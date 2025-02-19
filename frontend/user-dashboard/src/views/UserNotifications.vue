@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="MainContainer">
     <h3>Notifications for {{ useremail }}</h3>
     <ul>
       <li v-for="notif in notifications" :key="notif.id">

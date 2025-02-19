@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="MainContainer">
       <h2>About This Project</h2>
       <p>This is a simple Vue.js project demonstrating frontend-backend communication.</p>
     </div>

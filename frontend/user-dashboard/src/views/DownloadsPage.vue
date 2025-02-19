@@ -2,9 +2,11 @@
   <div v-if="loading" id="loading">
     <ion-icon name="reload-outline"></ion-icon>
   </div>
-  <div id="downloading-container">
+  <div class="MainContainer">
+
+  <div id="downloads-Main-container">
     downloads
-  <div v-if="downloads.length">
+  <div v-if="downloads.length" id="downloads-container">
     <div v-for="(download, index) in downloads" :key="index" class="downloading-file card">
       <!-- File Info -->
       <div class="ghg">
@@ -62,11 +64,9 @@
       <img src="../assets/no-search-result.png" alt="No search Found">
       No downloads found.
   </p>
-
-   
-
-
   </div>
+  </div>
+
 </template>
 
 <script>
@@ -146,7 +146,14 @@ export default {
     flex-direction: row;
     width: 100%;
 }
-#downloading-container {
+#downloads-Main-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+#downloads-container {
     display: flex;
     flex-direction: column-reverse;
     position: relative;
@@ -156,6 +163,9 @@ export default {
     justify-content: center;
     align-items: center;
     font-size: 12px;
+    padding: 5px;
+    box-sizing: border-box;
+ 
 }
 #downloading-container p,span {
     font-size: 12px;

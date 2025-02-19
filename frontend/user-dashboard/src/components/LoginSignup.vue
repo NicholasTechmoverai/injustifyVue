@@ -1,6 +1,6 @@
 <template>
   <div v-if="isOpen" class="modal-overlay" @click.self="closeModal">
-    <div class="modal-container" :class="{ 'dark-mode': isDarkMode }">
+    <div class="modal-container">
       <!-- Close Button -->
       <button class="close-btn" @click="closeModal">✖</button>
 
@@ -21,6 +21,9 @@
               </div>
             </div>
             <button type="submit">Login</button>
+            <div v-if="loading">
+              <div class="loader"></div>
+            </div>
             <label>
               <input type="checkbox" v-model="rememberMe" />
               Remember Me
@@ -58,6 +61,9 @@
               </div>
             </div>
             <button type="submit">Sign Up</button>
+            <div v-if="loading">
+              <div class="loader"></div>
+            </div>
           </form>
           <div class="googleLogin" @click="signupWithGoogle">
             <span>Signup with;</span>
@@ -118,6 +124,7 @@ export default {
         if (response.data.user) {
           const userStore = useUserStore();
           userStore.setUser(response.data.user);
+          this.loading = false;
         }
         
         console.log('Backend response:', response.data);
@@ -152,6 +159,7 @@ export default {
         if (response.data.user) {
           const userStore = useUserStore();
           userStore.setUser(response.data.user);
+          this.loading = false;
         }
         
         console.log('Backend response:', response.data);

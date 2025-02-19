@@ -63,7 +63,7 @@ def fetchUserTopSongs(userId, limit=10):
 
 
 @songs_bp.route('/<user_id>', methods=['GET'])
-def fetch_songs(user_id, songs_per_page=15, offset=0):
+def fetch_songs(user_id, songs_per_page=24, offset=0):
     """
     Fetch songs for a user with optional search filtering.
     """
