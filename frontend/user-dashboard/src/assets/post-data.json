@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "title": "Getting Started with Vue.js",
+    "description": "A beginner-friendly guide to understanding the basics of Vue.js.",
+    "tags": ["Vue", "Beginner", "JavaScript"]
+  },
+  {
+    "id": 2,
+    "title": "Vue 3 Composition API Explained",
+    "description": "A deep dive into the Composition API and how it improves Vue development.",
+    "tags": ["Vue", "Composition API", "JavaScript"]
+  },
+  {
+    "id": 3,
+    "title": "State Management in Vue with Pinia",
+    "description": "Learn how to manage global state efficiently using Pinia instead of Vuex.",
+    "tags": ["Vue", "State Management", "Pinia"]
+  },
+  {
+    "id": 4,
+    "title": "Building a Search Filter in Vue",
+    "description": "Implement a search filter in Vue.js to dynamically filter lists of items.",
+    "tags": ["Vue", "Search", "Filter"]
+  },
+  {
+    "id": 5,
+    "title": "Vue Router Navigation Guide",
+    "description": "A practical guide to handling navigation in Vue using Vue Router.",
+    "tags": ["Vue", "Vue Router", "Navigation"]
+  }
+]

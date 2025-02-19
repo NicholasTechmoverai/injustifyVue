@@ -1,0 +1,55 @@
+npm install -g @vue/cli
+vue create user-dashboard
+cd user-dashboard
+npm install vue-router axios
+
+
+
+
+
+user-dashboard/
+│── backend/                # Flask Backend (API)
+│   │── app.py              # Main Flask App
+│   │── users.json          # Mock User Database (Optional)
+│   │── venv/               # Virtual Environment (Optional)
+│   └── requirements.txt    # Python Dependencies
+│
+│── frontend/               # Vue.js Frontend
+│   │── public/             # Static Assets
+│   │   └── index.html      # Vue.js Root HTML File
+│   │── src/                # Source Code
+│   │   │── assets/         # Images, Fonts, etc.
+│   │   │── components/     # Vue Components
+│   │   │   ├── Navbar.vue  # Navigation Bar
+│   │   │   ├── Footer.vue  # Footer (Optional)
+│   │   │── views/          # Page Components
+│   │   │   ├── Home.vue    # Home Page
+│   │   │   ├── Profile.vue # Profile Page
+│   │   │   ├── Notifications.vue  # Notifications Page
+│   │   │   ├── Downloads.vue  # Downloads Page
+│   │   │── router/         # Vue Router Configuration
+│   │   │   ├── index.js    # Routing Configuration
+│   │   │── App.vue         # Main Vue Component
+│   │   │── main.js         # Vue Entry Point
+│   └── package.json        # Project Dependencies
+│
+│── .gitignore              # Git Ignore File
+│── README.md               # Documentation
+│── setup.sh                # Optional Script for Setup
+
+
+/frontend
+??? /src
+?   ??? /assets       # Static assets (images, styles)
+?   ??? /components   # Reusable Vue components
+?   ??? /views        # Full-page Vue components
+?   ??? /router       # Vue Router configuration (index.js)
+?   ??? /store        # Vuex/Pinia store (if used)
+?   ??? /websockets   # WebSocket logic (optional)
+?   ??? App.vue       # Main App component
+?   ??? main.js       # Entry point for Vue app
+?   ??? websocket.js  # WebSocket file (optional)
+??? /public           # Public assets (favicon, index.html)
+??? package.json      # Project dependencies
+??? vite.config.js    # Vite config (if using Vite)
+??? webpack.config.js # Webpack config (if using Webpack)
