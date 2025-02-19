@@ -1,4 +1,4 @@
-<template id="lfsidebar">
+<template >
   <aside :class="{ collapsed: !isSidebarOpen }" class="sidecontent">
     <!-- User Info -->
     <div class="userinfo">
@@ -79,10 +79,10 @@
     </button>
     <div class="globalToogle">
       <label class="toggle ThemeToggle">
-        <span class="hidden" id="darkthemething"><i class="fa-solid fa-moon"></i> </span>
-        <input v-if="isSidebarOpen" @change="toggleThemes" :checked="isDarkMode" type="checkbox" id="themeToggle" >
-        <span v-if="isSidebarOpen" class="slider  mode-toggle"></span>
-        <span class="hidden" id="lighthemething"><i class="fa-solid fa-sun"></i> </span>
+        <span v-if="isSidebarOpen" class="hidden" id="darkthemething"><i class="fa-solid fa-moon"></i> </span>
+        <input  @change="toggleThemes" :checked="isDarkMode" type="checkbox" id="themeToggle" >
+        <span  class="slider  mode-toggle"></span>
+        <span v-if="isSidebarOpen" class="hidden" id="lighthemething"><i class="fa-solid fa-sun"></i> </span>
       </label>
     </div>
   </aside>
@@ -100,14 +100,11 @@ export default {
   data() {
     return {
       isSidebarOpen: true,
-      deviceWidth: window.innerWidth, // Get the current width on initial load
+      deviceWidth: window.innerWidth, 
     };
   },
   mounted() {
-    // Run the defaultSidebarHandler when the component is mounted
     this.defaultSidebarHandler();
-    
-    // Add resize event listener to adjust sidebar on window resize
     window.addEventListener("resize", this.handleResize);
   },
   beforeUnmount() {
@@ -123,7 +120,6 @@ export default {
       this.$emit('toggle-theme');
     },
     defaultSidebarHandler() {
-      // Check if device width is less than 862px and adjust sidebar visibility
       if (this.deviceWidth < 862) {
         this.isSidebarOpen = false;
       } else {
@@ -131,7 +127,6 @@ export default {
       }
     },
     handleResize() {
-      // Update deviceWidth and call defaultSidebarHandler on resize
       this.deviceWidth = window.innerWidth;
       this.defaultSidebarHandler();
     },
@@ -229,7 +224,8 @@ nav ul {
   color: white;
   position: relative;
   overflow: hidden;
-  transition:  all 0.5s ease;
+  transition:  all 0.5s ease; 
+   border-bottom: 3px solid transparent;
 }
 a{
   color: inherit;
@@ -238,7 +234,7 @@ a{
 
 /* Hover Effect */
 .inline:hover {
-  background: var(--hover-color1);
+  background: rgba(255, 0, 0, 0.249);
 }
 
 /* Ion Icons Styling */
@@ -316,5 +312,12 @@ ion-icon {
 
 .globalToogle span{
   margin: 0 5px;
+}
+
+ .router-link-active {
+  font-weight: bold;
+  text-shadow: 0px 0px 5px rgb(0, 0, 0);
+  color: rgb(228, 228, 228); /* Change color for active link */
+  border-bottom: 3px solid red; /* Optional underline effect */
 }
 </style>

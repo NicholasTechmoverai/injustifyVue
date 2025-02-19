@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="MainContainer">
       <h3>History for {{ useremail }}</h3>
       <ul>
         <li v-for="item in history" :key="item.id">{{ item.action }} - {{ item.date }}</li>

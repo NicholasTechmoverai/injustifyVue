@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="MainContainer">
       <div v-if="songs.length">
         <h3>Search Results for: "{{ searchQuery }}"</h3>
         <div v-for="song in songs" :key="song.song_id">

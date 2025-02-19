@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="MainContainer">
     <h3>Search Articles:</h3>
 
     <!-- ✅ Input Field for Live Search -->

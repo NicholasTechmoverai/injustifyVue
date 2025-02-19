@@ -1,8 +1,7 @@
 body {
     font-family: Arial, sans-serif;
-    background-color:rgb(219, 214, 214);
+    background-color:rgb(236, 236, 236);
     color: rgb(29, 28, 28);
-    max-width:1200px;
     margin: 0;
     padding: 0;
   }
@@ -10,18 +9,47 @@ body {
     background: rgb(47, 47, 47) !important;
     color: white;
   }
-  
-  #app{
-    margin-left: 130px;
-    transition: all 0.5s ease;
-    display: flex;
-    width: 100%;
-    height: 100%;
-    justify-content: center;
-    align-items: center;
-    padding: 3px 5px;
-    box-sizing: border-box;
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
+#app {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  box-sizing: border-box;
+  position: relative;
+  justify-content: center;
+  align-items: center;
+}
+
+.MainContainer {
+  margin-left: 260px;
+  transition: all 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3px 5px;
+  box-sizing: border-box;
+  width: calc(100% - 260px); /* Prevents overflow */
+  min-height: 90vh;
+  position: relative;
+  max-width: 1500px;
+}
+
+@media (max-width: 863px) {
+  .MainContainer {
+      margin-left: 70px;
+      max-width: 100%; /* Allow full width */
   }
+}
+
 
 
   .toggle {
@@ -31,6 +59,7 @@ body {
     margin: 10px 0;
     width: 100%;
     z-index: 90;
+    box-sizing: border-box;
 }
 
  .toggle >span :nth-child(1) {
@@ -130,12 +159,7 @@ color: white;
   }
 }
 
-@media (max-width: 862px) {
-  #app{
-    margin-left: 35px;
-  }
 
-}
 
 .injustifyLogoR{
   font-family: 'Sofia', cursive;
@@ -150,3 +174,35 @@ color: white;
 }
 
 
+/* HTML: <div class="loader"></div> */
+.loader {
+  width: 40px;
+  aspect-ratio: 1;
+  --c: linear-gradient(#000 0 0);
+  --r1: radial-gradient(farthest-side at bottom,#000 93%,#0000);
+  --r2: radial-gradient(farthest-side at top   ,#000 93%,#0000);
+  background: 
+    var(--c) ,var(--r1),var(--r2),
+    var(--c) ,var(--r1),var(--r2),
+    var(--c) ,var(--r1),var(--r2);
+  background-repeat: no-repeat;
+  animation: l2 0.7s infinite alternate;
+}
+@keyframes l2 {
+  0%,25% {
+    background-size: 8px 0,8px 4px,8px 4px,8px 0,8px 4px,8px 4px,8px 0,8px 4px,8px 4px;
+    background-position: 0 50%,0 calc(50% - 2px),0 calc(50% + 2px),50% 50%,50% calc(50% - 2px),50% calc(50% + 2px),100% 50%,100% calc(50% - 2px),100% calc(50% + 2px);
+ }
+ 50% {
+    background-size: 8px 100%,8px 4px,8px 4px,8px 0,8px 4px,8px 4px,8px 0,8px 4px,8px 4px;
+    background-position: 0 50%,0 calc(0% - 2px),0 calc(100% + 2px),50% 50%,50% calc(50% - 2px),50% calc(50% + 2px),100% 50%,100% calc(50% - 2px),100% calc(50% + 2px);
+ }
+ 75% {
+    background-size: 8px 100%,8px 4px,8px 4px,8px 100%,8px 4px,8px 4px,8px 0,8px 4px,8px 4px;
+    background-position: 0 50%,0 calc(0% - 2px),0 calc(100% + 2px),50% 50%,50% calc(0% - 2px),50% calc(100% + 2px),100% 50%,100% calc(50% - 2px),100% calc(50% + 2px);
+ }
+ 95%,100% {
+    background-size: 8px 100%,8px 4px, 8px 4px,8px 100%,8px 4px,8px 4px,8px 100%,8px 4px,8px 4px;
+    background-position: 0 50%,0 calc(0% - 2px),0 calc(100% + 2px),50% 50%,50% calc(0% - 2px),50% calc(100% + 2px),100% 50%,100% calc(0% - 2px),100% calc(100% + 2px);
+ }
+}

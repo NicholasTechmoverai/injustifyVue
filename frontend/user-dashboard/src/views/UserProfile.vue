@@ -1,8 +1,8 @@
 <template>
-  <div v-if="loading" id="loading">
+  <div v-if="loading" id="loading" >
     <ion-icon name="reload-outline"></ion-icon>
   </div>
-  <div id="profileUserInfo">
+  <div id="profileUserInfo" class="MainContainer">
     <div id="profile-pic">
       <div class="profile-pic-ON">
         <img 
@@ -149,128 +149,148 @@ export default {
 </script>
 
 <style scoped>
-h3 {
-  color: #34495e;
+  h3 {
+  color: #2c3e50;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 5px;
 }
+
 p {
-  font-size: 16px;
+  font-size: 14px;
+  color: #7f8c8d;
   margin: 5px 0;
 }
-#profile-pic{
-    display: flex;
-    position: relative;
-    width: 100%;
-    margin-bottom: 10px;
-    align-items: center;
-    justify-content: center;
-}
-.profile-pic-ON{
-    width: 100px !important;
-    height: 100px !important;
-    background-color: #646060;
-    border-radius: 50%;
 
+#profileUserInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
-.profile-pic-ON img{
-    width: 100%;
-    height: 100%;
+.circular-profile_pic {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin-bottom: 15px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #3498db;
 }
-#settings .dropdown .dropdown-content a{
-    color: inherit;
-    padding: 8px 16px;
-    text-decoration: none;
-    display: block;
-    transition: background-color 0.3s ease;
+
+
+.cicircular-profile_pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
-#settings .dropdown .dropdown-content a:hover{
-    background-color: #6b6a6a20;
+
+.profile-edit {
+  position: absolute;
+  top: 85%;
+  right: 10px;
+  background: #3498db;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s;
 }
-#profileUserInfo{
-    margin: 0 auto;
-    display:flex;
+
+.profile-edit:hover {
+  background: #2980b9;
+}
+
+.profile-info {
+  text-align: center;
+  margin-top: 10px;
+}
+
+#userEmail {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#verifiedState {
+  color: green;
+  margin-left: 10px;
+  font-weight: bold;
+}
+
+#top-songs-Adhered {
+  width: 100%;
+  margin-top: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.top-songs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.artist-socialist {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.artist-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.artist-info img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.WheatherVerified {
+  color: #3498db;
+  font-size: 14px;
+  margin-left: 5px;
+}
+
+.moreOn-song {
+  display: flex;
+  gap: 15px;
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+#loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  color: #3498db;
+}
+
+@media (max-width: 768px) {
+  #profileUserInfo {
+    padding: 15px;
+  }
+  .artist-socialist {
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+    align-items: flex-start;
+  }
 }
-.profile-info{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1px;
-    position: relative;
-}
-
- .profile-edit{
-    position: absolute;
-    top: 90%;
-    right: 10px;
-}
- .artist-socialist{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 15px;
-}
-#profile{
-    display: none;
-    flex-direction: column;
-}
-.artist-info{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1px;
-    position: relative;
-}
-
-.artist-info img{
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-.moreOn-song{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-    font-size: 12px;
-}
- .WheatherVerified{
-    position: absolute;
-    top: 10%;
-    right: 0;
-}
-
-#top-songs-Adhered{
-    margin-top: 30px;
-}
-
-#top-songs-adheredHeader{
-    padding:3px;
-}
-
- #top-songs-list{
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-}
- #userEmail{
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    padding: 5px;
-}
-
- #verifiedState{
-    color:green;
-}
-
-
 
 </style>

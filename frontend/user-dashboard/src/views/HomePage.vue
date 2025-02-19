@@ -1,11 +1,12 @@
-<template>
-  <div>
-    <div>
+<template> 
+  <div class="MainContainer">
+    <div id="homepage-header">
+      <div>
       <h3>Videos</h3>
       <p>{{ message }}</p>
     </div>
     <div v-if="loading" class="spinner-container">
-      <div class="spinner">
+      <div class="loader">
         <p>Loading...</p>
       </div> 
     </div>
@@ -16,8 +17,9 @@
       <button @click="reset">Clear</button>
     </div>
 
-    <div id="videosContainer">
-      <div v-if="videos.length">
+    </div>
+    <div >
+      <div v-if="videos.length" id="videosContainer">
         <div v-for="video in videos" :key="video.song_id" class="video-card">
           <div @click="playVideo(video)">
             <img :src="video.thumbnail" alt="Video Thumbnail" />
@@ -158,32 +160,52 @@ export default {
 </script>
 
 <style scoped>
-/* Add custom styles here for the video cards and interactions */
+
 #videosContainer {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center; /* Center videos nicely */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* Responsive grid */
     gap: 10px;
     width: 100%;
     box-sizing: border-box;
-    background-color: aqua;
     padding: 10px;
+    grid-auto-rows: min-content; /* Ensures height matches content */
 }
 
+/* Default Video Card Styling */
 .video-card {
-    padding: 5px 10px;
-    background-color: rgb(219, 216, 216);
+  background: #d9d7d7;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 10px;
     border-radius: 5px;
     transition: all 0.3s ease-in-out;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    flex: 1 1 min(30%, 400px); /* Adjust width dynamically */
-    max-width: calc(33.33% - 10px); /* Ensures no card exceeds 1/3 of the container */
-    min-width: 350px; /* Prevents shrinking too much */
-    height: auto;
+    width: 100%;
+    height: auto; /* Ensures height is based on content */
 }
+
+/* Responsive Layout: 3 Columns for Larger Screens */
+@media (min-width: 1024px) {
+    #videosContainer {
+        grid-template-columns: repeat(3, 1fr); /* Exactly 3 columns on large screens */
+    }
+}
+
+/* Responsive Layout: 2 Columns for Tablets */
+@media (max-width: 1023px) {
+    #videosContainer {
+        grid-template-columns: repeat(2, 1fr); /* 2 columns on medium screens */
+    }
+}
+
+/* Responsive Layout: 1 Column for Mobile */
+@media (max-width: 600px) {
+    #videosContainer {
+        grid-template-columns: repeat(1, 1fr); /* 1 column on small screens */
+    }
+}
+
 
 /* Make sure video elements fit inside the card */
 .video-card video {
@@ -194,6 +216,10 @@ export default {
 
 
 .video-card img{
+  min-width: 200px;
+  min-height: 75px;
+  background-color: rgb(78, 77, 77);
+  height: auto;
   width: 200px;
   border-radius: 10px;
 }
@@ -211,5 +237,22 @@ export default {
   align-items: center;
   gap: 5px;
 
+}
+#spinner-container{
+  position: absolute;
+  right: 0;
+  background-color: aqua;
+}
+#homepage-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding:0 10px;
+  position: sticky;
+  top: 0;
+  background-color: rgb(216, 210, 210);
+  z-index: 99;
+  width: 100%;
+  box-sizing: border-box;
 }
 </style>

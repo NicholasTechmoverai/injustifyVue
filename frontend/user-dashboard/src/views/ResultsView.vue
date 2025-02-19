@@ -1,5 +1,5 @@
 <template>
-    <div class="results-container">
+    <div class="results-container MainContainer">
       <p>Found {{ filteredTitles.length }} results for "{{ query }}"</p>
       <ul v-if="filteredTitles.length">
         <li v-for="post in filteredTitles" :key="post.id" class="result-item">
