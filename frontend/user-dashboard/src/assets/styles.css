@@ -1,0 +1,152 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color:rgb(219, 214, 214);
+    color: rgb(29, 28, 28);
+    max-width:1200px;
+    margin: 0;
+    padding: 0;
+  }
+  .dark-mode{
+    background: rgb(47, 47, 47) !important;
+    color: white;
+  }
+  
+  #app{
+    margin-left: 130px;
+    transition: all 0.5s ease;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    padding: 3px 5px;
+    box-sizing: border-box;
+  }
+
+
+  .toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 10px 0;
+    width: 100%;
+    z-index: 90;
+}
+
+ .toggle >span :nth-child(1) {
+    font-size: 16px;
+    margin-left: 0px;
+}
+
+ .toggle span {
+    font-size: 16px;
+    margin-right: 0px;
+}
+
+ .toggle input[type="checkbox"] {
+    display: none;
+}
+
+ .toggle .slider {
+    position: relative;
+    width: 40px !important;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    z-index: 80;
+}
+
+ .toggle .slider::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+ .toggle input[type="checkbox"]:checked + .slider {
+    background-color: #4caf50;
+}
+
+ .toggle input[type="checkbox"]:checked + .slider::before {
+    transform: translateX(20px);
+}
+
+/*loading indicators*/
+#loading{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  color: #34495e;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+#loading ion-icon {
+  font-size: 42px;
+  font-weight: bolder;
+  animation: loadingAnimation 1s infinite linear;
+color: white;
+}
+
+.card img{
+  width: 300px;
+  border-radius: 10px;
+}
+.card{
+  padding: 3px 10px;
+  background-color: rgb(219, 216, 216);
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+  transition: all 0.6s ease;
+  
+}
+.card.dark-mode{
+  background-color: var(--dark-foreground);
+}
+
+
+@keyframes loadingAnimation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 862px) {
+  #app{
+    margin-left: 35px;
+  }
+
+}
+
+.injustifyLogoR{
+  font-family: 'Sofia', cursive;
+  position: absolute;
+}
+.circular-profile_pic{
+  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-size: cover;
+}
+
+
