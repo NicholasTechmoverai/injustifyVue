@@ -5,7 +5,11 @@ import './assets/styles.css';
 import WebSocketService from './websocket.js'; // WebSocket
 import { createPinia } from 'pinia'; // Import Pinia
 
+
+
+
 const app = createApp(App);
+
 //setupuserdetails(); // Uncomment this line to enable user authentication
 
 

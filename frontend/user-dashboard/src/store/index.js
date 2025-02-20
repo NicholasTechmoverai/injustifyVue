@@ -8,10 +8,11 @@ export const useUserStore = defineStore('user', {
   actions: {
     setUser(data) {
       this.email = data.email;
+      this.userId = data.id; 
       this.name = data.name;
       this.profilePic = data.picture; 
       this.verifiedEmail = data.verified_email;
-      console.log(this.email, this.name,this.profilePic,this.verifiedEmail);  // Log after the state is set
+      console.log(this.email, this.name,this.profilePic,this.verifiedEmail,this.userId);  // Log after the state is set
     }
   }
 });

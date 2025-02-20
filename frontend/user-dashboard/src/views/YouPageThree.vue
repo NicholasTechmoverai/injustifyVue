@@ -15,36 +15,38 @@
   
   <script>
   import axios from "axios";
+  import { BASE_URL } from "@/utils";
 
   export default {
     data() {
       return {
-        songs: [
-          { id: 1, thumbnail: '../static/thumbnails/@coldplay - Yellow (Lyrics)_njt (1).jpg', title: 'songA', rank: '#1' },
-          { id: 2, thumbnail: '../static/thumbnails/@coldplay - Yellow (Lyrics)_njt (1).jpg', title: 'songA', rank: '#1' },
-          { id: 3, thumbnail: '../static/thumbnails/@coldplay - Yellow (Lyrics)_njt (1).jpg', title: 'songA', rank: '#1' },
-          { id: 4, thumbnail: '../static/thumbnails/@coldplay - Yellow (Lyrics)_njt (1).jpg', title: 'songA', rank: '#1' },
-          { id: 5, thumbnail: '../static/thumbnails/@coldplay - Yellow (Lyrics)_njt (1).jpg', title: 'songA', rank: '#1' },
-          { id: 6, thumbnail: '../static/thumbnails/@coldplay - Yellow (Lyrics)_njt (1).jpg', title: 'songA', rank: '#1' },
-          { id: 7, thumbnail: '../static/thumbnails/@coldplay - Yellow (Lyrics)_njt (1).jpg', title: 'songA', rank: '#1' },
-        ]
+        songs: [], 
+
       };
     },
     mounted() {
-    if (!this.useremail) {
-      console.error("User email is undefined");
-      return;
-    }
+        this.fetchVideos(); 
 
-    axios
-      .get(`http://127.0.0.1:5000/api/${this.useremail}`)
-      .then((response) => {
-        this.message = response.data.message;
-      })
-      .catch((error) => console.error("API Error:", error));
-
-    this.fetchVideos(); 
   },
+  methods:{
+    fetchVideos() {
+        this.loading = true; 
+
+        axios
+        .get(`${BASE_URL}/api/songs/pl/ple8dd2fc4`)
+        .then((response) => {
+        console.log("playlist::",response.data.songs); // Add this line to log the response
+        this.songs = response.data.songs;
+        })
+        .catch((error) => {
+        console.error("API Error:", error);
+        })
+        .finally(() => {
+        this.loading = false;
+        });
+
+        },
+  }
   };
   </script>
   
