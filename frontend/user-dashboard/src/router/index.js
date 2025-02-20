@@ -11,6 +11,7 @@ import ProfileSettings from "@/views/ProfileSettings.vue";
 import NotificationSettings from "@/views/NotificationsSettings.vue";
 import PreferenceSettings from "@/views/PreferenceSettings.vue";
 import SecuritySettings from "@/views/SecuritySet.vue";
+import YouPage from "../views/YouPage.vue";
 
 const routes = [
   { path: '/:useremail', name: 'Home', component: HomePage, props: true },
@@ -20,19 +21,21 @@ const routes = [
   { path: '/notifications/:useremail', name: 'UserNotifications', component: UserNotifications, props: true },
   { path: '/search', name: 'SearchResults', component: SearchResults}, 
   { path: '/about', name: 'About', component: About }, 
+  { path: '/you', name:'YouPage',component:YouPage}, 
 
-  // Settings Route with child routes and working redirect to profile
   {
     path: "/settings",
     name: "SettingsPage",
     component: SettingsPage,
     children: [
+      { path: "", redirect: "/settings/profile" }, // Redirect to profile settings when visiting /settings
       { path: "profile", name: "ProfileSettings", component: ProfileSettings },
       { path: "notifications", name: "NotificationSettings", component: NotificationSettings },
       { path: "preferences", name: "PreferenceSettings", component: PreferenceSettings },
       { path: "security", name: "SecuritySettings", component: SecuritySettings },
     ],
-  },
+  }
+  
 
 
 ];

@@ -44,7 +44,13 @@
           </router-link>
         </li>
         <li>
-          <router-link class="inline" :to="`/settings/profile`">
+          <router-link class="inline" :to="`/you`">
+            <ion-icon name="time-outline"></ion-icon>
+            <div v-if="isSidebarOpen">You</div>
+          </router-link>
+        </li>
+        <li>
+          <router-link class="inline" :to="`/settings`">
             <ion-icon name="settings-outline"></ion-icon>
             <div v-if="isSidebarOpen">Settings</div>
           </router-link>
