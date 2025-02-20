@@ -152,3 +152,56 @@ def fetch_songs(user_id, songs_per_page=24, offset=0):
     except mysql.connector.Error as err:
         print(f"Error fetching songs: {err}")
         return jsonify({"message": "Error fetching songs", "error": str(err)}), 500
+
+
+
+@songs_bp.route('/pl/<pl_id>', methods=['GET'])
+def fetch_playlists(pl_id):
+    if not pl_id:
+        return jsonify({"message": "Playlist ID is required"}), 400
+    
+    print(f"Fetching songs for playlist: {pl_id}")
+    pl_songs = get_playlistSongs(pl_id)
+    if not pl_songs:
+        return jsonify({"message": "Playlist is empty"}), 204
+    
+    return jsonify({"songs": pl_songs})
+
+
+
+def get_playlistSongs(playlistId):
+    sql_query = """
+        SELECT ps.song_id, im.title, im.artist, im.url, im.thumbnail_path, p.name 
+        FROM playlistSongs ps 
+        JOIN injustifyMusic im 
+        ON ps.song_id = im.song_id 
+        JOIN playlists p 
+        ON ps.playlist_id = p.playlist_id 
+        WHERE ps.playlist_id = %s;
+    """
+    values = (playlistId,)
+    try:
+        mycursor.execute(sql_query, values)
+        songs = mycursor.fetchall()
+        result = [
+            {    
+                "song_id": song[0],
+                "title": song[1],
+                "artist": song[2],
+                "url":f'{song[3]}',
+                "thumbnail":f"{Config.thumbnailPath}/{song[4]}",
+                "playlist_name": song[5],
+                "Stype": "local"
+            }
+            for song in songs
+        ]
+        return result
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
+
+    except mysql.connector.Error as err:
+        print(f"Error fetching playlists: {err}")
+        return {"success": False, "message": "Failed to fetch playlist songs!"}
+
+

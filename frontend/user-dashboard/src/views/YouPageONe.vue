@@ -1,81 +1,52 @@
 <template>
-    <div id="youSectionA">
-
-      <!-- Scrollable Categories -->
-      <div id="sectionAscroll">
-        <div id="allScrolls">
-          <div  class="secAscroll"
-            v-for="(section, index) in scrollSections" 
-            :key="index" 
-      @click="handleScroll(section.name, $event)">
-            {{ section.name }}
-          </div>
+  <div id="youSectionA">
+    <!-- Scrollable Categories -->
+    <div id="sectionAscroll">
+      <div id="allScrolls">
+        <div class="secAscroll" @click="handleScroll('yls', $event)">
+          <router-link :to="`/you/yls/${userId}`">You liked songs</router-link>
         </div>
-      </div>
-  
-      <!-- Dynamic Content Section -->
-      <div id="selected_type_view">
-        <h2>{{ selectedCategory }}</h2>
-        <div>
-          <div v-for="(item, index) in selectedContent" :key="index" class="songs">
-            <img v-if="item.thumbnail" :src="item.thumbnail" alt="Thumbnail">
-            <div>
-              <div>{{ item.title || item.name }}</div>
-              <div v-if="item.rank">{{ item.rank }}</div>
-            </div>
-          </div>
+        <div class="secAscroll" @click="handleScroll('pl', $event)">
+          <router-link :to="`/you/pl/${userId}`">Your playlists</router-link>
+        </div>
+        <div class="secAscroll" @click="handleScroll('str', $event)">
+          <router-link :to="`/you/str/${userId}`">Stream rate</router-link>
+        </div>
+        <div class="secAscroll" @click="handleScroll('utr', $event)">
+          <router-link :to="`/you/utr/${userId}`">Your top songs</router-link>
+        </div>
+        <div class="secAscroll" @click="handleScroll('tr', $event)">
+          <router-link to="/you/tr">Trending</router-link> 
+          <!-- This one does not need userId, assuming that's intentional -->
         </div>
       </div>
     </div>
+
+    <!-- Dynamic Content Section -->
+    <router-view></router-view>
+  </div>
 </template>
 
+<script setup>
+import { ref } from "vue";
+import { useUserStore } from "@/store/index.js";
+import { computed } from "vue";
 
-  
-  <script setup>
-  import { ref } from 'vue';
-  
+const userStore = useUserStore();
+const userId = computed(() => userStore.userId);
+//const userEmail = computed(() => userStore.email);
 
-  const scrollSections = ref([
-    { name: 'Your Top Songs' },
-    { name: 'Your Liked Songs' },
-    { name: 'Your Top Artists' },
-    { name: 'Your Stream Rate' },
-    { name: 'Trending' },
-    { name: 'Your Playlists' }
-  ]);
-  
-  const topSongs = ref([
-    { title: 'Song A', rank: '#1', thumbnail: 'https://via.placeholder.com/50' },
-    { title: 'Song B', rank: '#2', thumbnail: 'https://via.placeholder.com/50' },
-    { title: 'Song C', rank: '#3', thumbnail: 'https://via.placeholder.com/50' }
-  ]);
-  
-  const likedSongs = ref([
-    { title: 'Liked Song 1', rank: '#1', thumbnail: 'https://via.placeholder.com/50' },
-    { title: 'Liked Song 2', rank: '#2', thumbnail: 'https://via.placeholder.com/50' }
-  ]);
-  
-  const selectedCategory = ref('Your Top Songs');
-  const selectedContent = ref(topSongs.value);
-  
-  const selectCategory = (category) => {
-    selectedCategory.value = category;
-    if (category === 'Your Top Songs') {
-      selectedContent.value = topSongs.value;
-    } else if (category === 'Your Liked Songs') {
-      selectedContent.value = likedSongs.value;
-    } else {
-      selectedContent.value = [{ name: category }];
-    }
-  };
-  
-  const handleScroll = (category, event) => {
-    selectCategory(category);
-    
-    event.target.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-  };
-  </script>
-  
+// Track the selected category
+const selectedCategory = ref(null);
+
+const handleScroll = (category, event) => {
+  selectedCategory.value = category;
+
+  // Ensure the correct div scrolls into view
+  event.currentTarget.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+};
+</script>
+
   
   <style scoped>
 
@@ -212,6 +183,8 @@
     cursor: pointer;
     user-select: none;
     background-color: gray;
+    text-decoration: none;
+    border-bottom: 0px;
 
 }
 
@@ -219,6 +192,16 @@
     background-color: rgb(161, 160, 160);
 }
 
+#allScrolls .secAscroll a{
+  text-decoration: none;
+  color:inherit
+}
 
+a.router-link-active{
+  font-weight: bold;
+  text-shadow: 0px 1px 3px rgb(0, 0, 0);
+  text-decoration: underline !important;
+  color: rgb(75, 75, 190) !important;
+}
   </style>
   

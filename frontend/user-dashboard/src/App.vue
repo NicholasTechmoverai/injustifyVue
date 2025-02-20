@@ -26,6 +26,7 @@ export default {
     const userStore = useUserStore();
     
     const userEmail = computed(() => userStore.email);
+    const userId = computed(() => userStore.userId);
     const userName = computed(() => userStore.name);
     const profilePic = computed(() => userStore.profilePic);
     const isVerified = computed(() => userStore.verifiedEmail);
@@ -37,7 +38,7 @@ export default {
       isDarkMode.value = !isDarkMode.value;
     };
 
-    return { userEmail,userName,profilePic,isVerified,isDarkMode, showSignupModal,toggleTheme };
+    return { userEmail,userId,userName,profilePic,isVerified,isDarkMode, showSignupModal,toggleTheme };
   },
 };
 </script>

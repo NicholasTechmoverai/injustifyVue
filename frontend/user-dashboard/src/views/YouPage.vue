@@ -18,6 +18,7 @@ import ChildOne from "./YouPageONe.vue";
 import ChildTwo from "./YouPageTwo.vue";
 import ChildThree from "./YouPageThree.vue";
 
+
 const viewPlayersMode = ref(true);
 
 const toggleViewPlayersMode = () => {

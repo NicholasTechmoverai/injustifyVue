@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useUserStore } from "@/store/index.js"; // Import Pinia store
+
 import HomePage from '../views/HomePage.vue';
 import UserProfile from '../views/UserProfile.vue';
 import DownloadsPage from '../views/DownloadsPage.vue';
@@ -12,6 +14,12 @@ import NotificationSettings from "@/views/NotificationsSettings.vue";
 import PreferenceSettings from "@/views/PreferenceSettings.vue";
 import SecuritySettings from "@/views/SecuritySet.vue";
 import YouPage from "../views/YouPage.vue";
+import LikedSongsPage from "@/views/LikedSongs.vue";
+import UserTopArtist from "@/views/TopArtist.vue";
+import PlaylistPage from "@/views/PlaylistsPage.vue";
+import StreamRatePage from "@/views/StreamRate.vue";
+import TrendingPage from "@/views/TrendingPage.vue";
+
 
 const routes = [
   { path: '/:useremail', name: 'Home', component: HomePage, props: true },
@@ -33,6 +41,24 @@ const routes = [
       { path: "notifications", name: "NotificationSettings", component: NotificationSettings },
       { path: "preferences", name: "PreferenceSettings", component: PreferenceSettings },
       { path: "security", name: "SecuritySettings", component: SecuritySettings },
+    ],
+  },
+
+
+  {
+    path: "/you",
+    name: "YouPage",
+    component: YouPage,
+    redirect: () => {
+      const userStore = useUserStore();
+      return userStore.userId ? `/you/yls/${userStore.userId}` : "/login"; 
+    },
+    children: [
+      { path: "yls/:userId", name: "LikedSongsPage", component: LikedSongsPage, props: true },
+      { path: "pl/:userId", name: "PlaylistPage", component: PlaylistPage, props: true },
+      { path: "str/:userId", name: "StreamRatePage", component: StreamRatePage, props: true },
+      { path: "utr/:userId", name: "UserTopArtist", component: UserTopArtist, props: true },
+      { path: "tr", name: "TrendingPage", component: TrendingPage },
     ],
   }
   
