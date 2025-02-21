@@ -54,18 +54,7 @@
             <div v-if="isSidebarOpen">Settings</div>
           </router-link>
         </li>
-        <li>
-          <router-link class="inline" to="/search">
-            <ion-icon name="search-outline"></ion-icon>
-            <div v-if="isSidebarOpen">Search</div>
-          </router-link>
-        </li>
-        <li>
-          <router-link class="inline" to="/about">
-            <ion-icon name="information-circle-outline"></ion-icon>
-            <div v-if="isSidebarOpen">About</div>
-          </router-link>
-        </li>
+
         <li>
             <a class="inline" href="#" @click.prevent="$emit('open-signup')">
               <ion-icon name="log-in-outline"></ion-icon>
@@ -82,6 +71,12 @@
       <span v-if="isSidebarOpen">❮</span>
       <span v-else>❯</span>
     </button>
+   <div id="sidebarBottom">
+    <h1 class="injustifyLogoR">
+        <ion-icon name="musical-note-outline" v-if="isSidebarOpen" ></ion-icon>
+        Injustify
+        <ion-icon name="musical-note-outline" v-if="isSidebarOpen" ></ion-icon>
+      </h1>
     <div class="globalToogle">
       <label class="toggle ThemeToggle">
         <span v-if="isSidebarOpen" class="hidden" id="darkthemething"><i class="fa-solid fa-moon"></i> </span>
@@ -90,6 +85,7 @@
         <span v-if="isSidebarOpen" class="hidden" id="lighthemething"><i class="fa-solid fa-sun"></i> </span>
       </label>
     </div>
+   </div>
   </aside>
 </template>
 
@@ -141,6 +137,22 @@ export default {
 
 <style scoped>
 /* Sidebar Styling */
+.injustifyLogoR {
+  position: relative;
+  font-size: 1em;
+}
+.injustifyLogoR h1{
+  margin: 0;
+  padding:0;
+}
+#sidebarBottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
 :root {
   --main-color: linear-gradient(45deg, rgb(25, 23, 53) 40%, rgb(95, 239, 255));
   --hover-color1: rgb(12, 216, 231);
@@ -195,6 +207,7 @@ export default {
 /* Sidebar Links */
 nav{
   overflow-y: auto;
+  margin-top: 10px !important;
 }
 nav,li,ul{
   margin: 0;
