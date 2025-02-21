@@ -2,8 +2,8 @@ import { defineStore } from 'pinia';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    email: '',
-    name: ''
+    email: 'injustify@gamil.com',
+    name: 'injustify'
   }),
   actions: {
     setUser(data) {
@@ -12,8 +12,19 @@ export const useUserStore = defineStore('user', {
       this.name = data.name;
       this.profilePic = data.picture; 
       this.verifiedEmail = data.verified_email;
-      console.log(this.email, this.name,this.profilePic,this.verifiedEmail,this.userId);  // Log after the state is set
+      //console.log(this.email, this.name,this.profilePic,this.verifiedEmail,this.userId);  // Log after the state is set
+    },
+    clearUser() {
+      this.email = '';
+      this.name = '';
+      this.profilePic = '';
+      this.verifiedEmail = false;
+      this.userId = null;
+    },
+    setActivePlaylist(playlistId){
+      this.activePlaylistId = playlistId;
     }
+
   }
 });
 

@@ -49,7 +49,7 @@ const handleScroll = (category, event) => {
 
   
   <style scoped>
-
+  
   
   #allScrolls::-webkit-scrollbar {
     display: none;

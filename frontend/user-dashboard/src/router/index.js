@@ -15,10 +15,14 @@ import PreferenceSettings from "@/views/PreferenceSettings.vue";
 import SecuritySettings from "@/views/SecuritySet.vue";
 import YouPage from "../views/YouPage.vue";
 import LikedSongsPage from "@/views/LikedSongs.vue";
-import UserTopArtist from "@/views/TopArtist.vue";
+//import UserTopArtist from "@/views/TopArtist.vue";
 import PlaylistPage from "@/views/PlaylistsPage.vue";
 import StreamRatePage from "@/views/StreamRate.vue";
 import TrendingPage from "@/views/TrendingPage.vue";
+import UserTopSongs from "@/views/UserTopSongs.vue";
+import ActivePLaylist from "@/views/YouPageThree.vue";
+import YouplayingSong from "@/views/YouPageTwo.vue";
+
 
 
 const routes = [
@@ -55,10 +59,12 @@ const routes = [
     },
     children: [
       { path: "yls/:userId", name: "LikedSongsPage", component: LikedSongsPage, props: true },
-      { path: "pl/:userId", name: "PlaylistPage", component: PlaylistPage, props: true },
+      { path: "pl/:playlist_id", name: "PlaylistPage", component: PlaylistPage, props: true },
       { path: "str/:userId", name: "StreamRatePage", component: StreamRatePage, props: true },
-      { path: "utr/:userId", name: "UserTopArtist", component: UserTopArtist, props: true },
+      { path: "utr/:userId", name: "UserTopArtist", component: UserTopSongs, props: true },
       { path: "tr", name: "TrendingPage", component: TrendingPage },
+      { path: "upls/ls/:playlist_id", name: "ActivePLaylist", component: ActivePLaylist, props: true },
+      { path: "st/:playlist_id", name: "YouplayingSong", component: YouplayingSong, props: true },
     ],
   }
   
