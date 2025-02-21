@@ -11,9 +11,20 @@
           <button class="dropdown-toggle">More</button>
           <div class="dropdown-content">
             <a href="#">Help</a>
-            <a href="#">About</a>
+
+            <router-link class="inline" to="/search">
+              <ion-icon name="code-slash-outline"></ion-icon>
+              devs
+            </router-link>
+
+            <router-link class="inline" to="/about">
+              <ion-icon name="information-circle-outline"></ion-icon>
+              About
+            </router-link>
+
             <a href="#">Feedback</a>
           </div>
+
         </div>
       </div>
     </div>

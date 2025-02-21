@@ -81,6 +81,16 @@ export default {
 
     watch(playlist_id, fetchVideos, { immediate: true });
 
+    const sharePlaylist = async () => {
+      try {
+        await navigator.clipboard.writeText(`${window.location.origin}/you/upls/ls/${playlist_id.value}`);
+        alert("Link copied to clipboard! 🎉");
+      } catch (err) {
+        console.error("Failed to copy:", err);
+      }
+      dropdownOpen.value = false;
+    };
+
     // ✅ Toggle dropdown
     const toggleDropdown = (event) => {
       event.stopPropagation(); // Prevent event bubbling
@@ -109,6 +119,7 @@ export default {
       dropdownOpen,
       dropdownRef, // ✅ Bind to template
       toggleDropdown,
+      sharePlaylist
     };
   },
 };
