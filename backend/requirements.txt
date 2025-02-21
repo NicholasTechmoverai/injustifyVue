@@ -1,0 +1,8 @@
+Flask
+flask-cors
+mysql-connector-python
+pymysql
+flask-socketio
+
+
+pip install flask flask-cors mysql-connector-python pymysql flask-socketio eventlet
