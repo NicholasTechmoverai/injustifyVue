@@ -8,6 +8,7 @@ from config import Config
 from websocket_service import INJUserNamespace
 
 from routes.main import main_bp
+
 from routes.profile import profile_bp
 from routes.downloads import downloads_bp
 from routes.notifications import notifications_bp
