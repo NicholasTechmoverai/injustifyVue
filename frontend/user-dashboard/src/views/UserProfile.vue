@@ -7,12 +7,12 @@
       <div class="profile-pic-ON">
         <img 
           :src="user.picture || defaultProfilePic" 
-          alt="Profile Picture" 
+          alt="Profile Picture"
           class="circular-profile_pic" 
           @click="triggerFileInput"
         />
       </div>
-      <div class="profile-edit">
+      <div class="profile-edit" v-if="user.email === this.useremail">
         <button type="button" id="saveprofileChanges" @click="saveProfileChanges">
           <i class="fas fa-pencil-alt"></i> Save
         </button>
@@ -57,32 +57,34 @@
     </div>
 
     <!-- Hidden File Input -->
-    <input type="file" ref="fileInput" accept="image/*" @change="handleFileChange" style="display: none" />
+    <input  type="file" ref="fileInput" accept="image/*" @change="handleFileChange" style="display: none" />
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch, toRefs } from "vue";
 
 export default {
   name: "UserProfile",
   props: {
-    useremail: String,
+    useremail: String, // User email passed as 
   },
   setup(props) {
+    const { useremail } = toRefs(props); // Make props reactive
     const user = ref({});
     const newProfilePicture = ref(null);
     const defaultProfilePic = "/path/to/default.jpg";
     const fileInput = ref(null);
-    const loading = ref(false); // Fix: Define loading using ref()
+    const loading = ref(false);
+    const playlistId = ref(null); // Store playlist ID
 
     // Theme handling
     const themeClass = computed(() => {
       return document.cookie.includes("theme=dark") ? "dark-mode" : "";
     });
 
-    // Format the date safely
+    // Format date safely
     const formattedDate = computed(() => {
       if (!user.value.created_at) return "Unknown";
       return user.value.created_at.split(" ").slice(1, 4).join(" ");
@@ -90,28 +92,40 @@ export default {
 
     // Fetch user profile
     const fetchUserProfile = async () => {
-      loading.value = true; // Fix: Use ref() correctly
+      loading.value = true;
       try {
-        const response = await axios.get(`http://127.0.0.1:5000/api/profile/${props.useremail}`);
+        const response = await axios.get(`http://127.0.0.1:5000/api/profile/${useremail.value}`);
         user.value = response.data;
+        playlistId.value = response.data.playlistId; // Assuming the response contains a playlistId
       } catch (error) {
         console.error("Error fetching profile:", error);
       } finally {
-        loading.value = false; // Fix: Ensure loading is reset
+        loading.value = false;
       }
     };
 
+    // Watch for useremail changes and refetch profile
+    watch(useremail, (newEmail, oldEmail) => {
+      if (newEmail !== oldEmail) {
+        fetchUserProfile();
+      }
+    });
+
     // Trigger file input when profile picture is clicked
     const triggerFileInput = () => {
-      fileInput.value.click();
+      if (user.value.email === useremail.value) {
+        fileInput.value.click();
+      }
     };
 
     // Handle profile picture change
     const handleFileChange = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        user.value.picture = URL.createObjectURL(file);
-        newProfilePicture.value = file;
+      if (user.value.email === useremail.value) { 
+        const file = event.target.files[0];
+        if (file) {
+          user.value.picture = URL.createObjectURL(file);
+          newProfilePicture.value = file;
+        }
       }
     };
 
@@ -121,7 +135,7 @@ export default {
 
       const formData = new FormData();
       formData.append("profile_picture", newProfilePicture.value);
-      formData.append("user_id", props.userId);
+      formData.append("user_id", user.value.id); // Fix: Use `user.value.id` instead of `props.userId`
 
       try {
         await axios.post("http://127.0.0.1:5000/api/update-profile", formData);
@@ -131,11 +145,12 @@ export default {
       }
     };
 
+    // Fetch profile on mount
     onMounted(fetchUserProfile);
 
     return {
       user,
-      loading, // Fix: Ensure loading is returned
+      loading,
       formattedDate,
       themeClass,
       defaultProfilePic,
@@ -143,6 +158,7 @@ export default {
       triggerFileInput,
       handleFileChange,
       saveProfileChanges,
+      playlistId, // Return playlist ID
     };
   },
 };

@@ -30,7 +30,8 @@ export default {
     const userName = computed(() => userStore.name);
     const profilePic = computed(() => userStore.profilePic);
     const isVerified = computed(() => userStore.verifiedEmail);
-    const showSignupModal = ref(!userEmail.value); // Modal opens if no user email
+
+    const showSignupModal = ref(!userEmail.value ||userEmail.value==='injustify@gamil.com' ); // Modal opens if no user email
     let isDarkMode = ref(false);
  
     const toggleTheme = () => {

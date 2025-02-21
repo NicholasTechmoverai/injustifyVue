@@ -32,3 +32,31 @@ class Config:
         database="injustify"
     )
 
+    # Database connection 
+    db_config = {
+        "host": os.getenv("DB_HOST", "localhost"),
+        "user": os.getenv("DB_USER", "root"),
+        "password": os.getenv("DB_PASSWORD", "0000"),
+        "database": os.getenv("DB_NAME", "injustify")
+    }
+
+    connection_pool = pooling.MySQLConnectionPool(
+        pool_name="mypool",
+        pool_size=int(os.getenv("DB_POOL_SIZE", 10)),  # Default to 10
+        pool_reset_session=True,  # Resets session state after reuse
+        autocommit=True,  # Ensures transactions are committed automatically
+        **db_config
+    )
+
+    @staticmethod
+    def get_db_connection():
+        """
+        Get a database connection from the pool.
+        If the connection fails, return None.
+        """
+        try:
+            return Config.connection_pool.get_connection()
+        except mysql.connector.Error as e:
+            print(f"Database connection failed: {e}")
+            return None
+

@@ -1,15 +1,15 @@
 <template>
-    <div class="MainContainer">
-        <h1 class="injustifyLogoR">
-          <ion-icon name="musical-note-outline"></ion-icon>Injustify
-          <ion-icon name="musical-note-outline"></ion-icon>
-        </h1>
-        <div class="children">
-          <ChildOne />
-          <ChildTwo @toggle-viewPlayersMode="toggleViewPlayersMode" />
-          <ChildThree v-if="viewPlayersMode"  />
-        </div>
-    </div>
+  <div class="MainContainer">
+      <h1 class="injustifyLogoR">
+        <ion-icon name="musical-note-outline"></ion-icon>Injustify
+        <ion-icon name="musical-note-outline"></ion-icon>
+      </h1>
+      <div class="children">
+        <ChildOne />
+        <ChildTwo @toggle-viewPlayersMode="toggleViewPlayersMode" />
+        <ChildThree v-if="viewPlayersMode"  />
+      </div>
+  </div>
 </template>
 
 <script setup>
@@ -22,15 +22,15 @@ import ChildThree from "./YouPageThree.vue";
 const viewPlayersMode = ref(true);
 
 const toggleViewPlayersMode = () => {
-    console.log("Toggled theme in app.vue");
-    viewPlayersMode.value = !viewPlayersMode.value;
+  console.log("Toggled theme in app.vue");
+  viewPlayersMode.value = !viewPlayersMode.value;
 };
 </script>
 
   
   <style scoped>
 
-  
+
   .children {
     display: flex;
     justify-content: space-around;

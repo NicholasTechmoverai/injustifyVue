@@ -9,7 +9,6 @@
        </div>
        <img :src="profilePic || require('@/assets/unknown-filef.png')" alt="Profile" class="circular-profile_pic" />
       </router-link>
-
       <div v-if="isSidebarOpen" class="info">
         <h3><router-link :to="`/profile/${userEmail}`">{{ userName }}</router-link></h3>
         <p>{{ userEmail }}</p>
@@ -45,7 +44,7 @@
         </li>
         <li>
           <router-link class="inline" :to="`/you`">
-            <ion-icon name="time-outline"></ion-icon>
+            <ion-icon name="heart-half-outline"></ion-icon>
             <div v-if="isSidebarOpen">You</div>
           </router-link>
         </li>
