@@ -1,4 +1,8 @@
 export const BASE_URL = "http://127.0.0.1:5000";
+export const AUTH_WITH_GOOGLE = `${BASE_URL}/login/google`
+export const MANUAL_LOGIN = `${BASE_URL}/login`
+export const SIGN_UP = `${BASE_URL}/signup`
+
 
 export function timeAgo(time) {
     const now = new Date();

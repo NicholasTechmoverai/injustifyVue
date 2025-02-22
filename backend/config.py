@@ -12,6 +12,10 @@ class Config:
 
     thumbnailPath = "http://127.0.0.1:5000/static/thumbnails"
     profilePath = "http://127.0.0.1:5000/static/uploads"
+    
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+    SONGS_FOLDER = os.path.join(BASE_DIR,'static', 'songs')
 
     # Allowed CORS origins
     CORS_ALLOWED_ORIGINS = [
@@ -22,6 +26,8 @@ class Config:
         "http://localhost:8080/",
         "http://192.168.100.2:8080/"
     ]
+
+    FRONTEND_SERVER = "http://localhost:8080"
 
 
 
@@ -47,7 +53,7 @@ class Config:
         autocommit=True,  # Ensures transactions are committed automatically
         **db_config
     )
-
+    
     @staticmethod
     def get_db_connection():
         """

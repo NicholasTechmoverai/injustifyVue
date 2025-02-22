@@ -63,95 +63,16 @@ def fetchUserTopSongs(userId, limit=10):
 
 
 @songs_bp.route('/<user_id>', methods=['GET'])
-def fetch_songs(user_id, songs_per_page=24, offset=0):
-    """
-    Fetch songs for a user with optional search filtering.
-    """
-    search_query = request.args.get('search', '').strip()  # ✅ Get search parameter
-    offset = int(request.args.get('offset', 0))  # ✅ Get offset (default 0)
+def return_fetch_songs(user_id):
+    return jsonify(fetch_songs(user_id, 24, 24, 0 ,None))
 
-    print(f"Fetching songs for user: {user_id} with search query: {search_query}")
 
-    try:
-        base_query = """
-            SELECT 
-                injustifyMusic.song_id, 
-                artist, 
-                title, 
-                url, 
-                thumbnail_path, 
-                duration, 
-                views, 
-                upload_date,
-                (SELECT COUNT(*) FROM songlikes WHERE songlikes.song_id = injustifyMusic.song_id) AS likes,
-                EXISTS(
-                    SELECT 1 
-                    FROM songlikes 
-                    WHERE songlikes.song_id = injustifyMusic.song_id AND songlikes.user_id = %s
-                ) AS liked
-            FROM injustifyMusic
-        """
-        values = [user_id]  
+@songs_bp.route('/song/info/<songId>', methods=['GET'])
+def fetch_song_info(songId):
+    return jsonify(fetch_songs(None, 24, 24, 0 ,songId))
 
-        # Search filtering
-        if search_query:
-            search_filter = f"%{search_query}%"
-            count_query = """
-                SELECT COUNT(*)
-                FROM injustifyMusic
-                WHERE title LIKE %s OR artist LIKE %s
-            """
-            mycursor.execute(count_query, (search_filter, search_filter))
-            total_songs = mycursor.fetchone()[0]
 
-            if offset >= total_songs:
-                return jsonify({"message": "No results found", "songs": []})
 
-            sql_query = f"""
-                {base_query}
-                WHERE title LIKE %s OR artist LIKE %s
-                ORDER BY title LIMIT %s OFFSET %s
-            """
-            values.extend([search_filter, search_filter, songs_per_page, offset])
-
-        else:
-            # No search query
-            count_query = "SELECT COUNT(*) FROM injustifyMusic"
-            mycursor.execute(count_query)
-            total_songs = mycursor.fetchone()[0]
-
-            if offset >= total_songs:
-                return jsonify({"message": "No results found", "songs": []})
-
-            sql_query = f"{base_query} ORDER BY title LIMIT %s OFFSET %s"
-            values.extend([songs_per_page, offset])
-
-        mycursor.execute(sql_query, tuple(values))
-
-        # Fetch songs
-        songs = mycursor.fetchall()
-        result = [
-            {
-                "song_id": song[0],
-                "artist": song[1],
-                "title": song[2],
-                "url": f'{song[3]}',
-                "thumbnail": f"{Config.thumbnailPath}/{song[4]}",
-                "duration": song[5],
-                "views": song[6],
-                "date": song[7].strftime('%Y-%m-%d %H:%M:%S'),
-                "likes": song[8],
-                "liked": bool(song[9]),  # Convert to boolean
-                "Stype": "local"
-            }
-            for song in songs
-        ]
-
-        return jsonify({"total_songs": total_songs, "songs": result})
-
-    except mysql.connector.Error as err:
-        print(f"Error fetching songs: {err}")
-        return jsonify({"message": "Error fetching songs", "error": str(err)}), 500
 
 
 
@@ -240,6 +161,108 @@ def get_Stream_position(userId):
         return jsonify({"message": "No playlists found"}), 204
     
     return jsonify({"stream_rate": rate.get('stream_rate')}),200
+        
+
+
+
+def fetch_songs(user_id=None, songs_per_page=15, offset=0, search=None,songId=None):
+    try:
+        base_query = """
+            SELECT 
+                injustifyMusic.song_id, 
+                artist, 
+                title, 
+                url, 
+                thumbnail_path, 
+                duration, 
+                views, 
+                upload_date,
+                (SELECT COUNT(*) FROM songlikes WHERE songlikes.song_id = injustifyMusic.song_id) AS likes,
+                EXISTS(
+                    SELECT 1 
+                    FROM songlikes 
+                    WHERE songlikes.song_id = injustifyMusic.song_id AND songlikes.user_id = %s
+                ) AS liked
+            FROM injustifyMusic
+        """
+        values = [user_id] if user_id else [None]
+
+        if not search or search.lower() == 'null' and not songId:
+            # Count total songs without search
+            count_query = "SELECT COUNT(*) FROM injustifyMusic"
+            mycursor.execute(count_query)
+            total_songs = mycursor.fetchone()[0]
+
+            if offset >= total_songs:
+                return {"message": "No results found"}
+
+            # Paginated songs query without search
+            sql_query = f"{base_query} ORDER BY title LIMIT %s OFFSET %s"
+            values.extend([songs_per_page, offset])
+            mycursor.execute(sql_query, tuple(values))
+
+          # Fetch songs with songId
+        elif songId and not search:
+        
+            sql_query = f"""
+                {base_query}
+                WHERE song_id = %s
+                ORDER BY title
+                LIMIT %s OFFSET %s
+                """
+            values.extend([songId, songs_per_page, offset])
+            mycursor.execute(sql_query, tuple(values))  
+
+
+         # Fetch songs with search   
+        else:
+     
+            count_query = """
+                SELECT COUNT(*)
+                FROM injustifyMusic
+                WHERE title LIKE %s OR artist LIKE %s
+            """
+            search_filter = f"%{search}%"
+            mycursor.execute(count_query, (search_filter, search_filter))
+            total_songs = mycursor.fetchone()[0]
+
+            if offset >= total_songs:
+                return {"message": "No results found"}
+
+            # Paginated songs query with search
+            sql_query = f"""
+                {base_query}
+                WHERE title LIKE %s OR artist LIKE %s
+                ORDER BY title LIMIT %s OFFSET %s
+            """
+            values.extend([search_filter, search_filter, songs_per_page, offset])
+            mycursor.execute(sql_query, tuple(values))
+
+        # Fetch songs
+        songs = mycursor.fetchall()
+        result = [
+            {
+                "song_id": song[0],
+                "artist": song[1],
+                "title": song[2],
+                "url": f'{song[3]}',
+                "thumbnail":f"{Config.thumbnailPath}/{song[4]}",
+                "duration": song[5],
+                "views": song[6],
+                "date": song[7].strftime('%Y-%m-%d %H:%M:%S'),
+                "likes": song[8],
+                "liked": bool(song[9]),  # Convert to boolean
+                "Stype": "local"
+            }
+            for song in songs
+        ]
+
+        return {"total_songs": total_songs, "songs": result}
+
+    except mysql.connector.Error as err:
+        return {"message": "Error fetching songs", "error": str(err)}
+
+
         
 
 def get_playlistSongs(playlistId):
