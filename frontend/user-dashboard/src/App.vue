@@ -24,12 +24,28 @@ export default {
   },
   setup() {
     const userStore = useUserStore();
+
+    const params = new URLSearchParams(window.location.search);
+    const user = params.get('user');
+    if(user){
+        try {
+            const decodedUser = decodeURIComponent(user);  // Decode URL-encoded JSON string
+            const userObj = JSON.parse(decodedUser);  // Convert to JavaScript object
+            userStore.setUser(userObj);
+            console.log("User logged in successfully:", userObj);
+        } catch (error) {
+            console.error("Error parsing user data:", error);
+        }
+    }
+
     
     const userEmail = computed(() => userStore.email);
     const userId = computed(() => userStore.userId);
     const userName = computed(() => userStore.name);
     const profilePic = computed(() => userStore.profilePic);
     const isVerified = computed(() => userStore.verifiedEmail);
+
+
 
     const showSignupModal = ref(!userEmail.value ||userEmail.value==='injustify@gamil.com' ); // Modal opens if no user email
     let isDarkMode = ref(false);

@@ -29,7 +29,7 @@
               Remember Me
             </label>
           </form>
-          <div class="googleLogin" @click="loginWithGoogle">
+          <div class="googleLogin" @click="authWithGoogle">
             <span>Login with;</span>
             <img src="../assets/google_logo.png" alt="Google Logo" />
           </div>
@@ -65,7 +65,7 @@
               <div class="loader"></div>
             </div>
           </form>
-          <div class="googleLogin" @click="signupWithGoogle">
+          <div class="googleLogin" @click="authWithGoogle">
             <span>Signup with;</span>
             <img src="../assets/google_logo.png" alt="Google Logo" />
           </div>
@@ -83,6 +83,8 @@
 <script>
 import axios from 'axios';
 import { useUserStore } from '@/store';
+import { SIGN_UP,AUTH_WITH_GOOGLE, MANUAL_LOGIN} from "@/utils";
+
 
 export default {
   props: {
@@ -107,6 +109,9 @@ export default {
     };
   },
   methods: {
+    authWithGoogle(){
+      window.location.href=AUTH_WITH_GOOGLE;
+    },
     async login() {
       if (!this.userEmail || !this.userPassword) {
         this.showMessage('Please fill in all fields!', false);
@@ -115,7 +120,7 @@ export default {
       
       this.loading = true;
       try {
-        const response = await axios.post('http://127.0.0.1:5000/api/login', {
+        const response = await axios.post(MANUAL_LOGIN, {
           email: this.userEmail,
           password: this.userPassword,
         });
@@ -149,7 +154,7 @@ export default {
       
       this.loading = true;
       try {
-        const response = await axios.post('http://127.0.0.1:5000/api/signup', {
+        const response = await axios.post(SIGN_UP, {
           email: this.signupEmail,
           username: this.signupUsername,
           password: this.signupPassword,

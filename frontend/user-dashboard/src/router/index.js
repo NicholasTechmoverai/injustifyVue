@@ -55,7 +55,7 @@ const routes = [
     component: YouPage,
     redirect: () => {
       const userStore = useUserStore();
-      return userStore.userId ? `/you/yls/${userStore.userId}` : "/login"; 
+      return userStore.userId ? `/you/st/561cf156` : "/login"; 
     },
     children: [
       { path: "yls/:userId", name: "LikedSongsPage", component: LikedSongsPage, props: true },
@@ -64,7 +64,7 @@ const routes = [
       { path: "utr/:userId", name: "UserTopArtist", component: UserTopSongs, props: true },
       { path: "tr", name: "TrendingPage", component: TrendingPage },
       { path: "upls/ls/:playlist_id", name: "ActivePLaylist", component: ActivePLaylist, props: true },
-      { path: "st/:playlist_id", name: "YouplayingSong", component: YouplayingSong, props: true },
+      { path: "st/:songId", name: "YouplayingSong", component: YouplayingSong, props: true },
     ],
   }
   

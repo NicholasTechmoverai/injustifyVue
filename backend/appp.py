@@ -15,6 +15,7 @@ from routes.notifications import notifications_bp
 from routes.globalp import global_bp
 from routes.history import history_bp
 from routes.songs import songs_bp
+from routes.stream import stream_bp
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
@@ -32,16 +33,17 @@ CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins for testing
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins='*')
 
 
-socketio.on_namespace(INJUserNamespace('/user'))
+socketio.on_namespace(INJUserNamespace('/inj'))
 
 # Register blueprints
-app.register_blueprint(main_bp, url_prefix='/api')
+app.register_blueprint(main_bp, url_prefix='/')
 app.register_blueprint(profile_bp, url_prefix='/api/profile')
 app.register_blueprint(downloads_bp, url_prefix='/api/downloads')
 app.register_blueprint(notifications_bp, url_prefix='/api/notifications')
 app.register_blueprint(global_bp, url_prefix='/global')
 app.register_blueprint(history_bp, url_prefix='/api/history')
 app.register_blueprint(songs_bp, url_prefix='/api/songs')
+app.register_blueprint(stream_bp, url_prefix='/api/stream')
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)

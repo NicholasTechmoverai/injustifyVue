@@ -23,13 +23,20 @@ export const useUserStore = defineStore('user', {
     },
     setActivePlaylist(playlistId){
       this.activePlaylistId = playlistId;
+    },
+
+    //handle playlist, add song, remove song, etc. methods here
+    setPlaylistSongs(songs) {
+      this.songs =null || [songs]; // Append new songs instead of replacing
+      console.log("stored songs",this.songs); // Log after the state is set
+    
     }
+    
 
   }
 });
 
 //get cookie with user email and name
-
 const cookieName = 'user_info';
 const cookie = document.cookie.split('; ').find(c => c.trim().startsWith(`${cookieName}=`));
 

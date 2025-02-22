@@ -67,10 +67,14 @@ export default {
       loading.value = true;
       try {
         const response = await axios.get(`${BASE_URL}/api/songs/pl/${playlist_id.value}`);
-        console.log("Playlist Songs:", response.data.songs?.songs || []);
+        //console.log("Playlist Songs:", response.data.songs?.songs || []);
 
         songs.value = response.data.songs?.songs || [];
         playlist_name.value = response.data.songs?.playlist_name || "Unknown Playlist";
+
+        //store the songs in userstore
+        userStore.setPlaylistSongs(songs.value);
+
       } catch (error) {
         console.error("API Error:", error);
         songs.value = [];
@@ -91,13 +95,11 @@ export default {
       dropdownOpen.value = false;
     };
 
-    // ✅ Toggle dropdown
     const toggleDropdown = (event) => {
       event.stopPropagation(); // Prevent event bubbling
       dropdownOpen.value = !dropdownOpen.value;
     };
 
-    // ✅ Close dropdown when clicking outside
     const closeDropdownOutside = (event) => {
       if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
         dropdownOpen.value = false;
