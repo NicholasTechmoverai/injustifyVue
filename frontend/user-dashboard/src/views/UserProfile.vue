@@ -1,14 +1,18 @@
 <template>
-  <div v-if="loading" id="loading" >
+  <div v-if="loading" id="loading">
     <ion-icon name="reload-outline"></ion-icon>
   </div>
-  <div id="profileUserInfo" class="MainContainer">
+  <div
+    id="profileUserInfo"
+    class="MainContainer"
+    :class="{ collabsedBig: iscollapsedBig }"
+  >
     <div id="profile-pic">
       <div class="profile-pic-ON">
-        <img 
-          :src="user.picture || defaultProfilePic" 
+        <img
+          :src="user.picture || defaultProfilePic"
           alt="Profile Picture"
-          class="circular-profile_pic" 
+          class="circular-profile_pic"
           @click="triggerFileInput"
         />
       </div>
@@ -57,18 +61,25 @@
     </div>
 
     <!-- Hidden File Input -->
-    <input  type="file" ref="fileInput" accept="image/*" @change="handleFileChange" style="display: none" />
+    <input
+      type="file"
+      ref="fileInput"
+      accept="image/*"
+      @change="handleFileChange"
+      style="display: none"
+    />
   </div>
 </template>
 
 <script>
 import axios from "axios";
 import { ref, computed, onMounted, watch, toRefs } from "vue";
+import { useUserStore } from "@/store/index.js";
 
 export default {
   name: "UserProfile",
   props: {
-    useremail: String, // User email passed as 
+    useremail: String, // User email passed as
   },
   setup(props) {
     const { useremail } = toRefs(props); // Make props reactive
@@ -78,6 +89,7 @@ export default {
     const fileInput = ref(null);
     const loading = ref(false);
     const playlistId = ref(null); // Store playlist ID
+    const userStore = useUserStore();
 
     // Theme handling
     const themeClass = computed(() => {
@@ -94,7 +106,9 @@ export default {
     const fetchUserProfile = async () => {
       loading.value = true;
       try {
-        const response = await axios.get(`http://127.0.0.1:5000/api/profile/${useremail.value}`);
+        const response = await axios.get(
+          `http://127.0.0.1:5000/api/profile/${useremail.value}`
+        );
         user.value = response.data;
         playlistId.value = response.data.playlistId; // Assuming the response contains a playlistId
       } catch (error) {
@@ -120,7 +134,7 @@ export default {
 
     // Handle profile picture change
     const handleFileChange = (event) => {
-      if (user.value.email === useremail.value) { 
+      if (user.value.email === useremail.value) {
         const file = event.target.files[0];
         if (file) {
           user.value.picture = URL.createObjectURL(file);
@@ -158,14 +172,15 @@ export default {
       triggerFileInput,
       handleFileChange,
       saveProfileChanges,
-      playlistId, // Return playlist ID
+      playlistId,
+      iscollapsedBig: computed(() => userStore.iscollapsedBig),
     };
   },
 };
 </script>
 
 <style scoped>
-  h3 {
+h3 {
   color: #2c3e50;
   font-size: 20px;
   font-weight: bold;
@@ -196,7 +211,6 @@ p {
   overflow: hidden;
   border: 3px solid #3498db;
 }
-
 
 .cicircular-profile_pic img {
   width: 100%;
@@ -308,5 +322,4 @@ p {
     align-items: flex-start;
   }
 }
-
 </style>

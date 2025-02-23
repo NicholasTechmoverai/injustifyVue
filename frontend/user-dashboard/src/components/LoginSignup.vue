@@ -21,7 +21,7 @@
               </div>
             </div>
             <button type="submit">Login</button>
-            <div v-if="loading">
+            <div v-if="loading" class="p-loader">
               <div class="loader"></div>
             </div>
             <label>
@@ -61,7 +61,7 @@
               </div>
             </div>
             <button type="submit">Sign Up</button>
-            <div v-if="loading">
+            <div v-if="loading" class="p-loader">
               <div class="loader"></div>
             </div>
           </form>
@@ -356,13 +356,21 @@ input[type='password'],
 
   }
   
-  </style>
-  
-  
 
-  
-  <style scoped>
-  /* 🔷 Modal Background */
+  .p-loader{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: white;
+    color: white;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+  }
   .modal-overlay {
     position: fixed;
     top: 0;

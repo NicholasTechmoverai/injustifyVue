@@ -1,5 +1,5 @@
 <template>
-  <div class="MainContainer">
+  <div class="MainContainer" :class="{ collabsedBig: iscollapsedBig }">
     <h3>Notifications for {{ useremail }}</h3>
     <ul>
       <li v-for="notif in notifications" :key="notif.id">
@@ -16,18 +16,24 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, defineProps } from 'vue';
-import axios from 'axios';
-import socket from '@/services/websocket'; // Use one WebSocket service
+import { ref, onMounted, onUnmounted, defineProps, computed } from "vue";
+import axios from "axios";
+import socket from "@/services/websocket"; // Use one WebSocket service
+import { useUserStore } from "@/store/index.js";
 
-const props = defineProps(['useremail']);
+const props = defineProps(["useremail"]);
 const notifications = ref([]);
 const messages = ref([]);
+
+const userStore = useUserStore();
+const iscollapsedBig = computed(() => userStore.iscollapsedBig);
 
 // Fetch notifications from backend
 const fetchNotifications = async () => {
   try {
-    const response = await axios.get(`http://127.0.0.1:5000/api/notifications/${props.useremail}`);
+    const response = await axios.get(
+      `http://127.0.0.1:5000/api/notifications/${props.useremail}`
+    );
     notifications.value = response.data.notifications;
   } catch (error) {
     console.error("Error fetching notifications:", error);
@@ -38,20 +44,20 @@ onMounted(() => {
   fetchNotifications(); // Initial API fetch
 
   // Listen for WebSocket messages
-  socket.on('message', (data) => {
+  socket.on("message", (data) => {
     messages.value.push(data);
   });
 
   // Listen for real-time notifications
-  socket.on('new_notification', (notif) => {
+  socket.on("new_notification", (notif) => {
     notifications.value.unshift(notif); // Add new notification at top
   });
 
-  socket.emit('join', { user: props.useremail }); // Example event
+  socket.emit("join", { user: props.useremail }); // Example event
 });
 
 onUnmounted(() => {
-  socket.off('message');
-  socket.off('new_notification'); // Cleanup listeners
+  socket.off("message");
+  socket.off("new_notification"); // Cleanup listeners
 });
 </script>

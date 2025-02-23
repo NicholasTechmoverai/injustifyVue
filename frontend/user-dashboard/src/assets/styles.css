@@ -30,24 +30,31 @@ html, body {
 }
 
 .MainContainer {
-  margin-left: 260px;
+  margin-left: 270px;
   transition: all 0.5s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 3px 5px;
   box-sizing: border-box;
-  width: calc(100% - 260px); /* Prevents overflow */
+  width: calc(100% - 270px); /* Prevents overflow */
   min-height: 90vh;
   position: relative;
   max-width: 1500px;
 }
+.collabsedBig{
+  width: calc(100% - 80px ); /* Prevents overflow */
+  margin-left: 80px;
+
+}
+
 
 @media (max-width: 863px) {
   .MainContainer {
-      margin-left: 70px;
-      max-width: 100%; /* Allow full width */
-  }
+      margin-left: 80px;
+      width: calc(100% - 80px ); /* Prevents overflow */
+
+    }
 }
 
 
@@ -159,8 +166,6 @@ color: white;
   }
 }
 
-
-
 .injustifyLogoR{
   font-family: 'Sofia', cursive;
   position: absolute;
@@ -205,4 +210,62 @@ color: white;
     background-size: 8px 100%,8px 4px, 8px 4px,8px 100%,8px 4px,8px 4px,8px 100%,8px 4px,8px 4px;
     background-position: 0 50%,0 calc(0% - 2px),0 calc(100% + 2px),50% 50%,50% calc(0% - 2px),50% calc(100% + 2px),100% 50%,100% calc(0% - 2px),100% calc(100% + 2px);
  }
+ 
+}
+
+
+:root {
+  /* Light Mode (White Theme) */
+  --bg-light-1: #ffffff;  /* Pure white */
+  --bg-light-2: #f8f9fa;  /* Soft gray */
+  --bg-light-3: #ebedf0;  /* Muted white-gray */
+  --bg-light-4: #e3e6ea;  /* Light stone */
+  --bg-light-5: #d9dee3;  /* Slightly darker gray */
+
+  --primary-light: #0056b3;  /* Deep blue */
+  --accent-light-1: #ff9800; /* Warm orange */
+  --accent-light-2: #00897b; /* Teal green */
+  --accent-light-3: #795548; /* Earthy brown */
+  --text-light: #212529;     /* Dark gray for text */
+
+  /* Dark Mode (Dark Theme) */
+  --bg-dark-1: #121212;  /* Deep black */
+  --bg-dark-2: #1e1e1e;  /* Dark gray */
+  --bg-dark-3: #252525;  /* Slightly lighter black */
+  --bg-dark-4: #2e2e2e;  /* Dark stone */
+  --bg-dark-5: #383838;  /* Muted charcoal */
+
+  --primary-dark: #00bcd4;  /* Cyan blue */
+  --accent-dark-1: #ff9800; /* Warm orange */
+  --accent-dark-2: #8e44ad; /* Soft purple */
+  --accent-dark-3: #4caf50; /* Green */
+  --text-dark: #f1f1f1;     /* Light gray for text */
+}
+
+.dark-parent {
+  background-color: var(--bg-dark-1); /* Deep Black */
+  color: var(--text-dark); /* Light Gray */
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.dark-sub {
+  background-color: var(--bg-dark-2); /* Dark Gray */
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid var(--accent-dark-1); /* Warm Orange Accent */
+}
+
+.dark-child {
+  background-color: var(--bg-dark-3); /* Slightly Lighter Black */
+  padding: 10px;
+  border-radius: 5px;
+  border-left: 3px solid var(--accent-dark-2); /* Soft Purple Accent */
+}
+
+.dark-element {
+  background-color: var(--bg-dark-4); /* Charcoal Gray */
+  padding: 8px;
+  border-radius: 4px;
+  border-left: 2px solid var(--accent-dark-3); /* Green Accent */
 }

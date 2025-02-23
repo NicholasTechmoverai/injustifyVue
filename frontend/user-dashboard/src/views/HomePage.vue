@@ -1,40 +1,64 @@
-<template>  
-  <div class="MainContainer">
-    <div id="homepage-header">
+<template>
+  <div class="MainContainer" :class="{ collabsedBig: iscollapsedBig }">
+    <div id="homepage-header" :class="{ 'darktheme-2': isDarkMode }">
       <h3>Videos</h3>
       <p>{{ message }}</p>
-
-      <div v-if="loading.local || loading.youtube || loading.spotify" class="spinner-container">
-        <div class="loader">
-          <p>Loading...</p>
-        </div> 
+      <div
+        v-if="loading.local || loading.youtube || loading.spotify"
+        class="spinner-container"
+      >
+        <h5 class="loader"></h5>
+        <p class="loadert">Loading...</p>
       </div>
 
-      <div>
+      <div :class="{ 'darktheme-1': isDarkMode }">
         <h2>Video Filter</h2>
-        <input type="text" placeholder="Filter Search" v-model="query" />
-        <button @click="reset">Clear</button>
-        <button @click="searchAll">Search</button>
+        <input
+          type="text"
+          placeholder="Filter Search"
+          v-model="query"
+          :class="{ 'darktheme-4': isDarkMode }"
+        />
+        <button @click="reset" :class="{ 'darktheme-3': isDarkMode }">Clear</button>
+        <button @click="searchAll" :class="{ 'darktheme-3': isDarkMode }">Search</button>
       </div>
     </div>
 
     <!-- Video Sections -->
-    <div v-for="(videoList, service) in videoSources" :key="service">
-      <h2>{{ service }} Videos</h2>
+    <div
+      v-for="(videoList, service) in videoSources"
+      :key="service"
+      id="holder"
+      :class="{ 'darktheme-5': isDarkMode }"
+    >
+      <div class="service" :class="{ 'darktheme-1': isDarkMode }">
+        {{ service }} Videos
+        <p v-if="loading[service]" class="loadert" :class="{ 'darktheme-2': isDarkMode }">
+          Loading...
+        </p>
+      </div>
+
       <div v-if="videoList.length" id="videosContainer">
-        <div v-for="video in videoList" :key="video.song_id" class="video-card">
+        <div
+          v-for="video in videoList"
+          :key="video.song_id"
+          class="video-card"
+          :class="{ 'darkthemec-a': isDarkMode }"
+        >
           <div @click="playVideo(video)">
             <img :src="getThumbnail(video, service)" alt="Video Thumbnail" />
             <div>
-              <h4>{{ video.title }}</h4>
-              <p>{{ video.artist }}</p>
+              <h4>{{ getTitle(video, service) }}</h4>
+              <p>{{ getArtist(video, service) }}</p>
             </div>
           </div>
           <div class="video-info-holder">
             <div class="video-Meta-info-holder">
-              <span><i class="fa-solid fa-eye"></i>{{ video.views }}</span> 
-              <span>{{ timeAgo(video.date) || 'many hours ago' }}</span>
-              <span class="video-duration">{{ convertSeconds(video.duration) || '' }}</span>
+              <span><i class="fa-solid fa-eye"></i>{{ video.views }}</span>
+              <span>{{ timeAgo(video.date) || "many hours ago" }}</span>
+              <span class="video-duration">{{
+                convertSeconds(video.duration) || ""
+              }}</span>
             </div>
             <div @click="likeVideo(video)">
               <ion-icon :name="video.liked ? 'heart' : 'heart-outline'"></ion-icon>
@@ -45,48 +69,56 @@
           </div>
         </div>
       </div>
-      <p v-else>No {{ service }} videos found</p>
+      <p v-else class="no-data">
+        No {{ service }} videos found
+        <img src="../assets/no-videos.webp" alt="" />
+      </p>
     </div>
   </div>
 </template>
 
 <script>
+import { computed } from "vue";
 import axios from "axios";
-import { timeAgo } from '@/utils/index';
+import { timeAgo } from "@/utils/index";
 import { getYouTubeThumbnails, getSpotifyThumbnail } from "@/utils/index.js";
+import { useUserStore } from "@/store/index.js";
 
 export default {
   name: "HomePage",
   props: ["useremail"],
-  
+
+  setup() {
+    const userStore = useUserStore();
+
+    return {
+      iscollapsedBig: computed(() => userStore.iscollapsedBig),
+      isDarkMode: computed(() => userStore.isdarkmode),
+    };
+  },
+
   data() {
     return {
       message: "",
       query: "",
-      videos: [], 
-      yt_videos: [], 
-      sp_videos: [], 
-      loading: { local: false, youtube: false, spotify: false },
+      inj_videos: [],
+      yt_videos: [],
+      sp_videos: [],
+      loading: { injustify: false, youtube: false, spotify: false },
       spotifyThumbnails: {}, // Store fetched Spotify thumbnails
     };
   },
-  
+
   computed: {
     videoSources() {
       return {
-        "Local": this.videos,
-        "YouTube": this.yt_videos,
-        "Spotify": this.sp_videos
+        injustify: this.inj_videos,
+        YouTube: this.yt_videos,
+        Spotify: this.sp_videos,
       };
-    }
-  },
-
-  watch: {
-    query() {
-      //this.fetchVideos(); 
     },
   },
-  
+
   async mounted() {
     if (!this.useremail) {
       console.error("User email is undefined");
@@ -100,31 +132,32 @@ export default {
       })
       .catch((error) => console.error("API Error:", error));
 
-    await this.fetchVideos(); 
+    await this.fetchVideos();
     await this.fetchSpotifyThumbnails(); // Preload Spotify thumbnails
   },
 
   methods: {
     reset() {
       this.query = "";
-      this.videos = [];
+      this.inj_videos = [];
       this.yt_videos = [];
       this.sp_videos = [];
       this.spotifyThumbnails = {};
     },
 
-    // Fetch Local Server Videos
     async fetchVideos() {
-      this.loading.local = true;
+      this.loading.injustify = true;
 
       try {
-        const response = await axios.get(`http://127.0.0.1:5000/api/songs/${this.useremail}?search=${this.query}`);
+        const response = await axios.get(
+          `http://127.0.0.1:5000/api/songs/${this.useremail}?search=${this.query}`
+        );
         console.log(response.data);
-        this.videos = response.data.songs || [];
+        this.inj_videos = response.data.songs || [];
       } catch (error) {
         console.error("API Error:", error);
       } finally {
-        this.loading.local = false;
+        this.loading.injustify = false;
       }
     },
 
@@ -145,16 +178,20 @@ export default {
     },
 
     async searchAll() {
-      await this.fetchVideos();       // Search local database
-      await this.searchYouTube();     // Search YouTube
-      await this.searchSpotify();     // Search Spotify
+      await this.fetchVideos(); // Search local database
+      await this.searchYouTube(); // Search YouTube
+      await this.searchSpotify(); // Search Spotify
     },
 
     async pollServiceResults(service, retries = 20, interval = 3000) {
       console.log(`Polling ${service} results for:`, this.query);
       const urls = {
-        youtube: `http://127.0.0.1:5000/api/songs/pol/yt/${this.useremail}?search=${encodeURIComponent(this.query)}`,
-        spotify: `http://127.0.0.1:5000/api/songs/pol/sp/${this.useremail}?search=${encodeURIComponent(this.query)}`
+        youtube: `http://127.0.0.1:5000/api/songs/pol/yt/${
+          this.useremail
+        }?search=${encodeURIComponent(this.query)}`,
+        spotify: `http://127.0.0.1:5000/api/songs/pol/sp/${
+          this.useremail
+        }?search=${encodeURIComponent(this.query)}`,
       };
 
       const url = urls[service];
@@ -207,8 +244,8 @@ export default {
 
     playVideo(video) {
       console.log("Playing video:", video.url);
-      if (video.sourceType === 'youtube') {
-        window.open(video.preservedSrc, '_blank');
+      if (video.sourceType === "youtube") {
+        window.open(video.preservedSrc, "_blank");
       } else {
         let videoPlayer = new Audio(video.preservedSrc);
         videoPlayer.play();
@@ -216,24 +253,24 @@ export default {
     },
 
     likeVideo(video) {
-      console.log('Like video:', video.song_id);
+      console.log("Like video:", video.song_id);
       video.liked = !video.liked;
     },
 
     handleChat(video) {
-      console.log('Chat about video:', video.song_id);
-      this.$emit('open-chat', video.song_id);
+      console.log("Chat about video:", video.song_id);
+      this.$emit("open-chat", video.song_id);
     },
 
     convertSeconds(seconds) {
       if (seconds < 0) {
         return "0s";
       }
-  
+
       const hours = Math.floor(seconds / 3600);
       const minutes = Math.floor((seconds % 3600) / 60);
       const remainingSeconds = seconds % 60;
-  
+
       if (hours > 0) {
         return `${hours}h ${minutes}m ${Math.ceil(remainingSeconds)}s`;
       } else if (minutes > 0) {
@@ -251,6 +288,41 @@ export default {
       }
       return video.thumbnail;
     },
+    getTitle(video, service) {
+      if (service === "YouTube") {
+        let title = video.title;
+
+        // Try different split formats
+        if (title.includes(" - ")) {
+          return title.split(" - ")[1].trim();
+        } else if (title.includes(" | ")) {
+          return title.split(" | ")[0].trim();
+        } else if (title.includes(": ")) {
+          return title.split(": ")[1].trim();
+        } else {
+          return title; // Default
+        }
+      }
+      return video.title;
+    },
+
+    getArtist(video, service) {
+      if (service === "YouTube") {
+        let title = video.title;
+
+        // Try different split formats
+        if (title.includes(" - ")) {
+          return title.split(" - ")[0].trim();
+        } else if (title.includes(" | ")) {
+          return title.split(" | ")[1].trim();
+        } else if (title.includes(": ")) {
+          return title.split(": ")[0].trim();
+        } else {
+          return "Unknown Artist"; // Default
+        }
+      }
+      return video.artist;
+    },
 
     timeAgo,
     getYouTubeThumbnails,
@@ -258,101 +330,300 @@ export default {
 };
 </script>
 
-
 <style scoped>
-
-#videosContainer {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); /* Responsive grid */
-    gap: 10px;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 10px;
-    grid-auto-rows: min-content; /* Ensures height matches content */
-}
-
-/* Default Video Card Styling */
-.video-card {
-  background: #d9d7d7;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-    padding: 10px;
-    border-radius: 5px;
-    transition: all 0.3s ease-in-out;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: auto; /* Ensures height is based on content */
-}
-
-/* Responsive Layout: 3 Columns for Larger Screens */
-@media (min-width: 1024px) {
-    #videosContainer {
-        grid-template-columns: repeat(3, 1fr); /* Exactly 3 columns on large screens */
-    }
-}
-
-/* Responsive Layout: 2 Columns for Tablets */
-@media (max-width: 1023px) {
-    #videosContainer {
-        grid-template-columns: repeat(2, 1fr); /* 2 columns on medium screens */
-    }
-}
-
-/* Responsive Layout: 1 Column for Mobile */
-@media (max-width: 600px) {
-    #videosContainer {
-        grid-template-columns: repeat(1, 1fr); /* 1 column on small screens */
-    }
-}
-
-
-/* Make sure video elements fit inside the card */
-.video-card video {
-    width: 100%;
-    height: auto;
-    border-radius: 5px;
-}
-
-
-.video-card img{
-  min-width: 200px;
-  min-height: 75px;
-  background-color: rgb(78, 77, 77);
-  height: auto;
-  width: 200px;
-  border-radius: 10px;
-}
-.video-card.dark-mode{
-  background-color: var(--dark-foreground);
-}
-
-
-.video-info-holder {
+.no-data {
+  width: 100%;
+  padding: 2rem 0;
+  box-sizing: border-box;
   display: flex;
-  justify-content: space-between;
-}
-.video-Meta-info-holder{
-  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 5px;
-
-}
-#spinner-container{
-  position: absolute;
-  right: 0;
-  background-color: aqua;
-}
-#homepage-header{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding:0 10px;
+  justify-content: center;
   position: sticky;
   top: 0;
-  background-color: rgb(216, 210, 210);
-  z-index: 99;
+
+  img {
+    width: 200px;
+  }
+}
+#videosContainer {
+  gap: 3px;
   width: 100%;
+  margin: 0 auto;
+  columns: 5 200px;
+  padding: 5px 0;
   box-sizing: border-box;
+
+  .video-card {
+    display: inline-block;
+    width: 100%;
+    break-inside: avoid;
+    background: #fff;
+    border: solid 2px #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out, box-shadow 0.5s;
+    box-sizing: border-box;
+    margin: 2px 0;
+
+    &:hover {
+      transform: scale(1.01);
+      box-shadow: 0px 0px 5px black;
+    }
+
+    > div:first-child {
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      transition: filter 0.2s ease-in-out;
+
+      &:hover {
+        filter: brightness(0.9);
+      }
+    }
+
+    h4 {
+      margin: 8px 0 4px;
+      font-size: 1rem;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    p {
+      font-size: 0.9rem;
+      color: #666;
+      text-align: center;
+    }
+
+    .video-info-holder {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 8px;
+      border-top: 1px solid #dad1d1;
+      margin-top: 8px;
+      box-sizing: border-box;
+
+      .video-Meta-info-holder {
+        display: flex;
+        gap: 10px;
+        font-size: 0.85rem;
+        color: #555;
+
+        span {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+      }
+
+      ion-icon {
+        font-size: 1.2rem;
+        color: #666;
+        cursor: pointer;
+        transition: color 0.2s ease-in-out;
+
+        &:hover {
+          color: #007bff;
+        }
+      }
+
+      .video-duration {
+        background: rgba(70, 67, 67, 0.8);
+        color: #fff;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+      }
+    }
+  }
+}
+#holder {
+  width: 100%;
+}
+.service {
+  width: 90%;
+  padding: 5px;
+  background-color: white;
+  box-shadow: 0 0px 10px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  border-radius: 5px;
+  margin: 5px auto;
+}
+
+#homepage-header {
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+  text-align: center;
+  background: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  position: relative;
+  z-index: 99;
+  h3 {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: inherit;
+    margin-bottom: 0.5rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  p {
+    font-size: 1rem;
+    color: inherit;
+    margin-bottom: 1rem;
+  }
+
+  .spinner-container {
+    position: fixed;
+    top: 0;
+    right: 1%;
+    display: flex;
+    justify-content: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+
+    .loadert {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 120px;
+      height: 30px;
+      background: #007bff;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.1);
+        opacity: 0.8;
+      }
+    }
+  }
+
+  div {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05);
+
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: inherit;
+      margin-bottom: 0.8rem;
+    }
+
+    input {
+      width: 80%;
+      max-width: 400px;
+      padding: 0.6rem;
+      font-size: 1rem;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.3s ease-in-out;
+
+      &:focus {
+        border-color: #007bff;
+      }
+    }
+
+    button {
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+      margin-left: 0.5rem;
+      transition: background 0.3s ease-in-out;
+
+      &:first-of-type {
+        background: gray;
+        color: white;
+
+        &:hover {
+          background: darkgray;
+        }
+      }
+
+      &:last-of-type {
+        background: #007bff;
+        color: white;
+
+        &:hover {
+          background: #007bff;
+        }
+      }
+    }
+  }
+}
+/*daark theme*/
+.darktheme-1 {
+  background: #1e1e1e !important;
+  color: #f0f0f0 !important;
+}
+
+/* Dark Theme 2 - Header */
+.darktheme-2 {
+  background: #2c2c2c !important;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  color: #e7e7e7 !important;
+}
+
+/* Dark Theme 3 - Buttons */
+.darktheme-3 {
+  background: #3a3a3a !important;
+  color: #ffffff !important;
+  border: 1px solid #555 !important;
+}
+
+.darktheme-3:hover {
+  background: #505050 !important;
+}
+
+/* Dark Theme 4 - Inputs */
+.darktheme-4 {
+  background: #2a2a2a !important;
+  color: #e0e0e0 !important;
+  border: 1px solid #444 !important;
+}
+
+/* Dark Theme 5 - Video Sections */
+.darktheme-5 {
+  background: #252525 !important;
+  color: #d4d4d4 !important;
+}
+.darkthemec-a {
+  background-color: #333 !important;
+  border: 10px solid #333 !important;
+  color: rgb(203, 203, 203);
+}
+.darkthemec-a .video-info-holder {
+  border-top: 1px solid #444 !important;
+}
+.darkthemec-a .video-duration {
+  background: rgba(28, 27, 27, 0.8) !important;
+  color: #868484 !important;
 }
 </style>

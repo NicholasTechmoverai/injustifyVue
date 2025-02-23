@@ -27,11 +27,17 @@ export const useUserStore = defineStore('user', {
 
     //handle playlist, add song, remove song, etc. methods here
     setPlaylistSongs(songs) {
-      this.songs =null || [songs]; // Append new songs instead of replacing
-      console.log("stored songs",this.songs); // Log after the state is set
+      this.songs =null || [songs]; 
     
+    },
+    
+    setMainContainerWidthMarginLeft(val){
+      this.iscollapsedBig = val;
+    },
+    //set theme
+    setTheme(val) {
+      this.isdarkmode = val;
     }
-    
 
   }
 });

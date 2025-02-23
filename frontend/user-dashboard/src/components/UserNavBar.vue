@@ -1,16 +1,21 @@
-<template >
+<template>
   <aside :class="{ collapsed: !isSidebarOpen }" class="sidecontent">
     <!-- User Info -->
     <div class="userinfo">
-
       <router-link :to="`/profile/${userEmail}`">
         <div class="UnverifiedEmailWarn" v-if="isVerified === 0">
-        <ion-icon name="alert-outline"></ion-icon>
-       </div>
-       <img :src="profilePic || require('@/assets/unknown-filef.png')" alt="Profile" class="circular-profile_pic" />
+          <ion-icon name="alert-outline"></ion-icon>
+        </div>
+        <img
+          :src="profilePic || require('@/assets/unknown-filef.png')"
+          alt="Profile"
+          class="circular-profile_pic"
+        />
       </router-link>
       <div v-if="isSidebarOpen" class="info">
-        <h3><router-link :to="`/profile/${userEmail}`">{{ userName }}</router-link></h3>
+        <h3>
+          <router-link :to="`/profile/${userEmail}`">{{ userName }}</router-link>
+        </h3>
         <p>{{ userEmail }}</p>
       </div>
     </div>
@@ -56,40 +61,49 @@
         </li>
 
         <li>
-            <a class="inline" href="#" @click.prevent="$emit('open-signup')">
-              <ion-icon name="log-in-outline"></ion-icon>
-              <div v-if="isSidebarOpen">Signup/Login</div>
-            </a>
-        
+          <a class="inline" href="#" @click.prevent="$emit('open-signup')">
+            <ion-icon name="log-in-outline"></ion-icon>
+            <div v-if="isSidebarOpen">Signup/Login</div>
+          </a>
         </li>
       </ul>
     </nav>
-
 
     <!-- Sidebar Toggle Button -->
     <button id="sideBartoggle" @click="toggleSidebar">
       <span v-if="isSidebarOpen">❮</span>
       <span v-else>❯</span>
     </button>
-   <div id="sidebarBottom">
-    <h1 class="injustifyLogoR">
-        <ion-icon name="musical-note-outline" v-if="isSidebarOpen" ></ion-icon>
+    <div id="sidebarBottom">
+      <h1 class="injustifyLogoR">
+        <ion-icon name="musical-note-outline" v-if="isSidebarOpen"></ion-icon>
         Injustify
-        <ion-icon name="musical-note-outline" v-if="isSidebarOpen" ></ion-icon>
+        <ion-icon name="musical-note-outline" v-if="isSidebarOpen"></ion-icon>
       </h1>
-    <div class="globalToogle">
-      <label class="toggle ThemeToggle">
-        <span v-if="isSidebarOpen" class="hidden" id="darkthemething"><i class="fa-solid fa-moon"></i> </span>
-        <input  @change="toggleThemes" :checked="isDarkMode" type="checkbox" id="themeToggle" >
-        <span  class="slider  mode-toggle"></span>
-        <span v-if="isSidebarOpen" class="hidden" id="lighthemething"><i class="fa-solid fa-sun"></i> </span>
-      </label>
+      <div class="globalToogle">
+        <label class="toggle ThemeToggle">
+          <span v-if="isSidebarOpen" class="hidden" id="darkthemething"
+            ><i class="fa-solid fa-moon"></i>
+          </span>
+          <input
+            @change="toggleThemes"
+            :checked="isDarkMode"
+            type="checkbox"
+            id="themeToggle"
+          />
+          <span class="slider mode-toggle"></span>
+          <span v-if="isSidebarOpen" class="hidden" id="lighthemething"
+            ><i class="fa-solid fa-sun"></i>
+          </span>
+        </label>
+      </div>
     </div>
-   </div>
   </aside>
 </template>
 
 <script>
+import { useUserStore } from "@/store/index.js";
+
 export default {
   props: {
     userEmail: String,
@@ -100,8 +114,9 @@ export default {
   },
   data() {
     return {
+      userStore: useUserStore(), // ✅ Store is correctly initialized in data()
       isSidebarOpen: true,
-      deviceWidth: window.innerWidth, 
+      deviceWidth: window.innerWidth, // ✅ Initial value set
     };
   },
   mounted() {
@@ -109,16 +124,23 @@ export default {
     window.addEventListener("resize", this.handleResize);
   },
   beforeUnmount() {
-    // Clean up the event listener when the component is destroyed
     window.removeEventListener("resize", this.handleResize);
   },
   methods: {
     toggleSidebar() {
+      const deviceWidth = window.innerWidth;
+
+      if (deviceWidth >= 862 && this.isSidebarOpen) {
+        this.userStore.setMainContainerWidthMarginLeft(true);
+      } else if (deviceWidth >= 862 && !this.isSidebarOpen) {
+        this.userStore.setMainContainerWidthMarginLeft(false);
+      }
+
       this.isSidebarOpen = !this.isSidebarOpen;
     },
     toggleThemes() {
       console.log("Toggled theme in navbar.vue");
-      this.$emit('toggle-theme');
+      this.$emit("toggle-theme");
     },
     defaultSidebarHandler() {
       if (this.deviceWidth < 862) {
@@ -141,9 +163,9 @@ export default {
   position: relative;
   font-size: 1em;
 }
-.injustifyLogoR h1{
+.injustifyLogoR h1 {
   margin: 0;
-  padding:0;
+  padding: 0;
 }
 #sidebarBottom {
   margin-top: auto;
@@ -172,7 +194,7 @@ export default {
   top: 0;
   width: 250px;
   height: 100%;
-  background:linear-gradient(45deg, rgb(25, 23, 53) 40%, rgb(95, 239, 255));
+  background: linear-gradient(45deg, rgb(25, 23, 53) 40%, rgb(95, 239, 255));
   padding: 10px;
   color: rgb(119, 116, 116);
   display: flex;
@@ -205,11 +227,13 @@ export default {
 }
 
 /* Sidebar Links */
-nav{
+nav {
   overflow-y: auto;
   margin-top: 10px !important;
 }
-nav,li,ul{
+nav,
+li,
+ul {
   margin: 0;
   padding: 0;
   text-align: center;
@@ -219,7 +243,6 @@ nav ul {
   padding: 0;
 }
 
-
 /* Styling for the inline div */
 .inline {
   transition: all 0.3s;
@@ -227,12 +250,12 @@ nav ul {
   text-decoration: none;
   display: flex;
   flex-direction: row;
-  margin:5px 0px ;
+  margin: 5px 0px;
   height: 30px;
   background-color: rgba(21, 21, 21, 0.156);
   text-align: center;
   align-items: center;
-  padding: 5px ;
+  padding: 5px;
   border-radius: 5px;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
@@ -242,10 +265,10 @@ nav ul {
   color: white;
   position: relative;
   overflow: hidden;
-  transition:  all 0.5s ease; 
-   border-bottom: 3px solid transparent;
+  transition: all 0.5s ease;
+  border-bottom: 3px solid transparent;
 }
-a{
+a {
   color: inherit;
   text-decoration: inherit;
 }
@@ -267,12 +290,11 @@ a{
   gap: 10px;
   padding-bottom: 10px;
   position: relative;
-  
 }
-.UnverifiedEmailWarn{
-position: relative;
-width: 100%;
-background: #303030;
+.UnverifiedEmailWarn {
+  position: relative;
+  width: 100%;
+  background: #303030;
 }
 .UnverifiedEmailWarn ion-icon {
   font-size: 2.4em !important;
@@ -282,21 +304,19 @@ background: #303030;
   right: -22px;
   top: 0;
   z-index: 101;
-
-
 }
-.userinfo p,h3{
+.userinfo p,
+h3 {
   margin: 0;
   color: white;
   transition: all 0.3s ease-in-out;
   display: -webkit-box; /* Use a flex-like box for line clamping */
-    -webkit-box-orient: vertical; /* Specify vertical stacking of lines */
-    -webkit-line-clamp: 1; /* Allow only two lines */
-    overflow: hidden; /* Hide overflowed text */
-    text-overflow: ellipsis; /* Add ellipsis (...) for overflowing text */
-    word-wrap: normal; /* Prevent forced breaks */
-    width: 200px;
-  
+  -webkit-box-orient: vertical; /* Specify vertical stacking of lines */
+  -webkit-line-clamp: 1; /* Allow only two lines */
+  overflow: hidden; /* Hide overflowed text */
+  text-overflow: ellipsis; /* Add ellipsis (...) for overflowing text */
+  word-wrap: normal; /* Prevent forced breaks */
+  width: 200px;
 }
 
 .circular-profile_pic {
@@ -320,19 +340,20 @@ ion-icon {
   font-weight: bolder;
   margin: 0px 10px;
 }
-.globalToogle{
-  max-width: 150px;background-color: #30303047;
+.globalToogle {
+  max-width: 150px;
+  background-color: #30303047;
   padding: 0px 5px;
   border-radius: 5px;
   margin: 0 auto;
   display: flex;
 }
 
-.globalToogle span{
+.globalToogle span {
   margin: 0 5px;
 }
 
- .router-link-active {
+.router-link-active {
   font-weight: bold;
   text-shadow: 0px 0px 5px rgb(0, 0, 0);
   color: rgb(228, 228, 228); /* Change color for active link */

@@ -1,5 +1,9 @@
 <template>
-  <section id="settings" class="main_tabs MainContainer">
+  <section
+    id="settings"
+    class="main_tabs MainContainer"
+    :class="{ collabsedBig: iscollapsedBig }"
+  >
     <div id="settings-header" class="card">
       <h2>Settings</h2>
       <div id="settings-scroll-select">
@@ -24,25 +28,25 @@
 
             <a href="#">Feedback</a>
           </div>
-
         </div>
       </div>
     </div>
     <div id="settings-body">
-      <router-view></router-view> <!-- Render the child route component here -->
+      <router-view></router-view>
+      <!-- Render the child route component here -->
     </div>
   </section>
 </template>
 
-<script>
-export default {
-  name: "SettingsPage",
-};
+<script setup>
+import { computed } from "vue";
+import { useUserStore } from "@/store/index.js";
+
+const userStore = useUserStore();
+const iscollapsedBig = computed(() => userStore.iscollapsedBig);
 </script>
 
 <style scoped>
-
-
 /* Header Styling */
 #settings-header {
   display: flex;
@@ -144,7 +148,7 @@ export default {
   background: var(--card-background, #ffffff);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   box-sizing: border-box;
-  width:fit-content;
+  width: fit-content;
   width: 650px;
 }
 
