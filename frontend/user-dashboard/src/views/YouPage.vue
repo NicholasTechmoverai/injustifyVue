@@ -6,8 +6,8 @@
       </h1>
       <div class="children">
         <ChildOne />
-        <ChildTwo @toggle-viewPlayersMode="toggleViewPlayersMode" />
-        <ChildThree v-if="viewPlayersMode"  />
+        <ChildTwo :clickedSongId="playSongID" @toggle-viewPlayersMode="toggleViewPlayersMode" />
+        <ChildThree  @play-song="sendId_of_clickedSong" v-if="viewPlayersMode"  />
       </div>
   </div>
 </template>
@@ -18,12 +18,17 @@ import ChildOne from "./YouPageONe.vue";
 import ChildTwo from "./YouPageTwo.vue";
 import ChildThree from "./YouPageThree.vue";
 
-
+const playSongID = ref(null);
 const viewPlayersMode = ref(true);
 
 const toggleViewPlayersMode = () => {
   console.log("Toggled theme in app.vue");
   viewPlayersMode.value = !viewPlayersMode.value;
+};
+
+const sendId_of_clickedSong = (id) => {
+  console.log("Song ID:", id);
+  playSongID.value = id;
 };
 </script>
 

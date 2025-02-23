@@ -1,28 +1,30 @@
-<template> 
+<template>  
   <div class="MainContainer">
     <div id="homepage-header">
-      <div>
       <h3>Videos</h3>
       <p>{{ message }}</p>
-    </div>
-    <div v-if="loading" class="spinner-container">
-      <div class="loader">
-        <p>Loading...</p>
-      </div> 
+
+      <div v-if="loading.local || loading.youtube || loading.spotify" class="spinner-container">
+        <div class="loader">
+          <p>Loading...</p>
+        </div> 
+      </div>
+
+      <div>
+        <h2>Video Filter</h2>
+        <input type="text" placeholder="Filter Search" v-model="query" />
+        <button @click="reset">Clear</button>
+        <button @click="searchAll">Search</button>
+      </div>
     </div>
 
-    <div>
-      <h2>Video Filter</h2>
-      <input type="text" placeholder="Filter Search" v-model="query" />
-      <button @click="reset">Clear</button>
-    </div>
-
-    </div>
-    <div >
-      <div v-if="videos.length" id="videosContainer">
-        <div v-for="video in videos" :key="video.song_id" class="video-card">
+    <!-- Video Sections -->
+    <div v-for="(videoList, service) in videoSources" :key="service">
+      <h2>{{ service }} Videos</h2>
+      <div v-if="videoList.length" id="videosContainer">
+        <div v-for="video in videoList" :key="video.song_id" class="video-card">
           <div @click="playVideo(video)">
-            <img :src="video.thumbnail" alt="Video Thumbnail" />
+            <img :src="getThumbnail(video, service)" alt="Video Thumbnail" />
             <div>
               <h4>{{ video.title }}</h4>
               <p>{{ video.artist }}</p>
@@ -43,7 +45,7 @@
           </div>
         </div>
       </div>
-      <p v-else>No videos found</p>
+      <p v-else>No {{ service }} videos found</p>
     </div>
   </div>
 </template>
@@ -51,7 +53,7 @@
 <script>
 import axios from "axios";
 import { timeAgo } from '@/utils/index';
-
+import { getYouTubeThumbnails, getSpotifyThumbnail } from "@/utils/index.js";
 
 export default {
   name: "HomePage",
@@ -62,17 +64,30 @@ export default {
       message: "",
       query: "",
       videos: [], 
-      loading: false, 
+      yt_videos: [], 
+      sp_videos: [], 
+      loading: { local: false, youtube: false, spotify: false },
+      spotifyThumbnails: {}, // Store fetched Spotify thumbnails
     };
   },
   
+  computed: {
+    videoSources() {
+      return {
+        "Local": this.videos,
+        "YouTube": this.yt_videos,
+        "Spotify": this.sp_videos
+      };
+    }
+  },
+
   watch: {
     query() {
-      this.fetchVideos(); 
+      //this.fetchVideos(); 
     },
   },
   
-  mounted() {
+  async mounted() {
     if (!this.useremail) {
       console.error("User email is undefined");
       return;
@@ -85,79 +100,164 @@ export default {
       })
       .catch((error) => console.error("API Error:", error));
 
-    this.fetchVideos(); 
+    await this.fetchVideos(); 
+    await this.fetchSpotifyThumbnails(); // Preload Spotify thumbnails
   },
 
   methods: {
     reset() {
       this.query = "";
+      this.videos = [];
+      this.yt_videos = [];
+      this.sp_videos = [];
+      this.spotifyThumbnails = {};
     },
 
-    fetchVideos() {
-      this.loading = true; 
+    // Fetch Local Server Videos
+    async fetchVideos() {
+      this.loading.local = true;
 
-      axios
-    .get(`http://127.0.0.1:5000/api/songs/${this.useremail}?search=${this.query}`)
-    .then((response) => {
-      console.log(response.data); // Add this line to log the response
-      this.videos = response.data.songs || [];
-    })
-    .catch((error) => {
-      console.error("API Error:", error);
-    })
-    .finally(() => {
-      this.loading = false;
-    });
+      try {
+        const response = await axios.get(`http://127.0.0.1:5000/api/songs/${this.useremail}?search=${this.query}`);
+        console.log(response.data);
+        this.videos = response.data.songs || [];
+      } catch (error) {
+        console.error("API Error:", error);
+      } finally {
+        this.loading.local = false;
+      }
+    },
 
+    async fetchSpotifyThumbnails() {
+      for (const video of this.sp_videos) {
+        if (!this.spotifyThumbnails[video.url]) {
+          this.spotifyThumbnails[video.url] = await getSpotifyThumbnail(video.url);
+        }
+      }
+    },
+
+    async searchYouTube(retries = 20, interval = 3000) {
+      this.pollServiceResults("youtube", retries, interval);
+    },
+
+    async searchSpotify(retries = 20, interval = 3000) {
+      this.pollServiceResults("spotify", retries, interval);
+    },
+
+    async searchAll() {
+      await this.fetchVideos();       // Search local database
+      await this.searchYouTube();     // Search YouTube
+      await this.searchSpotify();     // Search Spotify
+    },
+
+    async pollServiceResults(service, retries = 20, interval = 3000) {
+      console.log(`Polling ${service} results for:`, this.query);
+      const urls = {
+        youtube: `http://127.0.0.1:5000/api/songs/pol/yt/${this.useremail}?search=${encodeURIComponent(this.query)}`,
+        spotify: `http://127.0.0.1:5000/api/songs/pol/sp/${this.useremail}?search=${encodeURIComponent(this.query)}`
+      };
+
+      const url = urls[service];
+      if (!url) {
+        console.error(`Unknown service: ${service}`);
+        return;
+      }
+
+      this.loading[service] = true;
+
+      const poll = async () => {
+        try {
+          const response = await axios.get(url);
+
+          if (response.status !== 200) {
+            console.error(`${service} server responded with status: ${response.status}`);
+            throw new Error(`${service} Error: ${response.statusText}`);
+          }
+
+          const data = response.data;
+
+          if (data.success) {
+            console.log(`${service} Results:`, data.songs);
+            if (service === "youtube") {
+              this.yt_videos = data.songs;
+            } else {
+              this.sp_videos = data.songs;
+              await this.fetchSpotifyThumbnails(); // Preload Spotify thumbnails
+            }
+            this.loading[service] = false;
+            return;
+          } else {
+            console.log(`${service} Results not ready yet...`);
+          }
+        } catch (error) {
+          console.error(`${service} Polling error:`, error);
+        }
+
+        retries--;
+        if (retries > 0) {
+          setTimeout(poll, interval);
+        } else {
+          console.error(`${service} Polling failed after maximum retries.`);
+          this.loading[service] = false;
+        }
+      };
+
+      poll();
     },
 
     playVideo(video) {
       console.log("Playing video:", video.url);
-      // Play the video using iframe for YouTube or a local player for local videos
       if (video.sourceType === 'youtube') {
         window.open(video.preservedSrc, '_blank');
       } else {
-        let videoPlayer = new Audio(video.preservedSrc); // Or use a video player element for better control
+        let videoPlayer = new Audio(video.preservedSrc);
         videoPlayer.play();
       }
     },
 
     likeVideo(video) {
       console.log('Like video:', video.song_id);
-      // Handle like/unlike functionality here
       video.liked = !video.liked;
-      // Optionally, you could make an API call to update the like status
     },
 
     handleChat(video) {
       console.log('Chat about video:', video.song_id);
-      // Trigger chat UI for the given video
       this.$emit('open-chat', video.song_id);
     },
 
-    timeAgo,
-
     convertSeconds(seconds) {
-    if (seconds < 0) {
-      return 0.0;
-    }
+      if (seconds < 0) {
+        return "0s";
+      }
   
-    const hours = Math.floor(seconds / 3600); // Calculate the number of hours
-    const minutes = Math.floor((seconds % 3600) / 60); // Calculate remaining minutes
-    const remainingSeconds = seconds % 60; // Calculate remaining seconds
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const remainingSeconds = seconds % 60;
   
-    // Format the result as HH:MM:SS or MM:SS
-    if (hours > 0) {
-      return `${hours}h ${minutes}m ${Math.ceil(remainingSeconds)}s`;
-    } else if (minutes > 0) {
-      return `${minutes}m ${Math.ceil(remainingSeconds)}s`;
-    } else {
-      return `${ Math.ceil(remainingSeconds)}s`;
-    }
-  },
+      if (hours > 0) {
+        return `${hours}h ${minutes}m ${Math.ceil(remainingSeconds)}s`;
+      } else if (minutes > 0) {
+        return `${minutes}m ${Math.ceil(remainingSeconds)}s`;
+      } else {
+        return `${Math.ceil(remainingSeconds)}s`;
+      }
+    },
+
+    getThumbnail(video, service) {
+      if (service === "YouTube") {
+        return getYouTubeThumbnails(video.url);
+      } else if (service === "Spotify") {
+        return this.spotifyThumbnails[video.url] || video.thumbnail;
+      }
+      return video.thumbnail;
+    },
+
+    timeAgo,
+    getYouTubeThumbnails,
   },
 };
 </script>
+
 
 <style scoped>
 

@@ -1,6 +1,17 @@
 from flask import Blueprint,Response,request,jsonify
 import mysql.connector
 from config import Config
+import logging
+from utils.sp_handler import search_songs_spotify
+from utils.yt_handler import search_videos_yt
+
+
+import threading
+youtube_results = {}
+spotify_results = {}
+yt_lock = threading.Lock()
+sp_lock = threading.Lock()
+
 songs_bp = Blueprint('songs', __name__)
 
 
@@ -64,8 +75,59 @@ def fetchUserTopSongs(userId, limit=10):
 
 @songs_bp.route('/<user_id>', methods=['GET'])
 def return_fetch_songs(user_id):
-    return jsonify(fetch_songs(user_id, 24, 24, 0 ,None))
+    search = request.args.get('search', '').strip()  # Get 'search' from query parameters
 
+    if search and search.lower() != "null":
+        # Start background threads for YouTube & Spotify searches
+        threading.Thread(target=fetch_youtube_results, args=(search,), daemon=True).start()
+        threading.Thread(target=fetch_spotify_results, args=(search,), daemon=True).start()
+
+
+    return jsonify(fetch_songs(user_id, 24, 0 ,search,None))
+
+def fetch_youtube_results(query):
+    results = search_videos_yt(query)
+    print(f"YouTube results fetched for query '{query}': {results}")
+    with yt_lock:
+        youtube_results[query] = results
+    logging.debug(f"YouTube results saved for query '{query}'")
+    print(f"Current stored YouTube results: {youtube_results.keys()}")  # Debugging
+
+def fetch_spotify_results(query):
+    results = search_songs_spotify(query)
+    with sp_lock:
+        spotify_results[query] = results
+    #print(f"Current stored Spotify results: {spotify_results.keys()}")  # Debugging
+
+
+yt_lock = threading.Lock()
+sp_lock = threading.Lock()
+
+
+@songs_bp.route('pol/yt/<userId>', methods=['GET'])
+def get_yt_results(userId):
+    search_query = request.args.get('search', '').strip()
+
+    with yt_lock:
+        if search_query in youtube_results:
+            return jsonify({"success": True, "songs": youtube_results[search_query]})
+    
+    return jsonify({"success": False, "message": "YouTube results not ready yet"}), 404
+
+
+
+@songs_bp.route('/pol/sp/<userId>', methods=['GET'])
+def get_sp_results(userId):
+    """Returns stored Spotify results for a given query."""
+    search_query = request.args.get('search', '').strip()
+    print(f"Searching for query in YouTube results: '{search_query}'")  # Debug
+    print(f"Available YouTube result keys: {spotify_results.keys()}")  # Debug
+
+    with sp_lock:
+        if search_query in spotify_results:
+            return jsonify({"success": True, "songs": spotify_results[search_query]})
+    
+    return jsonify({"success": False, "message": "Spotify results not ready yet"}), 404
 
 @songs_bp.route('/song/info/<songId>', methods=['GET'])
 def fetch_song_info(songId):

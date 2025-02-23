@@ -55,7 +55,7 @@ const routes = [
     component: YouPage,
     redirect: () => {
       const userStore = useUserStore();
-      return userStore.userId ? `/you/st/561cf156` : "/login"; 
+      return userStore.userId ? `/you/utr/${userStore.userId}` : "/login"; 
     },
     children: [
       { path: "yls/:userId", name: "LikedSongsPage", component: LikedSongsPage, props: true },

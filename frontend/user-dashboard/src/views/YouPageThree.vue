@@ -25,7 +25,7 @@
       </div>
 
       <div id="moststreamedSongsBody">
-        <div v-for="(song, index) in songs" :key="index" class="song-item" :song_id="song.id">
+        <div v-for="(song, index) in songs" :key="index" class="song-item" :song_id="song.song_id" @click="playthis(song.song_id)">
           <img :src="song.thumbnail" alt="Song thumbnail">
           <div class="songTitle">{{ song.title }}</div>
           <div class="songTrendinfo">{{ song.rank }}</div>
@@ -46,7 +46,7 @@ export default {
   props: {
     playlist_id: String,
   },
-  setup(props) {
+  setup(props,{emit}) {
     const userStore = useUserStore();
     const songs = ref([]);
     const playlist_name = ref("");
@@ -106,6 +106,11 @@ export default {
       }
     };
 
+    const playthis = (song_id) => {
+      console.log("Playing song:", song_id);
+      emit("play-song", song_id);
+    };
+
     onMounted(() => {
       document.addEventListener("click", closeDropdownOutside);
     });
@@ -121,7 +126,8 @@ export default {
       dropdownOpen,
       dropdownRef, // ✅ Bind to template
       toggleDropdown,
-      sharePlaylist
+      sharePlaylist,
+      playthis
     };
   },
 };

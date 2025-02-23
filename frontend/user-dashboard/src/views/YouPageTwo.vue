@@ -12,6 +12,7 @@
       <div 
         v-for="(song, index) in availableSongs" 
         :key="song.song_id" 
+        @click="scrollToview($event)"
         class="playingCard card" 
         :class="{ 'viewPlayer': viewPlayersMode, 'activePlayingCard': song.isPlaying, 'PlayerModeActivePlayingCard': viewPlayersMode && song.isPlaying }"
       >
@@ -51,6 +52,7 @@ export default {
   props: {
     songs: Array, // Optional array of songs
     songUrl: String, // Optional single song URL
+    clickedSongId:String,
   },
   setup(props, { emit }) {
     const userStore = useUserStore();
@@ -63,7 +65,8 @@ export default {
     let viewUpdateInterval = null;
     const loading = ref(false);
 
-    // Fetch song if only songUrl is provided
+
+
     watch(
       () => props.songUrl,
       async (newSongUrl) => {
@@ -163,6 +166,9 @@ export default {
       if (currentIndex.value < availableSongs.value.length - 1) {
         togglePlay(++currentIndex.value);
       }
+      else {
+        togglePlay(0);
+      }
     };
 
     // Play previous song
@@ -171,7 +177,39 @@ export default {
       if (currentIndex.value > 0) {
         togglePlay(--currentIndex.value);
       }
+      else {
+        togglePlay(availableSongs.value.length - 1);
+      }
     };
+
+    const changeIndex_v_sondID = (songId) => {
+      if (!availableSongs.value.length) {
+        console.warn("Song list is empty, cannot change index.");
+        return;
+      }
+
+      const newIndex = availableSongs.value.findIndex((s) => s.song_id === songId);
+
+      if (newIndex === -1) {
+        console.error("Song ID not found in playlist:", songId);
+        return;
+      }
+
+      currentIndex.value = newIndex;
+      togglePlay(currentIndex.value);
+    };
+
+    const scrollToview = (event) => {
+      event.currentTarget.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+
+    };
+
+    watch(() => props.clickedSongId, (newSongId) => {
+      if (newSongId && typeof newSongId === "string") {
+        changeIndex_v_sondID(newSongId);
+      }
+    });
+
 
     // Fetch song from API using song URL
     const fetchVideoForPropUrl = async (id) => {
@@ -206,6 +244,7 @@ export default {
       onSongEnd,
       playNext,
       playPrevious,
+      scrollToview
     };
   },
 };
@@ -292,6 +331,8 @@ export default {
     left: 0%;
     z-index: 90;
     box-sizing: border-box;
+    scroll-snap-align: center;
+
 }
 .playingCard:hover{
     box-shadow: 0px 0px 95px rgb(0, 0, 0) !important;

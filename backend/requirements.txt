@@ -3,6 +3,9 @@ flask-cors
 mysql-connector-python
 pymysql
 flask-socketio
-
+pytube
+spotipy
+spotipy
+ google-api-python-client
 
 pip install flask flask-cors mysql-connector-python pymysql flask-socketio eventlet

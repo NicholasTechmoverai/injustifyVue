@@ -7,7 +7,7 @@
   <div id="downloads-Main-container">
     downloads
   <div v-if="downloads.length" id="downloads-container">
-    <div v-for="(download, index) in downloads" :key="index" class="downloading-file card">
+    <div v-for="(download, index) in downloads" :key="download.download_id" class="downloading-file card">
       <!-- File Info -->
       <div class="ghg">
         <div class="dowloadFileInfo">
