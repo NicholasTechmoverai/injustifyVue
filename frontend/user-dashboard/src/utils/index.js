@@ -12,10 +12,10 @@ export function timeAgo(time) {
     //console.log(now , postTime)
     const intervals = [
         { label: "year", seconds: 31536000 },
-        { label: "month", seconds: 2592000 },
-        { label: "day", seconds: 86400 },
-        { label: "hour", seconds: 3600 },
-        { label: "minute", seconds: 60 },
+        { label: "mnth", seconds: 2592000 },
+        { label: "d", seconds: 86400 },
+        { label: "hr", seconds: 3600 },
+        { label: "m", seconds: 60 },
     ];
 
     for (const interval of intervals) {
@@ -66,7 +66,7 @@ async function getSpotifyAccessToken() {
     const data = await response.json();
     if (data.access_token) {
         spotifyToken = data.access_token;
-        tokenExpiration = Date.now() + data.expires_in * 1000; // Set expiration
+        tokenExpiration = Date.now() + data.expires_in * 1000; 
         return spotifyToken;
     } else {
         console.error("Failed to fetch Spotify access token");
@@ -91,7 +91,7 @@ export async function getSpotifyThumbnail(songUrl) {
         return null;
     }
 
-    const token = await getValidSpotifyToken(); // Ensure we have a fresh token
+    const token = await getValidSpotifyToken(); 
 
     const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
         headers: {

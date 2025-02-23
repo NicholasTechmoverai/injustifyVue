@@ -18,7 +18,7 @@
           </ul>
         </div>
       </div>
-      
+
       <!-- Loading State -->
       <div id="moststreamedSongsBody" v-if="loading">
         <p>Loading stream rate data...</p>
@@ -26,20 +26,20 @@
 
       <!-- Stream Rate Data -->
       <div id="moststreamedSongsBody" v-else>
-        <div 
-          v-for="(user, index) in users" 
-          :key="index" 
+        <div
+          v-for="(user, index) in users"
+          :key="index"
           class="user-item"
-          :class="{ 'currentUser': user.userId === userId }"
+          :class="{ currentUser: user.userId === userId }"
         >
           <router-link :to="`/profile/${user.userId}`">
-            <img :src="user.profile_image_url" alt="User Profile" class="profile-img">
+            <img :src="user.profile_image_url" alt="User Profile" class="profile-img" />
           </router-link>
           <div class="user-info">
             <div class="user-name">{{ user.username }}</div>
             <div class="user-rank">Rank: #{{ user.global_rank }}</div>
             <div class="engagement-score">
-                Score: {{ Number(user.engagement_score).toFixed(2) }}
+              Notch: {{ Number(user.engagement_score).toFixed(2) }}
             </div>
           </div>
         </div>
@@ -56,14 +56,14 @@ import { watch, ref, onMounted, onUnmounted } from "vue";
 
 export default {
   props: {
-    userId: { type: String, required: false }, 
+    userId: { type: String, required: false },
   },
   setup(props) {
     const users = ref([]);
     const loading = ref(false);
     const dropdownOpen = ref(false);
     const userStore = useUserStore();
-    const userId = ref(props.userId || userStore.userId); 
+    const userId = ref(props.userId || userStore.userId);
 
     const fetchStreamRate = async () => {
       loading.value = true;
@@ -109,12 +109,15 @@ export default {
       document.removeEventListener("click", closeDropdownOutside);
     });
 
-    watch(() => userStore.userId, async (newUserId) => {
-      if (newUserId) {
-        userId.value = newUserId;
-        await fetchStreamRate();
+    watch(
+      () => userStore.userId,
+      async (newUserId) => {
+        if (newUserId) {
+          userId.value = newUserId;
+          await fetchStreamRate();
+        }
       }
-    });
+    );
 
     return {
       users,
@@ -126,7 +129,6 @@ export default {
   },
 };
 </script>
-
 
 <style scoped>
 .header {
@@ -148,14 +150,12 @@ export default {
   font-size: 20px;
 }
 #moststreamedHeader {
- 
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: #dadada;
   padding: 10px 15px;
   border-radius: 8px;
-
 }
 .profile-img {
   width: 50px;
@@ -176,7 +176,8 @@ export default {
   flex-direction: column;
 }
 
-.user-rank, .engagement-score {
+.user-rank,
+.engagement-score {
   font-size: 14px;
   color: gray;
 }

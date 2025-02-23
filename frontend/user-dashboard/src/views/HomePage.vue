@@ -1,10 +1,10 @@
 <template>
   <div class="MainContainer" :class="{ collabsedBig: iscollapsedBig }">
     <div id="homepage-header" :class="{ 'darktheme-2': isDarkMode }">
-      <h3>Videos</h3>
+      <h1 class="injustifyLogoR">Injustify</h1>
       <p>{{ message }}</p>
       <div
-        v-if="loading.local || loading.youtube || loading.spotify"
+        v-if="loading.injustify || loading.youtube || loading.spotify"
         class="spinner-container"
       >
         <h5 class="loader"></h5>
@@ -36,6 +36,7 @@
         <p v-if="loading[service]" class="loadert" :class="{ 'darktheme-2': isDarkMode }">
           Loading...
         </p>
+        <img v-if="getLogo(service)" :src="getLogo(service)" alt="Service Logo" />
       </div>
 
       <div v-if="videoList.length" id="videosContainer">
@@ -55,7 +56,7 @@
           <div class="video-info-holder">
             <div class="video-Meta-info-holder">
               <span><i class="fa-solid fa-eye"></i>{{ video.views }}</span>
-              <span>{{ timeAgo(video.date) || "many hours ago" }}</span>
+              <span>{{ timeAgo(video.date) || "many hours " }}</span>
               <span class="video-duration">{{
                 convertSeconds(video.duration) || ""
               }}</span>
@@ -137,6 +138,18 @@ export default {
   },
 
   methods: {
+    getLogo(service) {
+      if (service === "injustify") {
+        return new URL("../assets/injustify.png", import.meta.url).href;
+      } else if (service === "YouTube") {
+        return new URL("../assets/youtube-icon2.jpg", import.meta.url).href;
+      } else if (service === "Spotify") {
+        return new URL("../assets/spotify-logo.png", import.meta.url).href;
+      } else {
+        return new URL("../assets/injustify.png", import.meta.url).href;
+      }
+    },
+
     reset() {
       this.query = "";
       this.inj_videos = [];
@@ -366,6 +379,7 @@ export default {
     transition: transform 0.2s ease-in-out, box-shadow 0.5s;
     box-sizing: border-box;
     margin: 2px 0;
+    color: rgb(66, 62, 62);
 
     &:hover {
       transform: scale(1.01);
@@ -457,16 +471,29 @@ export default {
   box-sizing: border-box;
   border-radius: 5px;
   margin: 5px auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "poppins";
+  font-weight: bold;
+  box-sizing: border-box;
+  img {
+    height: 50px;
+    width: auto;
+    filter: drop-shadow(2px 4px 6px rgba(142, 139, 139, 0.5));
+  }
 }
 
 #homepage-header {
   width: 100%;
-  margin: 0 auto;
+  margin: 0 auto !important;
   padding: 1.5rem;
+  padding-top: 0;
   text-align: center;
   background: #f9f9f9;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 0px 10px rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
   position: relative;
   z-index: 99;
@@ -493,6 +520,8 @@ export default {
     justify-content: center;
     justify-content: center;
     margin-bottom: 1.5rem;
+    background-color: rgba(255, 255, 255, 0.169) !important;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.815);
 
     .loadert {
       display: flex;
@@ -520,17 +549,15 @@ export default {
   }
 
   div {
-    margin-top: 1rem;
+    margin-top: 0px;
     padding: 1rem;
-    background: white;
-    border-radius: 8px;
+    border-radius: 0px 0px 10px 10px;
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05);
 
     h2 {
       font-size: 1.4rem;
       font-weight: 600;
       color: inherit;
-      margin-bottom: 0.8rem;
     }
 
     input {
@@ -617,7 +644,7 @@ export default {
 .darkthemec-a {
   background-color: #333 !important;
   border: 10px solid #333 !important;
-  color: rgb(203, 203, 203);
+  color: rgb(172, 168, 168) !important;
 }
 .darkthemec-a .video-info-holder {
   border-top: 1px solid #444 !important;
@@ -625,5 +652,18 @@ export default {
 .darkthemec-a .video-duration {
   background: rgba(28, 27, 27, 0.8) !important;
   color: #868484 !important;
+}
+@media (max-width: 863px) {
+  #homepage-header {
+    padding: 3px;
+    padding-top: 0;
+    div > {
+      margin-top: 0;
+      padding: 0.5rem;
+    }
+  }
+  .injustifyLogoR {
+    font-size: 20px;
+  }
 }
 </style>
