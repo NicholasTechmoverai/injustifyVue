@@ -21,7 +21,7 @@ def globalSearch_spotify(search):
 def search_songs_spotify(query):
     """Fetch Spotify search results for a given query."""
     try:
-        print("Searching Spotify... 🎶")
+        #print("Searching Spotify... 🎶")
 
         results = sp.search(q=query, limit=10, type='track')
         #print(json.dumps(results,indent=4))

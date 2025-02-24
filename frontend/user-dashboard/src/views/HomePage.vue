@@ -305,7 +305,6 @@ export default {
       if (service === "YouTube") {
         let title = video.title;
 
-        // Try different split formats
         if (title.includes(" - ")) {
           return title.split(" - ")[1].trim();
         } else if (title.includes(" | ")) {

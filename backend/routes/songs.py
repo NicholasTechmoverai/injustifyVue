@@ -75,7 +75,7 @@ def fetchUserTopSongs(userId, limit=10):
 
 @songs_bp.route('/<user_id>', methods=['GET'])
 def return_fetch_songs(user_id):
-    search = request.args.get('search', '').strip()  # Get 'search' from query parameters
+    search = request.args.get('search', '').strip()  
 
     if search and search.lower() != "null":
         # Start background threads for YouTube & Spotify searches
@@ -87,11 +87,10 @@ def return_fetch_songs(user_id):
 
 def fetch_youtube_results(query):
     results = search_videos_yt(query)
-    print(f"YouTube results fetched for query '{query}': {results}")
     with yt_lock:
         youtube_results[query] = results
-    logging.debug(f"YouTube results saved for query '{query}'")
-    print(f"Current stored YouTube results: {youtube_results.keys()}")  # Debugging
+    #logging.debug(f"YouTube results saved for query '{query}'")
+    #print(f"Current stored YouTube results: {youtube_results.keys()}")  # Debugging
 
 def fetch_spotify_results(query):
     results = search_songs_spotify(query)
@@ -120,8 +119,9 @@ def get_yt_results(userId):
 def get_sp_results(userId):
     """Returns stored Spotify results for a given query."""
     search_query = request.args.get('search', '').strip()
-    print(f"Searching for query in YouTube results: '{search_query}'")  # Debug
-    print(f"Available YouTube result keys: {spotify_results.keys()}")  # Debug
+    
+    #print(f"Searching for query in YouTube results: '{search_query}'")  # Debug
+    #print(f"Available YouTube result keys: {spotify_results.keys()}")  # Debug
 
     with sp_lock:
         if search_query in spotify_results:

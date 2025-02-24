@@ -13,7 +13,9 @@ from authlib.integrations.flask_client import OAuth
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from utils.userDb import validate_user_login, validate_user, createNewUser, fetch_user
-
+from urllib.parse import urlencode
+import json
+from urllib.parse import urlencode
 from config import Config
 
 main_bp = Blueprint('main', __name__)
@@ -39,7 +41,7 @@ google = oauth.register(
     authorize_url='https://accounts.google.com/o/oauth2/auth',
     access_token_url='https://oauth2.googleapis.com/token',
     redirect_uri='http://127.0.0.1:5000/login/callback',
-    client_kwargs={'scope': 'openid email profile', 'state': True},
+    client_kwargs={'scope': 'openid email profile'},
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
 )
 
@@ -76,14 +78,15 @@ def login():
     useremail = user_data.get('email')
     password = user_data.get('password')
     
-    if useremail and password:
-        user = validate_user_login(useremail, password)
-        if user.get('userFound'):
-            if user.get('truepassword'):
-                return jsonify({"message": "Login successful", "user": user.get('user_info').get('user_info')}), 200
-            return jsonify({"message": "Invalid password. Please try again."}), 401
-        return jsonify({"message": "User not found. Please check your email."}), 404
-    return jsonify({"message": "Please provide both email and password"}), 400
+    if not useremail or not password:
+        return jsonify({"message": "Please provide both email and password"}), 400
+    
+    user = validate_user_login(useremail, password)
+    if user.get('userFound'):
+        if user.get('truepassword'):
+            return jsonify({"message": "Login successful", "user": user.get('user_info')}), 200
+        return jsonify({"message": "Invalid password. Please try again."}), 401
+    return jsonify({"message": "User not found. Please check your email."}), 404
 
 @main_bp.route('/login/google')
 def google_login():
@@ -91,49 +94,49 @@ def google_login():
         redirect_uri = url_for('main.authorize_route', _external=True)
         return google.authorize_redirect(redirect_uri)
     except Exception as e:
-        logging.error(f"Login error: {e}")
-        return "An error occurred during login redirection.", 500
-
-from urllib.parse import urlencode
-import json
-from urllib.parse import urlencode
-
+        logging.error(f"Google login error: {e}")
+        return jsonify({"error": "Login failed"}), 500
 
 @main_bp.route('/login/callback')
 def authorize_route():
     try:
         token = google.authorize_access_token()
         if not token:
-            return redirect(f"{Config.FRONTEND_SERVER}/login?error=access_token_failed")  # Redirect to frontend with error
-        
+            return redirect(f"{Config.FRONTEND_SERVER}/login?error=access_token_failed")
+
+        # Check if user is already logged in (cache token in session)
+        if session.get("user_email"):
+            return redirect(f"{Config.FRONTEND_SERVER}/dashboard")
+
+        # Fetch user info
         user_info_response = google.get('https://www.googleapis.com/oauth2/v1/userinfo')
         if user_info_response.status_code != 200:
             return redirect(f"{Config.FRONTEND_SERVER}/login?error=user_info_failed")
-        
+
         user_info = user_info_response.json()
         user_email = user_info.get('email')
         if not user_email:
             return redirect(f"{Config.FRONTEND_SERVER}/login?error=email_missing")
-        
-        # Fetch user details from database
-        user_data = fetch_user(user_email).get('user_info')
 
-        if not validate_user(user_email):
-            createNewUser(user_info)  # Create new user if not exists
+        # Cache user session to speed up future logins
+        session["user_email"] = user_email
+
+        # Fetch user details from DB (avoid redundant calls)
+        user_data = fetch_user(user_email).get('user_info')
+        if not user_data:  
+            createNewUser(user_info)
             user_data = fetch_user(user_email).get('user_info')
 
-
+        # Redirect to frontend with user info
         query_params = urlencode({
-        "message": "Login successful",
-        "user": json.dumps(user_data, default=str)  # Convert to JSON and serialize datetime
+            "message": "Login successful",
+            "user": json.dumps(user_data, default=str)
         })
-
         return redirect(f"{Config.FRONTEND_SERVER}/dashboard?{query_params}")
-    
+
     except Exception as e:
         logging.error(f"Authorization error: {e}")
         return redirect(f"{Config.FRONTEND_SERVER}/login?error=server_error")
-
 
 
 @main_bp.route('/logout')

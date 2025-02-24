@@ -173,206 +173,278 @@ export default {
 </script>
 
 <style scoped>
+/* General container styling */
 .ghg {
   display: flex;
   flex-direction: row;
   width: 100%;
 }
+
+/* Main Downloads Container */
 #downloads-Main-container {
   display: flex;
   flex-direction: column;
   width: 100%;
   align-items: center;
   justify-content: center;
+  padding: 10px;
+  box-sizing: border-box;
 }
+
+/* Downloads List Container */
 #downloads-container {
   display: flex;
   flex-direction: column-reverse;
   position: relative;
   width: 100%;
-  min-height: 100px; /* Ensures the container has a minimum height */
-  transition: all 0.5s ease;
+  min-height: 120px;
+  transition: transform 0.5s ease-in-out, opacity 0.3s ease;
   justify-content: center;
   align-items: center;
-  font-size: 12px;
-  padding: 5px;
+  font-size: 14px;
+  padding: 10px;
   box-sizing: border-box;
 }
+
+/* Text Styling */
 #downloading-container p,
 span {
-  font-size: 12px;
+  font-size: 14px;
+  color: #333;
 }
+
+/* Individual Download Box */
 .downloading-file {
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-between;
   position: relative;
-  width: 90%;
+  width: 95%;
   max-width: 600px;
-  min-height: 100px; /* Ensures it keeps its height */
-  padding-right: 0;
+  min-height: 120px;
   flex-direction: column;
   height: fit-content;
   gap: 10px;
   margin-top: 20px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
 }
 
+.downloading-file:hover {
+  transform: scale(1.02);
+}
+
+/* File Information */
 .dowloadFileInfo {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  padding: 3px;
+  padding: 5px;
   width: 100%;
+  box-sizing: border-box;
+  color: #222;
 }
 
-.downloading-file .end-handle {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: gold;
-  width: 10px;
-  height: 50%;
-  display: inline-block; /* Maintains width even if empty */
-  border-radius: 3px 0 0 3px;
+.dowloadFileInfo h3 {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 5px;
 }
+
+.dowloadFileInfo p {
+  font-size: 14px;
+  color: #555;
+}
+
+/* File Thumbnail */
 .downloadFilePic {
-  min-width: 70px;
+  min-width: 80px;
   width: 40%;
   max-width: 200px;
   height: 100%;
   position: relative;
 }
+
 .downloadFilePic img {
   max-height: 100%;
   width: 100%;
-  min-height: 130px;
-  height: 100% !important;
+  min-height: 140px;
+  height: auto;
   object-fit: cover;
+  border-radius: 5px;
 }
+
+/* File Resolution Tag */
 .downloadFilePic .downloadFileResolution {
   position: absolute;
-  top: 0;
-  left: -8%;
-  color: inherit;
-  padding: 5px;
-  text-align: center;
-  background-color: rgba(0, 0, 0, 0.818);
-  border-radius: 50%;
-  color: rgb(165, 165, 165);
-  cursor: pointer;
-}
-.dowloadFileInfo h3,
-p {
-  margin: 0;
-  padding: 0;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.dowloadFileInfo h3 {
+  top: 5px;
+  left: 5px;
+  color: white;
+  padding: 5px 10px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  font-size: 12px;
   font-weight: bold;
+  transition: all 0.3s ease-in-out;
 }
 
-.progressAndcancel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 5px;
-  width: 100%;
-  gap: 5px;
+.downloadFilePic .downloadFileResolution:hover {
+  background-color: rgba(0, 0, 0, 0.9);
 }
+
+/* Progress Bar */
 .downloading-file .downloadFileProgressBar {
-  width: 100px;
-  height: 5px;
-  background-color: rgba(0, 0, 0, 0.2);
+  width: 100%;
+  height: 6px;
+  background-color: rgba(0, 0, 0, 0.1);
   border-radius: 3px;
   position: relative;
-  margin: 2px 0;
+  overflow: hidden;
 }
 
 .downloading-file .downloadFileProgressBar .progress-bar {
   height: 100%;
-  background-color: rgb(0, 153, 0);
+  background: linear-gradient(to right, #4caf50, #00e676);
   border-radius: 3px;
   position: absolute;
-  transition: width 0.5s ease;
+  transition: width 0.5s ease-in-out;
   width: 70%;
 }
+
 .downloading-file .downloadFileProgressBar .progress-percentage {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: -10%;
-  color: inherit;
-  font-size: 10px;
+  top: -20px;
+  right: 5px;
+  color: #222;
+  font-size: 12px;
+  font-weight: bold;
 }
+
+/* Control Buttons */
+.progressAndcancel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  width: 100%;
+  gap: 8px;
+  border-top: 1px solid #ddd;
+  box-sizing: border-box;
+  padding-top: 8px;
+}
+.downloadfileMeta p,
+.progressAndcancel p {
+  margin: 0;
+  padding: 0;
+} /* Pause, Retry, Delete Buttons */
+.pauseDownload,
+.retryDownload,
+.cancelDownload {
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: all 0.3s ease-in-out;
+}
+
 .pauseDownload {
-  padding: 5px 10px;
-  border-radius: 3px;
-  cursor: pointer;
-  border: none;
-  outline: none;
-  box-shadow: none;
-  font-size: 20px;
-  color: inherit;
+  background: #f1c40f;
+  color: #fff;
 }
+
+.pauseDownload:hover {
+  background: #d4ac0d;
+}
+
 .retryDownload {
-  padding: 5px 10px;
-  border-radius: 3px;
-  cursor: pointer;
-  border: none;
-  outline: none;
-  box-shadow: none;
-  font-size: 20px;
-  color: inherit;
-}
-.deleteDownload {
-  font-size: 20px !important;
-}
-.progressAndcancel .cancelDownload {
-  color: rgb(147, 7, 7);
-  padding: 5px 10px;
-  border-radius: 3px;
-  cursor: pointer;
-  border: none;
-  outline: none;
-  box-shadow: none;
-  min-width: 25px;
+  background: #3498db;
+  color: #fff;
 }
 
-.progressAndcancel .cancelDownload:hover {
-  color: rgb(255, 4, 4);
+.retryDownload:hover {
+  background: #2980b9;
 }
 
+.cancelDownload {
+  background: #e74c3c;
+  color: #fff;
+}
+
+.cancelDownload:hover {
+  background: #c0392b;
+}
+
+/* Notification Badge */
 #popUp-Noty-count,
 #downloads-count {
   position: absolute;
-  top: 1%;
-  left: 98%;
-  transform: translateX(-100%);
+  top: 5px;
+  right: 5px;
   font-size: 12px;
-  color: inherit;
-  background-color: rgba(248, 0, 0, 0.818);
+  color: #fff;
+  background-color: red;
   border-radius: 50%;
   width: 20px;
   height: 20px;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.5s ease;
+  transition: all 0.5s ease-in-out;
 }
+
+/* No Result Message */
 .No-resultFound-message {
   display: flex;
   align-items: center;
   justify-content: center;
   margin-top: 20px;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
   flex-direction: column;
+  color: #666;
+  text-align: center;
 }
+
 .No-resultFound-message img {
   mix-blend-mode: multiply;
+  max-height: 50vh;
+}
+@media screen and (max-width: 500px) {
+  .ghg {
+    flex-direction: column-reverse; /* Stack items vertically */
+    align-items: center;
+    text-align: center;
+    gap: 15px;
+  }
+
+  .downloadFilePic {
+    width: 100%; /* Full width for better visibility */
+    max-width: 300px; /* Prevent oversized images */
+  }
+
+  .downloadFilePic img {
+    min-height: 120px; /* Ensure image is visible */
+    object-fit: contain; /* Prevents cropping */
+  }
+
+  .dowloadFileInfo {
+    width: 100%;
+    padding: 5px;
+  }
+
+  .dowloadFileInfo h3 {
+    font-size: 16px; /* Adjusted for readability */
+  }
+
+  .dowloadFileInfo p {
+    font-size: 14px; /* Improve readability */
+  }
 }
 </style>
