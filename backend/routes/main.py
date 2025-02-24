@@ -13,9 +13,12 @@ from authlib.integrations.flask_client import OAuth
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from utils.userDb import validate_user_login, validate_user, createNewUser, fetch_user
+from utils.email_notification_sender import send_verify_link
 from urllib.parse import urlencode
 import json
 from urllib.parse import urlencode
+
+
 from config import Config
 
 main_bp = Blueprint('main', __name__)
@@ -41,7 +44,7 @@ google = oauth.register(
     authorize_url='https://accounts.google.com/o/oauth2/auth',
     access_token_url='https://oauth2.googleapis.com/token',
     redirect_uri='http://127.0.0.1:5000/login/callback',
-    client_kwargs={'scope': 'openid email profile'},
+    client_kwargs={'scope': 'openid email profile', 'state': True},
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
 )
 
@@ -78,15 +81,14 @@ def login():
     useremail = user_data.get('email')
     password = user_data.get('password')
     
-    if not useremail or not password:
-        return jsonify({"message": "Please provide both email and password"}), 400
-    
-    user = validate_user_login(useremail, password)
-    if user.get('userFound'):
-        if user.get('truepassword'):
-            return jsonify({"message": "Login successful", "user": user.get('user_info')}), 200
-        return jsonify({"message": "Invalid password. Please try again."}), 401
-    return jsonify({"message": "User not found. Please check your email."}), 404
+    if useremail and password:
+        user = validate_user_login(useremail, password)
+        if user.get('userFound'):
+            if user.get('truepassword'):
+                return jsonify({"message": "Login successful", "user": user.get('user_info').get('user_info')}), 200
+            return jsonify({"message": "Invalid password. Please try again."}), 401
+        return jsonify({"message": "User not found. Please check your email."}), 404
+    return jsonify({"message": "Please provide both email and password"}), 400
 
 @main_bp.route('/login/google')
 def google_login():
@@ -94,10 +96,70 @@ def google_login():
         redirect_uri = url_for('main.authorize_route', _external=True)
         return google.authorize_redirect(redirect_uri)
     except Exception as e:
-        logging.error(f"Google login error: {e}")
-        return jsonify({"error": "Login failed"}), 500
+        logging.error(f"Login error: {e}")
+        return "An error occurred during login redirection.", 500
+
 
 @main_bp.route('/login/callback')
+def authorize_route():
+    try:
+        token = google.authorize_access_token()
+        if not token:
+            return redirect(f"{Config.FRONTEND_SERVER}/login?error=access_token_failed")  # Redirect to frontend with error
+        
+        user_info_response = google.get('https://www.googleapis.com/oauth2/v1/userinfo')
+        if user_info_response.status_code != 200:
+            return redirect(f"{Config.FRONTEND_SERVER}/login?error=user_info_failed")
+        
+        user_info = user_info_response.json()
+        user_email = user_info.get('email')
+        if not user_email:
+            return redirect(f"{Config.FRONTEND_SERVER}/login?error=email_missing")
+        
+        # Fetch user details from database
+        user_data = fetch_user(user_email).get('user_info')
+
+        if not validate_user(user_email):
+            createNewUser(user_info)  # Create new user if not exists
+            user_data = fetch_user(user_email).get('user_info')
+
+
+        query_params = urlencode({
+        "message": "Login successful",
+        "user": json.dumps(user_data, default=str)  # Convert to JSON and serialize datetime
+        })
+
+        return redirect(f"{Config.FRONTEND_SERVER}/dashboard?{query_params}")
+    
+    except Exception as e:
+        logging.error(f"Authorization error: {e}")
+        return redirect(f"{Config.FRONTEND_SERVER}/login?error=server_error")
+
+
+
+@main_bp.route('/logout')
+def logout_route():
+    session.clear()
+    return redirect(url_for('main.noindexx'))
+
+@main_bp.route('/verify-token', methods=['POST'])
+def verify_token():
+    data = request.get_json()
+    token = data.get('token')
+    try:
+        idinfo = id_token.verify_oauth2_token(
+            token,
+            requests.Request(),
+            '507627163964-ms3hgtil3pe68bgsih6n6545t0lh2r91.apps.googleusercontent.com'
+        )
+        user_info = {"email": idinfo['email'], "name": idinfo.get('name', 'Unknown'), "picture": idinfo.get('picture', '')}
+        return jsonify(success=True, user=user_info)
+    except ValueError:
+        return jsonify(success=False), 400
+
+
+
+"""@main_bp.route('/login/callback')
 def authorize_route():
     try:
         token = google.authorize_access_token()
@@ -136,25 +198,72 @@ def authorize_route():
 
     except Exception as e:
         logging.error(f"Authorization error: {e}")
-        return redirect(f"{Config.FRONTEND_SERVER}/login?error=server_error")
+        return redirect(f"{Config.FRONTEND_SERVER}/login?error=server_error")"""
 
 
-@main_bp.route('/logout')
-def logout_route():
-    session.clear()
-    return redirect(url_for('main.noindexx'))
 
-@main_bp.route('/verify-token', methods=['POST'])
-def verify_token():
-    data = request.get_json()
-    token = data.get('token')
-    try:
-        idinfo = id_token.verify_oauth2_token(
-            token,
-            requests.Request(),
-            '507627163964-ms3hgtil3pe68bgsih6n6545t0lh2r91.apps.googleusercontent.com'
-        )
-        user_info = {"email": idinfo['email'], "name": idinfo.get('name', 'Unknown'), "picture": idinfo.get('picture', '')}
-        return jsonify(success=True, user=user_info)
-    except ValueError:
-        return jsonify(success=False), 400
+@main_bp.route('/signup', methods=['POST'])
+def create_user():
+    data = request.json
+    
+    if not data:
+        return jsonify({"error": "No input data provided"}), 400
+
+    email = data.get('email')
+    name = data.get('name')
+    password = data.get('password')
+
+    profile = data.get('picture', '/static/uploads/nouser.jpeg')
+
+    if not email or not name or not password:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    if '@' not in email:
+        return jsonify({
+            'error': 'Invalid email format',
+            'msg_type': 'ERROR'
+        }), 400
+
+    if len(password) < 8:
+        return jsonify({
+            'error': 'Password must be at least 8 characters long',
+            'msg_type': 'ERROR'
+        }), 400
+    
+    # Check if user already exists 
+    if validate_user(email):
+        return jsonify({
+            'error': 'Email already exists Kindly Login or reset password',
+            'msg_type': 'ERROR'
+        }), 400
+
+    user_info = {
+        "email": email,
+        "family_name": "",
+        "given_name": "",
+        "id": "", 
+        "name": name,
+        "password": password, 
+        "picture": profile,
+        "verified_email": False
+    }
+
+    result = send_verify_link(email)
+    if result['success'] == False:
+        return jsonify({
+            'error': 'Failed to send verification email. Please try again later.',
+            'msg_type': 'ERROR'
+        }), 500
+
+    # Create new user as we wait for email verificaion
+    createNewUser(user_info)
+    
+    return jsonify({
+        'error': None,
+        'msg_type': 'SUCCESS',
+        'message': result['message'],
+        'data': {
+            'email': email,
+            'name': name
+        }
+    }), 200

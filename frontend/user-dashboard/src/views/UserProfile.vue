@@ -2,72 +2,75 @@
   <div v-if="loading" id="loading">
     <ion-icon name="reload-outline"></ion-icon>
   </div>
-  <div
-    id="profileUserInfo"
-    class="MainContainer"
-    :class="{ collabsedBig: iscollapsedBig }"
-  >
-    <div id="profile-pic">
-      <div class="profile-pic-ON">
-        <img
-          :src="user.picture || defaultProfilePic"
-          alt="Profile Picture"
-          class="circular-profile_pic"
-          @click="triggerFileInput"
-        />
-      </div>
-      <div class="profile-edit" v-if="user.email === this.useremail">
-        <button type="button" id="saveprofileChanges" @click="saveProfileChanges">
-          <i class="fas fa-pencil-alt"></i> Save
-        </button>
-      </div>
-    </div>
-
-    <div class="profile-info">
-      <h3>{{ user.name }}</h3>
-      <p v-if="user.created_at">User since: {{ formattedDate }}</p>
-
-      <div id="userEmail" class="card" :class="themeClass">
-        <div id="veryEmail">{{ user.email }}</div>
-        <div v-if="user.verified_email === 1" id="verifiedState">
-          <i class="fas fa-check-circle"></i>
-          <span>Verified</span>
+  <div class="MainContainer" :class="{ collabsedBig: iscollapsedBig }">
+    <div id="profileUserInfo" :class="{ 'darktheme-5': isDarkMode }">
+      <div id="profile-pic">
+        <div class="profile-pic-ON">
+          <img
+            :src="user.picture || defaultProfilePic"
+            alt="Profile Picture"
+            class="circular-profile_pic"
+            @click="triggerFileInput"
+          />
+        </div>
+        <div class="profile-edit" v-if="user.email === this.useremail">
+          <button
+            type="button"
+            id="saveprofileChanges"
+            @click="saveProfileChanges"
+            :class="{ 'darktheme-3': isDarkMode }"
+          >
+            <i class="fas fa-pencil-alt"></i> Save
+          </button>
         </div>
       </div>
 
-      <div id="top-songs-Adhered">
-        <div id="top-songs-adheredHeader">
-          <h3>Top Songs Adhered</h3>
+      <div class="profile-info">
+        <h3>{{ user.name }}</h3>
+        <p v-if="user.created_at">User since: {{ formattedDate }}</p>
+
+        <div id="userEmail" class="card" :class="{ 'darktheme-4': isDarkMode }">
+          <div id="veryEmail">{{ user.email }}</div>
+          <div v-if="user.verified_email === 1" id="verifiedState">
+            <i class="fas fa-check-circle"></i>
+            <span>Verified</span>
+          </div>
         </div>
-        <div class="top-songs-list">
-          <div class="artist-socialist">
-            <div class="artist-info">
-              <img src="" />
-              <p>Adele</p>
-              <div class="WheatherVerified">
-                <i class="fas fa-check-circle"></i>
+
+        <div id="top-songs-Adhered" :class="{ 'darktheme-4': isDarkMode }">
+          <div id="top-songs-adheredHeader">
+            <h3>Top Songs Adhered</h3>
+          </div>
+          <div class="top-songs-list">
+            <div class="artist-socialist">
+              <div class="artist-info">
+                <img src="" />
+                <p>Adele</p>
+                <div class="WheatherVerified">
+                  <i class="fas fa-check-circle"></i>
+                </div>
               </div>
-            </div>
-            <div class="thesong">
-              <h4>Easy On Me</h4>
-              <div class="moreOn-song">
-                <div class="songPviews">1.5B views</div>
-                <div class="songpYear">6 months ago</div>
+              <div class="thesong">
+                <h4>Easy On Me</h4>
+                <div class="moreOn-song">
+                  <div class="songPviews">1.5B views</div>
+                  <div class="songpYear">6 months ago</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Hidden File Input -->
-    <input
-      type="file"
-      ref="fileInput"
-      accept="image/*"
-      @change="handleFileChange"
-      style="display: none"
-    />
+      <!-- Hidden File Input -->
+      <input
+        type="file"
+        ref="fileInput"
+        accept="image/*"
+        @change="handleFileChange"
+        style="display: none"
+      />
+    </div>
   </div>
 </template>
 
@@ -174,6 +177,7 @@ export default {
       saveProfileChanges,
       playlistId,
       iscollapsedBig: computed(() => userStore.iscollapsedBig),
+      isDarkMode: computed(() => userStore.isdarkmode),
     };
   },
 };
@@ -200,6 +204,8 @@ p {
   padding: 20px;
   background: #f8f9fa;
   border-radius: 10px;
+  width: 100%;
+  box-sizing: border-box;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 .circular-profile_pic {
@@ -311,6 +317,49 @@ p {
   align-items: center;
   font-size: 24px;
   color: #3498db;
+}
+
+/*daark theme*/
+.darktheme-1 {
+  background: #1e1e1e !important;
+  color: #f0f0f0 !important;
+}
+
+/* Dark Theme 2 - Header */
+.darktheme-2 {
+  background: #2c2c2c !important;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  color: #e7e7e7 !important;
+}
+
+/* Dark Theme 3 - Buttons */
+.darktheme-3 {
+  background: #3a3a3a !important;
+  color: #ffffff !important;
+  border: 1px solid #555 !important;
+}
+
+.darktheme-3:hover {
+  background: #505050 !important;
+}
+
+/* Dark Theme 4 - Inputs */
+.darktheme-4 {
+  background: #2a2a2a !important;
+  color: #e0e0e0 !important;
+  border: 1px solid #444 !important;
+}
+.darktheme-4 h3 {
+  color: #e0e0e0 !important;
+}
+.darktheme-5 h3,
+.darktheme-4 h3 {
+  color: #cfc7c7 !important;
+}
+/* Dark Theme 5 - Video Sections */
+.darktheme-5 {
+  background: #333131 !important;
+  color: #d4d4d4 !important;
 }
 
 @media (max-width: 768px) {

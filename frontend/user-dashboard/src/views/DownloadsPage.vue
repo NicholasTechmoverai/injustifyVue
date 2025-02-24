@@ -10,6 +10,7 @@
           v-for="(download, index) in downloads"
           :key="download.download_id"
           class="downloading-file card"
+          :class="{ 'darktheme-5': isDarkMode }"
         >
           <!-- File Info -->
           <div class="ghg">
@@ -99,6 +100,7 @@ export default {
 
     return {
       iscollapsedBig: computed(() => userStore.iscollapsedBig),
+      isDarkMode: computed(() => userStore.isdarkmode),
     };
   },
 
@@ -130,7 +132,11 @@ export default {
     },
 
     remainingSize(download) {
-      return ((download.contentLength - download.totalSize) / 1024 / 1024).toFixed(2);
+      if (download.contentLength && download.totalSize) {
+        return ((download.contentLength - download.totalSize) / 1024 / 1024).toFixed(2);
+      } else {
+        return 0;
+      }
     },
 
     speed(download) {
@@ -187,7 +193,6 @@ export default {
   width: 100%;
   align-items: center;
   justify-content: center;
-  padding: 10px;
   box-sizing: border-box;
 }
 
@@ -202,11 +207,9 @@ export default {
   justify-content: center;
   align-items: center;
   font-size: 14px;
-  padding: 10px;
-  box-sizing: border-box;
+  padding: 0px !important;
 }
 
-/* Text Styling */
 #downloading-container p,
 span {
   font-size: 14px;
@@ -225,19 +228,19 @@ span {
   flex-direction: column;
   height: fit-content;
   gap: 10px;
-  margin-top: 20px;
-  padding: 15px;
+  margin-top: 10px;
+  padding: 10px;
   background: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease-in-out;
+  transition: all 0.2s ease-in-out;
+  box-sizing: border-box;
 }
 
 .downloading-file:hover {
   transform: scale(1.02);
 }
 
-/* File Information */
 .dowloadFileInfo {
   display: flex;
   flex-direction: column;
@@ -267,6 +270,8 @@ span {
   max-width: 200px;
   height: 100%;
   position: relative;
+  background-color: rgba(121, 109, 109, 0.141);
+  border-radius: 10px;
 }
 
 .downloadFilePic img {
@@ -275,7 +280,6 @@ span {
   min-height: 140px;
   height: auto;
   object-fit: cover;
-  border-radius: 5px;
 }
 
 /* File Resolution Tag */
@@ -415,6 +419,45 @@ span {
 .No-resultFound-message img {
   mix-blend-mode: multiply;
   max-height: 50vh;
+}
+
+/*daark theme*/
+.darktheme-1 {
+  background: #1e1e1e !important;
+  color: #f0f0f0 !important;
+}
+
+/* Dark Theme 2 - Header */
+.darktheme-2 {
+  background: #2c2c2c !important;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  color: #e7e7e7 !important;
+}
+
+/* Dark Theme 3 - Buttons */
+.darktheme-3 {
+  background: #3a3a3a !important;
+  color: #ffffff !important;
+  border: 1px solid #555 !important;
+}
+
+.darktheme-3:hover {
+  background: #505050 !important;
+}
+
+.darktheme-5 {
+  background: #252525 !important;
+  color: #d4d4d4 !important;
+}
+.darktheme-5 .dowloadFileInfo p {
+  color: #999;
+}
+.darktheme-5 span,
+.darktheme-5 .darktheme-5 {
+  color: #646161;
+}
+.darktheme-5 .dowloadFileInfo {
+  color: rgb(191, 179, 179);
 }
 @media screen and (max-width: 500px) {
   .ghg {

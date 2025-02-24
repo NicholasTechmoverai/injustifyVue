@@ -78,7 +78,7 @@ def createNewUser(Userinfo):
         name = Userinfo['name']
         password = Userinfo.get('password', None)
         email = Userinfo['email']
-        profilePicture = Userinfo.get('picture', None)  # Use .get() for optional fields
+        profilePicture = Userinfo.get('picture',  '/static/uploads/nouser.jpeg')
         verified_email = Userinfo.get('verified_email', False)
 
         if not id:
@@ -90,7 +90,7 @@ def createNewUser(Userinfo):
             password = generate_password_hash(password)
 
         if not profilePicture:
-            profilePicture ='static/img/icon3.jpg'  # Default profile picture
+            profilePicture ='/static/uploads/nouser.jpeg'
 
 
         try:
@@ -98,7 +98,7 @@ def createNewUser(Userinfo):
                 "INSERT INTO injustifyUsers (id,email, name, password, picture,verified_email) VALUES (%s,%s, %s, %s, %s,%s)",
                 (id,email, name,password , profilePicture, verified_email)
             )
-            mydb.commit()  # Commit the transaction
+            mydb.commit()  
             return 'success'
         except Exception as err:
             logging.error("Error: %s", err) 

@@ -5,8 +5,9 @@
       <ion-icon name="musical-note-outline"></ion-icon>
     </h1>
     <div class="children">
-      <ChildOne />
+      <ChildOne :isDarkMode="isDarkMode" />
       <ChildTwo
+        :isDarkMode="isDarkMode"
         :clickedSongId="playSongID"
         @toggle-viewPlayersMode="toggleViewPlayersMode"
       />
@@ -36,6 +37,7 @@ const sendId_of_clickedSong = (id) => {
   playSongID.value = id;
 };
 const iscollapsedBig = computed(() => userStore.iscollapsedBig);
+const isDarkMode = computed(() => userStore.isdarkmode);
 </script>
 
 <style scoped>

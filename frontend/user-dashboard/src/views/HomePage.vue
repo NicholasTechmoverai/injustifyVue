@@ -322,7 +322,6 @@ export default {
       if (service === "YouTube") {
         let title = video.title;
 
-        // Try different split formats
         if (title.includes(" - ")) {
           return title.split(" - ")[0].trim();
         } else if (title.includes(" | ")) {
@@ -480,7 +479,7 @@ export default {
   img {
     height: 50px;
     width: auto;
-    filter: drop-shadow(2px 4px 6px rgba(142, 139, 139, 0.5));
+    filter: drop-shadow(5px 0px 2px rgba(142, 139, 139, 0.5));
   }
 }
 
@@ -642,7 +641,7 @@ export default {
 }
 .darkthemec-a {
   background-color: #333 !important;
-  border: 10px solid #333 !important;
+  border: 1px solid #333 !important;
   color: rgb(172, 168, 168) !important;
 }
 .darkthemec-a .video-info-holder {
