@@ -104,115 +104,68 @@
         <div>
           <h2>Reset Password</h2>
           <form @submit.prevent="resetPassword">
-            <input v-model="resetEmail" type="email" placeholder="Enter Email you to seset password" required />
-            <button type="submit" :disabled="!resetEmail.includes('@')"  :class="{ 'disabled-btn':!resetEmail.includes('@')}">Send Reset Code</button>
-            <div v-if="loading" class="p-loader">
-              <div class="loader"></div>
+            <input
+              v-model="resetEmail"
+              type="email"
+              placeholder="Enter your email to reset password"
+              required
+            />
+            <div v-if="!resetApproved">
+              <button
+                @click="sendResendEmail"
+                type="submit"
+                :disabled="!resetEmail.includes('@')"
+                :class="{ 'disabled-btn': !resetEmail.includes('@') }"
+                this.codes=""
+              >
+                Send Reset Code
+              </button>
+              <div v-if="loading" class="p-loader">
+                <div class="loader"></div>
+              </div>
+
+              <p id="password_resetInfo">{{ resetMessage }}</p>
+
+              <div id="six-digit-codeInput">
+                <input
+                  v-for="(code, index) in codes"
+                  :key="index"
+                  v-model="codes[index]"
+                  :id="'digit' + (index + 1)"
+                  :class="{ diggitLoader: verifyCodeloading }"
+                  type="text"
+                  maxlength="1"
+                  pattern="[0-9]"
+                  @input="moveNext($event, index)"
+                  @paste.prevent
+                  @keydown="preventInvalidInput($event)"
+                />
+              </div>
             </div>
 
-            <p>Check your email for a 6-digit reset code.</p>
-
-            <div id="six-digit-codeInput">
-              <input
-                v-model="CheckCode1"
-                id="digit1"
-                type="text"
-                maxlength="1"
-                pattern="[0-9]"
-                @input="moveNext($event, 'digit2')"
-                @paste.prevent
-                @keydown="
-                  (e) =>
-                    e.target.value.length >= 1 && e.key !== 'Backspace'
-                      ? e.preventDefault()
-                      : null
-                "
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-              />
-
-              <input
-                v-model="CheckCode2"
-                id="digit2"
-                type="text"
-                maxlength="1"
-                pattern="[0-9]"
-                @input="moveNext($event, 'digit3')"
-                @paste.prevent
-                @keydown="
-                  (e) =>
-                    e.target.value.length >= 1 && e.key !== 'Backspace'
-                      ? e.preventDefault()
-                      : null
-                "
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-              />
-
-              <input
-                v-model="CheckCode3"
-                id="digit3"
-                type="text"
-                maxlength="1"
-                pattern="[0-9]"
-                @input="moveNext($event, 'digit4')"
-                @paste.prevent
-                @keydown="
-                  (e) =>
-                    e.target.value.length >= 1 && e.key !== 'Backspace'
-                      ? e.preventDefault()
-                      : null
-                "
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-              />
-
-              <input
-                v-model="CheckCode4"
-                id="digit4"
-                type="text"
-                maxlength="1"
-                pattern="[0-9]"
-                @input="moveNext($event, 'digit5')"
-                @paste.prevent
-                @keydown="
-                  (e) =>
-                    e.target.value.length >= 1 && e.key !== 'Backspace'
-                      ? e.preventDefault()
-                      : null
-                "
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-              />
-
-              <input
-                v-model="CheckCode5"
-                id="digit5"
-                type="text"
-                maxlength="1"
-                pattern="[0-9]"
-                @input="moveNext($event, 'digit6')"
-                @paste.prevent
-                @keydown="
-                  (e) =>
-                    e.target.value.length >= 1 && e.key !== 'Backspace'
-                      ? e.preventDefault()
-                      : null
-                "
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-              />
-
-              <input
-                v-model="CheckCode6"
-                id="digit6"
-                type="text"
-                maxlength="1"
-                pattern="[0-9]"
-                @paste.prevent
-                @keydown="
-                  (e) =>
-                    e.target.value.length >= 1 && e.key !== 'Backspace'
-                      ? e.preventDefault()
-                      : null
-                "
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-              />
+            <div v-if="resetApproved" id="resetPasswordInput">
+              <div class="passwordInputs">
+                <input
+                  v-model="signupPassword"
+                  type="password"
+                  placeholder="Password"
+                  required
+                />
+                <div class="showHidePassword" @click="togglePasswordVisibility">
+                  <i class="fa-solid fa-eye"></i>
+                </div>
+              </div>
+              <div class="passwordInputs">
+                <input
+                  v-model="signupConfirmPassword"
+                  type="password"
+                  placeholder="Confirm Password"
+                  required
+                />
+                <div class="showHidePassword" @click="togglePasswordVisibility">
+                  <i class="fa-solid fa-eye"></i>
+                </div>
+              </div>
             </div>
 
             <p>Back to <a @click.prevent="switchMode('login')">Login</a></p>
@@ -226,7 +179,13 @@
 <script>
 import axios from "axios";
 import { useUserStore } from "@/store";
-import { SIGN_UP, AUTH_WITH_GOOGLE, MANUAL_LOGIN } from "@/utils";
+import {
+  SIGN_UP,
+  SEND_EMAIL_RESET_CODES,
+  VERIFY_CODES,
+  AUTH_WITH_GOOGLE,
+  MANUAL_LOGIN,
+} from "@/utils";
 
 export default {
   props: {
@@ -245,13 +204,16 @@ export default {
       rememberMe: false,
       termsAccepted: false,
       loading: false,
+      verifyCodeloading: false,
       message: "",
       success: false,
       isLogin: true,
       isSignup: false,
       isResetPassword: false,
       resetEmail: "",
-      CheckCodes: "",      
+      resetMessage: "Enter you Email to get password reset codes.",
+      codes: ["", "", "", "", "", ""],
+      resetApproved: false,
     };
   },
   methods: {
@@ -259,16 +221,32 @@ export default {
       window.location.href = AUTH_WITH_GOOGLE;
     },
     isValidEmail() {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.resetEmail);
-  },
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.resetEmail);
+    },
     moveNext(event, nextId) {
       const input = event.target;
-
       // Ensure only one digit is entered
       input.value = input.value.replace(/[^0-9]/g, "").slice(0, 1);
 
       if (input.value.length === 1 && nextId) {
         document.getElementById(nextId)?.focus();
+      }
+      this.checkAndVerify();
+    },
+    preventInvalidInput(event) {
+      if (event.target.value.length >= 1 && event.key !== "Backspace") {
+        event.preventDefault();
+      }
+    },
+
+    checkAndVerify() {
+      if (this.codes.every((code) => code.length === 1)) {
+        this.verifyCode();
+      } else {
+        const emptyIndex = this.codes.findIndex((code) => code === "");
+        if (emptyIndex !== -1) {
+          document.getElementById("digit" + (emptyIndex + 1))?.focus();
+        }
       }
     },
 
@@ -299,6 +277,72 @@ export default {
         console.error("Login error:", error);
       }
       this.loading = false;
+    },
+    async sendResendEmail() {
+      if (!this.resetEmail) {
+        this.showMessage("Email is missing !!", false);
+        return;
+      }
+
+      this.loading = true;
+
+      try {
+        const response = await axios.post(SEND_EMAIL_RESET_CODES, {
+          email: this.resetEmail,
+        });
+
+        console.log(response.data);
+        this.resetMessage = response.data.error
+          ? response.data.error
+          : response.data.message;
+        this.showMessage("Enter Codes sent to your Email", true);
+      } catch (error) {
+        console.error("Email resend error:", error);
+
+        this.resetMessage = error.response.data.error
+          ? error.response.data.error
+          : error.response.data.message;
+
+        this.showMessage(this.resetMessage, false);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async verifyCode() {
+      console.log("Verifying:", this.codes.join(""));
+
+      if (!this.resetEmail || !this.codes.join("")) {
+        this.showMessage("Please fill in all fields!", false);
+        return;
+      }
+
+      this.verifyCodeloading = true;
+
+      try {
+        const response = await axios.post(VERIFY_CODES, {
+          email: this.resetEmail,
+          code: this.codes.join(""),
+        });
+
+        console.log("Verification Response:", response.data);
+
+        if (response.data.success) {
+          this.resetApproved = true;
+          this.showMessage("Code verified! You can now reset your password.", true);
+        } else {
+          this.showMessage(response.data.message || "Invalid code. Try again.", false);
+        }
+      } catch (error) {
+        console.error("Verification error:", error);
+        this.showMessage(
+          error.response?.data?.error || "Verification failed. Try again.",
+          false
+        );
+      }
+       finally {
+        this.verifyCodeloading = false; 
+      }
     },
 
     async signup() {
@@ -384,7 +428,7 @@ export default {
   background: #ccc;
   cursor: not-allowed;
 }
-.disabled-btn:hover{
+.disabled-btn:hover {
   background: #ccc !important;
 }
 .active-btn {
@@ -399,12 +443,16 @@ export default {
 #resetPassword {
   width: 100%;
   margin: 10px auto;
-  padding: 20px;
+  padding: 5px;
   border-radius: 10px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
   text-align: center;
   box-sizing: border-box;
   background: #4b484843;
+}
+#resetPassword p {
+  color: #000000;
+  font-weight: bold;
 }
 
 .injustifyLogoR {
@@ -419,7 +467,7 @@ export default {
 form {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 5px;
 }
 
 input {
@@ -482,7 +530,7 @@ p a:hover,
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.751);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -506,7 +554,6 @@ p a:hover,
   color: white !important;
   background-size: cover;
   animation: slideIn 0.5s ease-in-out;
-
 }
 
 .close-btn {
@@ -524,7 +571,7 @@ p a:hover,
   align-items: center;
   justify-content: center;
 }
-.close-btn:hover{
+.close-btn:hover {
   background: #51171749;
 }
 .modal-title {
@@ -548,39 +595,57 @@ p a:hover,
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background-color: white;
+  background-color: rgb(209, 209, 209);
+  box-shadow: 0px 0px 10px black !important;
+  filter: drop-shadow(0px 0px 5px rgb(0, 0, 0));
   align-items: center;
 }
 
-.loader {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  animation: spin 1s linear infinite;
+#password_resetInfo {
+  font-size: 14px;
+  color: #e7dcdc !important;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
+.diggitLoader {
+  width: 15px;
+  height: 15px;
+  border-radius: 50% !important;
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  line-height: 15px;
+  border-radius: 3px;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.diggitLoader:nth-child(1) {
+  animation-delay: 0s;
+}
+.diggitLoader:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.diggitLoader:nth-child(3) {
+  animation-delay: 0.4s;
+}
+.diggitLoader:nth-child(4) {
+  animation-delay: 0.6s;
+}
+.diggitLoader:nth-child(5) {
+  animation-delay: 0.8s;
+}
+.diggitLoader:nth-child(6) {
+  animation-delay: 1s;
+}
+
+@keyframes bounce {
+  0%,
   100% {
-    transform: rotate(360deg);
-  }
-}
-
-
-
-
-@keyframes slideIn {
-  from {
-    transform: translateY(-25px);
-    opacity: 0;
-  }
-  to {
     transform: translateY(0);
-    opacity: 1;
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }
 

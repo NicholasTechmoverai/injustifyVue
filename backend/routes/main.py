@@ -13,7 +13,8 @@ from authlib.integrations.flask_client import OAuth
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from utils.userDb import validate_user_login, validate_user, createNewUser, fetch_user
-from utils.email_notification_sender import send_verify_link
+from utils.auth_securityDb import set_token,validate_token
+from utils.email_notification_sender import send_verify_link,send_codes
 from urllib.parse import urlencode
 import json
 from urllib.parse import urlencode
@@ -23,7 +24,6 @@ from config import Config
 
 main_bp = Blueprint('main', __name__)
 
-# Load environment variables
 load_dotenv()
 EMAIL = os.getenv("EMAIL")
 PASSWORD = os.getenv("EMAIL_PASSWORD")
@@ -267,3 +267,61 @@ def create_user():
             'name': name
         }
     }), 200
+
+
+
+from flask import request, jsonify
+from datetime import datetime, timedelta
+
+@main_bp.route('/send_email_reset_codes', methods=['POST'])
+def send_email_reset_codes():
+    data = request.json
+    email = data.get('email')
+
+    if not email:
+        return jsonify({'error': 'Invalid email address'}), 400
+
+    # Send the verification code
+    response = send_codes(email)
+
+    if not response.get('success'):
+        return jsonify({
+            'error': response.get('message')
+        }), 500
+
+    verification_code = response.get('codes')
+    if not verification_code:
+        return jsonify({
+            'message': 'A valid token exists for this email, check you emil inbox or wait for 30min for token to expire'
+        }), 500
+
+    # Set the token in the database
+    token_response = set_token(email, verification_code)
+
+    if not token_response.get('success'):
+        return jsonify({
+            'error': token_response.get('message', 'A valid token already exists for you. Please check your email or wait 30 minutes.')
+        }), 400  # Change to 400 since it's a client-side issue
+
+    return jsonify({'message': token_response.get('message', 'Token successfully sent!')}), 200
+
+
+@main_bp.route('/verify_reset_codes', methods=['POST'])
+def verify_codes():
+    data = request.json
+    email = data.get('email')
+    code = data.get('code')
+
+    print('verifying EMAIL,' ,email , ' CODES' , code )
+
+    if not email or not code:
+        return jsonify({'error': 'Email and verification codes are required'}), 400
+
+    check_token = validate_token(email, code)
+
+    if not check_token.get('valid'):
+        return jsonify({'error': check_token.get('message')}), 400
+
+    # TODO: Implement password reset functionality (e.g., updating user password in the database)
+    
+    return jsonify({'success': True}), 200

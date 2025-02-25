@@ -1,7 +1,9 @@
 export const BASE_URL = "http://127.0.0.1:5000";
-export const AUTH_WITH_GOOGLE = `${BASE_URL}/login/google`
-export const MANUAL_LOGIN = `${BASE_URL}/login`
-export const SIGN_UP = `${BASE_URL}/signup`
+export const AUTH_WITH_GOOGLE = `${BASE_URL}/login/google`;
+export const MANUAL_LOGIN = `${BASE_URL}/login`;
+export const SIGN_UP = `${BASE_URL}/signup`;
+export const SEND_EMAIL_RESET_CODES = `${BASE_URL}/send_email_reset_codes`;
+export const VERIFY_CODES = `${BASE_URL}/verify_reset_codes`;
 
 
 export function timeAgo(time) {

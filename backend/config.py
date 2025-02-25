@@ -4,7 +4,6 @@ from mysql.connector import pooling
 import pymysql
 
 class Config:
-    # Load sensitive values from environment variables
     SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret_key')
 
     # Secure session cookies in production
@@ -38,7 +37,6 @@ class Config:
         database="injustify"
     )
 
-    # Database connection 
     db_config = {
         "host": os.getenv("DB_HOST", "localhost"),
         "user": os.getenv("DB_USER", "root"),

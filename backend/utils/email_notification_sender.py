@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
 
-from utils.auth_securityDb import set_token
+from utils.auth_securityDb import set_token,check_token_existency
 from config import Config
 
 Frontend_server = Config.FRONTEND_SERVER
@@ -34,7 +34,7 @@ def generate_random_code(length=6):
     return ''.join(str(random.randint(0, 9)) for _ in range(length))
 
 
-def send_codes(addr, custom_message=None, length=6):
+def send_codes(email, custom_message=None, length=6):
     """
     Generates a verification code and sends it via email.
 
@@ -50,8 +50,13 @@ def send_codes(addr, custom_message=None, length=6):
     if not EMAIL or not PASSWORD:
         raise ValueError("Email credentials are not set in the environment variables.")
 
-    if not addr or "@" not in addr:
+    if not email or "@" not in email:
         raise ValueError("Invalid recipient email address.")
+    
+
+    if check_token_existency(email):
+        return {"success": False, "message": "A valid token already exists for the given email."}
+
 
     random_code = generate_random_code(length)
 
@@ -62,12 +67,12 @@ def send_codes(addr, custom_message=None, length=6):
         <body style="font-family: Arial, sans-serif; line-height: 1.5; color: #333;">
         <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">Injustify</h1>
             <p>Dear user,</p>
-            <p>Please use the following code to verify your email (<span style="font-style: italic; color: gray; font-size: 12px;">{addr}</span>):</p>
+            <p>Please use the following code to verify your email or reset password (<span style="font-style: italic; color: gray; font-size: 12px;">{email}</span>):</p>
             <p style="font-size: 24px; font-weight: bold; color: #000; border: 1px solid #ccc; padding: 10px; display: inline-block; background-color: #f9f9f9;">
                 {random_code}
             </p>
             <p><i>(Manually copy the code above and paste it in the verification form.)</i></p>
-            <p>This code will expire in 24 hours. If you need a new code, please request one.</p>
+            <p>This code will expire in 30 minutes. If you need a new code, please request one.</p>
             <p>Sent on {now.strftime('%Y-%m-%d %H:%M:%S')}</p>
             <hr>
             <p>If you did not request this code, please ignore this email.</p>
@@ -81,17 +86,17 @@ def send_codes(addr, custom_message=None, length=6):
     try:
         message = MIMEMultipart("alternative")
         message['From'] = EMAIL
-        message['To'] = addr
+        message['To'] = email
         message['Subject'] = "Verification Code"
         message.attach(MIMEText(email_message, "html"))
 
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as connection:
             connection.starttls()
             connection.login(EMAIL, PASSWORD)
-            connection.sendmail(EMAIL, addr, message.as_string())
+            connection.sendmail(EMAIL, email, message.as_string())
 
-        print(f"Verification code sent to {addr}: {random_code}")
-        return random_code
+        message = (f"Verification code sent to {email}")
+        return {"email":email,"codes": random_code,"success": True,"message": message}
 
     except smtplib.SMTPException as e:
         print(f"SMTP error occurred: {e}")

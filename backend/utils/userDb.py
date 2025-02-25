@@ -78,7 +78,7 @@ def createNewUser(Userinfo):
         name = Userinfo['name']
         password = Userinfo.get('password', None)
         email = Userinfo['email']
-        profilePicture = Userinfo.get('picture',  '/static/uploads/nouser.jpeg')
+        profilePicture = Userinfo.get('picture',  'nouser.jpeg')
         verified_email = Userinfo.get('verified_email', False)
 
         if not id:
@@ -90,7 +90,7 @@ def createNewUser(Userinfo):
             password = generate_password_hash(password)
 
         if not profilePicture:
-            profilePicture ='/static/uploads/nouser.jpeg'
+            profilePicture ='nouser.jpeg'
 
 
         try:
