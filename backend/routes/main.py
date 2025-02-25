@@ -255,7 +255,6 @@ def create_user():
             'msg_type': 'ERROR'
         }), 500
 
-    # Create new user as we wait for email verificaion
     createNewUser(user_info)
     
     return jsonify({
@@ -301,7 +300,7 @@ def send_email_reset_codes():
     if not token_response.get('success'):
         return jsonify({
             'error': token_response.get('message', 'A valid token already exists for you. Please check your email or wait 30 minutes.')
-        }), 400  # Change to 400 since it's a client-side issue
+        }), 400 
 
     return jsonify({'message': token_response.get('message', 'Token successfully sent!')}), 200
 
