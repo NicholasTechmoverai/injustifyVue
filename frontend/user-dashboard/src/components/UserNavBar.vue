@@ -24,7 +24,7 @@
     <nav>
       <ul>
         <li>
-          <router-link class="inline" :to="`/${userEmail}`">
+          <router-link class="inline" :to="`/`">
             <ion-icon name="home-outline"></ion-icon>
             <div v-if="isSidebarOpen">Dashboard</div>
           </router-link>
@@ -243,7 +243,6 @@ nav ul {
   padding: 0;
 }
 
-/* Styling for the inline div */
 .inline {
   transition: all 0.3s;
   color: white;
@@ -273,17 +272,14 @@ a {
   text-decoration: inherit;
 }
 
-/* Hover Effect */
 .inline:hover {
   background: rgba(255, 0, 0, 0.249);
 }
 
-/* Ion Icons Styling */
 .inline ion-icon {
   font-size: 20px;
 }
 
-/* User Info */
 .userinfo {
   display: flex;
   align-items: center;

@@ -58,7 +58,7 @@ def set_token(email, token):
         print(f"Error setting token: {e}")
         return {"success": False, "message": "An error occurred while setting the token."}
 
-def validate_token(email, token):
+def validate_token(email, token ,delete=False):
     if not email or not token:
         return {"valid": False, "message": "Email and token are required."}
 
@@ -80,8 +80,10 @@ def validate_token(email, token):
             return {"valid": False, "message": "Token expired. Please sign up again."}
 
         if token == setToken:
-            mycursor.execute("DELETE FROM verification_sessions WHERE email = %s", (email,))
-            mydb.commit()
+            if delete:
+                mycursor.execute("DELETE FROM verification_sessions WHERE email = %s", (email,))
+                mydb.commit()
+                
             return {"valid": True, "message": "Verification successful!"}
 
         return {"valid": False, "message": "Verification failed. Token mismatch."}

@@ -56,7 +56,49 @@ html, body {
 
     }
 }
+@media (max-width: 480px) {
+  .sidecontent{
+      box-sizing: border-box;
 
+  }
+  .sidecontent .userinfo img{
+      width: 35px;
+      height:35px;
+      margin-left: 0;
+  }
+  .MainContainer {
+    margin-left: 60px;
+    width: calc(100% - 60px );
+
+  }
+  .inline {
+  
+    margin: 5px 0px;
+    height: 30px;
+    text-align: center;
+    align-items: center;
+    padding: 0px !important;
+    
+    position: relative;
+    overflow: hidden;
+  }
+  .collapsed .inline{
+    justify-content: center;
+  }
+  .inline ion-icon {
+    font-size: 20px !important;
+  }
+  .sidecontent {
+    padding:  5px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .globalToogle{
+    transform: scale(0.8);
+  }
+
+}
 
 
   .toggle {

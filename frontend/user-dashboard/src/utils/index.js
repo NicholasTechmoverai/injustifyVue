@@ -1,10 +1,12 @@
-export const BASE_URL = "http://127.0.0.1:5000";
+//export const BASE_URL = "http://127.0.0.1:5000";
+export const BASE_URL = "http://192.168.100.2:5000";
+
 export const AUTH_WITH_GOOGLE = `${BASE_URL}/login/google`;
 export const MANUAL_LOGIN = `${BASE_URL}/login`;
 export const SIGN_UP = `${BASE_URL}/signup`;
 export const SEND_EMAIL_RESET_CODES = `${BASE_URL}/send_email_reset_codes`;
-export const VERIFY_CODES = `${BASE_URL}/verify_reset_codes`;
-
+export const VERIFY_CODES = `${BASE_URL}/verify_reset_codes`
+export const RESET_PASSWORD = `${BASE_URL}/reset_email_password`
 
 export function timeAgo(time) {
     const now = new Date();
@@ -30,7 +32,10 @@ export function timeAgo(time) {
     return "just now";
 }
 
-
+export function  extractYouTubeID(url) {
+    const match = url.match(/[?&]v=([^&]+)/);
+    return match ? match[1] : null;  // Extracts video ID from YouTube URL
+}
 
 export function getYouTubeThumbnails(url) {
     // Optimized regex to match YouTube video ID across all URL formats

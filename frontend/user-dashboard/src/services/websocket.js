@@ -1,6 +1,8 @@
 import { io } from 'socket.io-client';
+import { BASE_URL } from "@/utils/index.js";
 
-const socket = io('http://127.0.0.1:5000/inj', {
+
+const socket = io(`${BASE_URL}/inj`, {
     transports: ['websocket'],  // Ensures WebSocket connection
 });
 

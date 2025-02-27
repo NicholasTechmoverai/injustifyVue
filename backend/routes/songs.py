@@ -3,7 +3,7 @@ import mysql.connector
 from config import Config
 import logging
 from utils.sp_handler import search_songs_spotify
-from utils.yt_handler import search_videos_yt
+from utils.yt_handler_PYTUBE import search_videos_yt
 
 
 import threading

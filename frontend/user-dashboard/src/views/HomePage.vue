@@ -25,6 +25,7 @@
     </div>
 
     <!-- Video Sections -->
+
     <div
       v-for="(videoList, service) in videoSources"
       :key="service"
@@ -41,7 +42,7 @@
 
       <div v-if="videoList.length" id="videosContainer">
         <div
-          v-for="video in videoList"
+          v-for="(video, index) in videoList"
           :key="video.song_id"
           class="video-card"
           :class="{ 'darkthemec-a': isDarkMode }"
@@ -64,8 +65,19 @@
             <div @click="likeVideo(video)">
               <ion-icon :name="video.liked ? 'heart' : 'heart-outline'"></ion-icon>
             </div>
-            <div @click="handleChat(video)">
-              <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+            <div class="dropdown-container">
+              <!-- Skull Icon (Toggle Button) -->
+              <div @click="toggleDropdown(index)" class="skull-icon">
+                <ion-icon name="skull-sharp"></ion-icon>
+              </div>
+
+              <!-- Dropdown Menu -->
+              <div v-if="openIndex === index" class="skull-more-options">
+                <button @click="handleDownload(video.url)">
+                  Injust <ion-icon name="download"></ion-icon>
+                </button>
+                <button>Djust</button>
+              </div>
             </div>
           </div>
         </div>
@@ -75,26 +87,37 @@
         <img src="../assets/no-videos.webp" alt="" />
       </p>
     </div>
+    <!-- Downloads Selector Container -->
+    <DownlodSelectorHold
+      id="streamsContainer"
+      :songId="streamSongID"
+      :streamloading="streamloading"
+      @selected="handleDownloadSelect"
+      v-if="streamloading"
+    />
   </div>
 </template>
 
 <script>
+import DownlodSelectorHold from "./downloadsSelectorContainer.vue";
+
 import { computed } from "vue";
 import axios from "axios";
 import { timeAgo } from "@/utils/index";
 import { getYouTubeThumbnails, getSpotifyThumbnail } from "@/utils/index.js";
 import { useUserStore } from "@/store/index.js";
+import { BASE_URL } from "@/utils/index.js";
 
 export default {
   name: "HomePage",
-  props: ["useremail"],
-
+  components: { DownlodSelectorHold },
   setup() {
     const userStore = useUserStore();
 
     return {
       iscollapsedBig: computed(() => userStore.iscollapsedBig),
       isDarkMode: computed(() => userStore.isdarkmode),
+      useremail: computed(() => userStore.email),
     };
   },
 
@@ -107,6 +130,9 @@ export default {
       sp_videos: [],
       loading: { injustify: false, youtube: false, spotify: false },
       spotifyThumbnails: {}, // Store fetched Spotify thumbnails
+      openIndex: null,
+      streamloading: false,
+      streamSongID: null,
     };
   },
 
@@ -127,7 +153,7 @@ export default {
     }
 
     axios
-      .get(`http://127.0.0.1:5000/api/${this.useremail}`)
+      .get(`${BASE_URL}/api/${this.useremail}`)
       .then((response) => {
         this.message = response.data.message;
       })
@@ -149,6 +175,15 @@ export default {
         return new URL("../assets/injustify.png", import.meta.url).href;
       }
     },
+    toggleDropdown(index) {
+      this.openIndex = this.openIndex === index ? null : index;
+    },
+
+    handleDownload(video) {
+      console.log("Downloading:", video);
+      this.streamSongID = video;
+      this.streamloading = true;
+    },
 
     reset() {
       this.query = "";
@@ -163,7 +198,7 @@ export default {
 
       try {
         const response = await axios.get(
-          `http://127.0.0.1:5000/api/songs/${this.useremail}?search=${this.query}`
+          `${BASE_URL}/api/songs/${this.useremail}?search=${this.query}`
         );
         console.log(response.data);
         this.inj_videos = response.data.songs || [];
@@ -199,10 +234,10 @@ export default {
     async pollServiceResults(service, retries = 20, interval = 3000) {
       console.log(`Polling ${service} results for:`, this.query);
       const urls = {
-        youtube: `http://127.0.0.1:5000/api/songs/pol/yt/${
+        youtube: `${BASE_URL}/api/songs/pol/yt/${
           this.useremail
         }?search=${encodeURIComponent(this.query)}`,
-        spotify: `http://127.0.0.1:5000/api/songs/pol/sp/${
+        spotify: `${BASE_URL}/api/songs/pol/sp/${
           this.useremail
         }?search=${encodeURIComponent(this.query)}`,
       };
@@ -342,6 +377,68 @@ export default {
 </script>
 
 <style scoped>
+#streamsContainer {
+  border-radius: 10px 10px 0 0;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  width: 60%;
+  transform: translateX(-50%);
+  background-color: rgb(89, 85, 85);
+  z-index: 100;
+  padding: 0 10px;
+
+}
+.dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Skull Icon (Toggle Button) */
+.skull-icon {
+  cursor: pointer;
+  font-size: 24px;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease-in-out;
+}
+
+/* Dropdown Menu */
+.skull-more-options {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: rgb(89, 85, 85);
+  box-shadow: 0px 0px 8px rgb(0, 0, 0);
+  border-radius: 0 15px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 140px;
+  border: 1px solid rgb(83, 78, 78);
+  color: white;
+}
+
+/* Dropdown Buttons */
+.skull-more-options button {
+  background: none;
+  border: none;
+  padding: 10px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #faf7f7;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.skull-more-options button:hover {
+  background: #9c9898;
+}
 .no-data {
   width: 100%;
   padding: 2rem 0;

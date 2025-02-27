@@ -16,6 +16,7 @@ from routes.globalp import global_bp
 from routes.history import history_bp
 from routes.songs import songs_bp
 from routes.stream import stream_bp
+from routes.download_streams import d_streams_bp
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
@@ -44,6 +45,9 @@ app.register_blueprint(global_bp, url_prefix='/global')
 app.register_blueprint(history_bp, url_prefix='/api/history')
 app.register_blueprint(songs_bp, url_prefix='/api/songs')
 app.register_blueprint(stream_bp, url_prefix='/api/stream')
+app.register_blueprint(d_streams_bp, url_prefix='/api/download_streams')
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    #socketio.run(app, debug=True)
+    socketio.run(app, host='192.168.100.2', port=5000, debug=True )
+

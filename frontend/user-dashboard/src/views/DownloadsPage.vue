@@ -90,7 +90,7 @@ import axios from "axios";
 import { computed } from "vue";
 import { timeAgo } from "@/utils/index";
 import { useUserStore } from "@/store/index.js";
-
+import { BASE_URL } from "@/utils/index.js";
 export default {
   name: "UserDownloads",
   props: ["useremail"],
@@ -117,9 +117,7 @@ export default {
     async fetchDownloads() {
       this.loading = true;
       try {
-        const response = await axios.get(
-          `http://127.0.0.1:5000/api/downloads/${this.useremail}`
-        );
+        const response = await axios.get(`${BASE_URL}/api/downloads/${this.useremail}`);
         this.downloads = response.data.downloads;
         this.loading = false;
       } catch (error) {

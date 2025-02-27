@@ -9,12 +9,10 @@ class Config:
     # Secure session cookies in production
     SESSION_COOKIE_SECURE = os.getenv("FLASK_ENV") == "production"
 
-    thumbnailPath = "http://127.0.0.1:5000/static/thumbnails"
-    profilePath = "http://127.0.0.1:5000/static/uploads"
-    
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
     SONGS_FOLDER = os.path.join(BASE_DIR,'static', 'songs')
+    
 
     # Allowed CORS origins
     CORS_ALLOWED_ORIGINS = [
@@ -27,7 +25,13 @@ class Config:
     ]
 
     FRONTEND_SERVER = "http://localhost:8080"
+    BACKEND_SERVER = " http://192.168.100.2:5000"
+    #BACKEND_SERVER = "http://127.0.0.1:5000"
 
+    
+    thumbnailPath = f"{BACKEND_SERVER}/static/thumbnails"
+    profilePath = f"{BACKEND_SERVER}/static/uploads"
+    
 
 
     mydb = pymysql.connect(

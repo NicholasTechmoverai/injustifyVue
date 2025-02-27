@@ -12,7 +12,7 @@ from flask import (
 from authlib.integrations.flask_client import OAuth
 from google.oauth2 import id_token
 from google.auth.transport import requests
-from utils.userDb import validate_user_login, validate_user, createNewUser, fetch_user
+from utils.userDb import validate_user_login, validate_user, createNewUser, fetch_user,update_user_password
 from utils.auth_securityDb import set_token,validate_token
 from utils.email_notification_sender import send_verify_link,send_codes
 from urllib.parse import urlencode
@@ -316,11 +316,36 @@ def verify_codes():
     if not email or not code:
         return jsonify({'error': 'Email and verification codes are required'}), 400
 
-    check_token = validate_token(email, code)
+    check_token = validate_token(email, code,False)
 
     if not check_token.get('valid'):
         return jsonify({'error': check_token.get('message')}), 400
 
-    # TODO: Implement password reset functionality (e.g., updating user password in the database)
     
     return jsonify({'success': True}), 200
+
+@main_bp.route('/reset_email_password', methods=['POST'])
+def reset_password():
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
+    code = data.get('code')
+
+    if not email or not password or not code:
+        return jsonify({'error': 'Email, password, and verification codes are required'}), 400
+    
+    check_token = validate_token(email, code,True)
+    if not check_token.get('valid'):
+        print(f"Token validation failed for {email}: {check_token.get('message')}")
+
+        return jsonify({'error': check_token.get('message')}), 400
+    
+    update_password = update_user_password(email, password)
+    if not update_password.get('success'):
+        print(f"Password update failed for {email}: {update_password.get('message')}")
+
+        return jsonify({'error': update_password.get('message')}), 400
+    
+    print(f"Password reset successful for {email}")
+    return jsonify({'success': True}), 200
+

@@ -95,6 +95,7 @@
           <p>Already have an account? <a @click="switchMode('islogin')">Login</a></p>
         </div>
       </div>
+
       <div v-if="isResetPassword" id="resetPassword">
         <h1 class="injustifyLogoR">
           <ion-icon name="musical-note-outline"></ion-icon>Injustify
@@ -103,26 +104,29 @@
 
         <div>
           <h2>Reset Password</h2>
-          <form @submit.prevent="resetPassword">
+
+          <!-- Single loader at the top -->
+          <div v-if="loading" class="p-loader">
+            <div class="loader"></div>
+          </div>
+
+          <div>
             <input
               v-model="resetEmail"
               type="email"
               placeholder="Enter your email to reset password"
               required
             />
+
             <div v-if="!resetApproved">
               <button
                 @click="sendResendEmail"
-                type="submit"
-                :disabled="!resetEmail.includes('@')"
-                :class="{ 'disabled-btn': !resetEmail.includes('@') }"
-                this.codes=""
+                type="button"
+                :disabled="!resetEmail.includes('@') || loading"
+                :class="{ 'disabled-btn': !resetEmail.includes('@') || loading }"
               >
                 Send Reset Code
               </button>
-              <div v-if="loading" class="p-loader">
-                <div class="loader"></div>
-              </div>
 
               <p id="password_resetInfo">{{ resetMessage }}</p>
 
@@ -139,6 +143,9 @@
                   @input="moveNext($event, index)"
                   @paste.prevent
                   @keydown="preventInvalidInput($event)"
+                  autocomplete="off"
+                  readonly
+                  onfocus="this.removeAttribute('readonly')"
                 />
               </div>
             </div>
@@ -166,10 +173,11 @@
                   <i class="fa-solid fa-eye"></i>
                 </div>
               </div>
+              <button @click="resetPassword" type="submit" :disabled="loading" v-html="saveButton"></button>
             </div>
 
             <p>Back to <a @click.prevent="switchMode('login')">Login</a></p>
-          </form>
+          </div>
         </div>
       </div>
     </div>
@@ -185,6 +193,7 @@ import {
   VERIFY_CODES,
   AUTH_WITH_GOOGLE,
   MANUAL_LOGIN,
+  RESET_PASSWORD,
 } from "@/utils";
 
 export default {
@@ -214,6 +223,7 @@ export default {
       resetMessage: "Enter you Email to get password reset codes.",
       codes: ["", "", "", "", "", ""],
       resetApproved: false,
+      saveButton:"Save"
     };
   },
   methods: {
@@ -233,9 +243,20 @@ export default {
       }
       this.checkAndVerify();
     },
+
     preventInvalidInput(event) {
+      const currentIndex = this.codes.findIndex(
+        (code, index) => document.getElementById("digit" + (index + 1)) === event.target
+      );
+
       if (event.target.value.length >= 1 && event.key !== "Backspace") {
         event.preventDefault();
+      }
+
+      if (event.key === "ArrowRight" && currentIndex < this.codes.length - 1) {
+        document.getElementById("digit" + (currentIndex + 2))?.focus();
+      } else if (event.key === "ArrowLeft" && currentIndex > 0) {
+        document.getElementById("digit" + currentIndex)?.focus();
       }
     },
 
@@ -292,9 +313,6 @@ export default {
         });
 
         console.log(response.data);
-        this.resetMessage = response.data.error
-          ? response.data.error
-          : response.data.message;
         this.showMessage("Enter Codes sent to your Email", true);
       } catch (error) {
         console.error("Email resend error:", error);
@@ -339,9 +357,8 @@ export default {
           error.response?.data?.error || "Verification failed. Try again.",
           false
         );
-      }
-       finally {
-        this.verifyCodeloading = false; 
+      } finally {
+        this.verifyCodeloading = false;
       }
     },
 
@@ -384,6 +401,62 @@ export default {
       }
       this.loading = false;
     },
+    async resetPassword() {
+  console.log(
+    " Reset Password for ",
+    this.resetEmail,
+    this.codes.join(""),
+    this.signupPassword,
+    this.signupConfirmPassword
+  );
+
+  if (
+    !this.resetEmail ||
+    !this.codes.join("") ||
+    !this.signupPassword ||
+    !this.signupConfirmPassword
+  ) {
+    this.showMessage("Please fill in all fields!", false);
+    return;
+  }
+
+  if (this.signupPassword !== this.signupConfirmPassword) {
+    this.showMessage("Passwords do not match!", false);
+    return;
+  }
+
+  this.loading = true;
+  try {
+    const response = await axios.post(RESET_PASSWORD, {
+      email: this.resetEmail,
+      code: this.codes.join(""),
+      password: this.signupPassword,
+    });
+
+    if (response.data.success) {
+      this.showMessage(response.data.message, true);
+      this.codes = ["", "", "", "", "", ""];
+      this.resetMessage = "Password Changed Successfully";
+      this.saveButton = `<ion-icon name="checkmark-circle-outline"></ion-icon> Successfully`
+
+      setTimeout(() => {
+        this.resetMessage = "Enter your Email to get password reset codes.";
+        this.resetApproved = false;
+        this.resetEmail = "";
+        this.closeModal();
+      }, 2000);
+    }else{
+      console.log("response from server",response.data)
+    }
+  } catch (error) {
+    this.showMessage("Password reset failed. Try again.", false);
+    console.error("Password reset error:", error);
+  } finally {
+    this.loading = false;
+  }
+},
+
+
 
     switchMode(v) {
       if (v == "signup") {
@@ -599,6 +672,7 @@ p a:hover,
   box-shadow: 0px 0px 10px black !important;
   filter: drop-shadow(0px 0px 5px rgb(0, 0, 0));
   align-items: center;
+  z-index: 101;
 }
 
 #password_resetInfo {

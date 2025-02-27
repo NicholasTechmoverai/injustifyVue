@@ -117,3 +117,32 @@ def validate_user(user_email):
     except Exception as err:
         logging.error("Error: %s", err)
         return False
+
+
+
+def update_user_password(username, password):
+    if not username or not password:
+        return {"success": False, "message": "Username and password are required"}
+    
+    try:
+        password_hash = generate_password_hash(password)
+        mycursor = mydb.cursor()
+
+        query = "UPDATE injustifyUsers SET password = %s WHERE email = %s"
+        mycursor.execute(query, (password_hash, username))
+        mydb.commit()
+        affected_rows = mycursor.rowcount  # Check if any row was updated
+        mycursor.close()
+
+        if affected_rows == 0:
+            return {"success": False, "message": "No user found with that email"}
+
+        return {"success": True, "message": "Password updated successfully"}
+
+    except Exception as db_err:
+        logging.error("Database Error: %s", db_err)
+        return {"success": False, "message": f"Database error: {str(db_err)}"}
+
+    except Exception as err:
+        logging.error("Unexpected Error: %s", err)
+        return {"success": False, "message": f"Unexpected error: {str(err)}"}

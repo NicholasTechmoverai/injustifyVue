@@ -78,7 +78,7 @@
 import axios from "axios";
 import { ref, computed, onMounted, watch, toRefs } from "vue";
 import { useUserStore } from "@/store/index.js";
-
+import { BASE_URL } from "@/utils/index.js";
 export default {
   name: "UserProfile",
   props: {
@@ -109,9 +109,7 @@ export default {
     const fetchUserProfile = async () => {
       loading.value = true;
       try {
-        const response = await axios.get(
-          `http://127.0.0.1:5000/api/profile/${useremail.value}`
-        );
+        const response = await axios.get(`${BASE_URL}/api/profile/${useremail.value}`);
         user.value = response.data;
         playlistId.value = response.data.playlistId; // Assuming the response contains a playlistId
       } catch (error) {
@@ -155,7 +153,7 @@ export default {
       formData.append("user_id", user.value.id); // Fix: Use `user.value.id` instead of `props.userId`
 
       try {
-        await axios.post("http://127.0.0.1:5000/api/update-profile", formData);
+        await axios.post(`${BASE_URL}/api/update-profile`, formData);
         console.log("Profile updated successfully!");
       } catch (error) {
         console.error("Error updating profile:", error);

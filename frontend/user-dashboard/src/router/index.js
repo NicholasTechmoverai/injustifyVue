@@ -26,7 +26,7 @@ import YouplayingSong from "@/views/YouPageTwo.vue";
 
 
 const routes = [
-  { path: '/:useremail', name: 'Home', component: HomePage, props: true },
+  { path: '/', name: 'Home', component: HomePage, },
   { path: '/profile/:useremail', name: 'Profile', component: UserProfile, props: true },
   { path: '/downloads/:useremail', name: 'UserDownloads', component: DownloadsPage, props: true },
   { path: '/history/:useremail', name: 'UserHistory', component: UserHistory, props: true },
