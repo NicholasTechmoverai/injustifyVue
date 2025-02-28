@@ -48,6 +48,6 @@ app.register_blueprint(stream_bp, url_prefix='/api/stream')
 app.register_blueprint(d_streams_bp, url_prefix='/api/download_streams')
 
 if __name__ == '__main__':
-    #socketio.run(app, debug=True)
-    socketio.run(app, host='192.168.100.2', port=5000, debug=True )
+    socketio.run(app, debug=True)
+    #socketio.run(app, host='192.168.100.2', port=5000, debug=True )
 

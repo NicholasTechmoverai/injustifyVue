@@ -1,6 +1,8 @@
 <template>
   <div id="stream-container">
     streams:{{ songId }}
+    {{ info.title }}
+    {{ info.author }}
     <transition name="fade">
       <div v-if="isLoading" class="loader-container">
         <div class="loader"></div>
@@ -11,9 +13,23 @@
       <template v-if="!isLoading">
         <!-- Streams (Visible Once Fetched) -->
         <div v-if="streams.length" class="streams-container">
-          <div v-for="(stream, index) in streams" :key="index" class="stream-item">
-            <span class="stream-name">{{ stream.name }}</span>
+          <div
+            v-for="(stream, index) in streams"
+            :key="index"
+            class="stream-item"
+            @click="ActivateStream($event, stream.itag)"
+          >
+            <span class="stream-name">{{ stream.resolution }}</span>
+            <p>itag:: {{ stream.itag }}</p>
+            <img
+              class="stream-audio-icon"
+              :src="showfileicon(convertResolution(stream.resolution))"
+              loading="lazy"
+              :alt="convertResolution(stream.resolution) + ' icon'"
+            />
+            <p v-if="activeItag === stream.itag "><ion-icon name="checkmark-done-outline"></ion-icon></p>
           </div>
+          <button id="downloadSt" :class="{'disabledDownload': !activeItag}" @click="handleDownload" :disabled="!activeItag">Confirm</button>
         </div>
 
         <!-- No Streams Found -->
@@ -24,7 +40,7 @@
 </template>
 
 <script>
-import { BASE_URL } from "@/utils/index.js";
+import { BASE_URL, showfileicon, convertResolution } from "@/utils/index.js";
 import axios from "axios";
 
 export default {
@@ -35,10 +51,27 @@ export default {
   data() {
     return {
       streams: [],
+      info: {},
       isLoading: this.streamloading, // Use a local state variable
+      showfileicon,
+      convertResolution,
+      activeItag: null,
     };
   },
   methods: {
+    ActivateStream(event, itag) {
+      event.preventDefault();
+      event.stopPropagation();
+      document.querySelectorAll(".active-stream").forEach(st=>{
+        st.classList.remove("active-stream");
+       });
+
+      const clickedElement = event.currentTarget; // Get the clicked element
+      clickedElement.classList.add("active-stream"); // Add class to it
+
+      this.activeItag = itag;
+    },
+
     categorize_url() {
       if (this.songId.includes("youtube" || "youtu")) {
         this.fetchStreams_youtube();
@@ -69,6 +102,7 @@ export default {
           console.log("Fetched Streams:", response.data);
           if (response.data.success) {
             this.streams = response.data.streams;
+            this.info = response.data.info;
           } else {
             console.error("Stream fetch failed:", response.data.message);
           }
@@ -103,12 +137,42 @@ export default {
   watch: {
     songId() {
       this.categorize_url();
+      this.streams = [];
+      this.info = {};
+      this.activeItag = null;
     },
   },
 };
 </script>
 
 <style scoped>
+
+#downloadSt{
+  background-color: #0435bc;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  position: absolute;
+  bottom: 2px;
+  right:0;
+}
+.disabledDownload{
+  background-color: grey !important;
+  cursor: not-allowed !important;
+}
+.active-stream {
+  background-color: rgba(255, 0, 0, 0.5) !important;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.3s ease-in-out;
+  color: #0435bc;
+}
+.stream-audio-icon {
+  height: 30px;
+}
 #stream-container {
   width: 100%;
   padding: 20px;
@@ -126,9 +190,8 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: white;
+  background: rgba(102, 100, 100, 0.541);
   color: black;
-  padding: 15px;
   border-radius: 8px;
   height: auto;
   max-height: 75vh;
@@ -136,11 +199,14 @@ export default {
 }
 .stream-item {
   padding: 8px;
-  background: #0077ff;
+  background: #1d242d;
   color: white;
   border-radius: 5px;
   text-align: center;
   font-weight: bold;
+  display: flex;
+  flex-direction: row !important;
+  align-items: center;
 }
 
 /* No Streams Found */

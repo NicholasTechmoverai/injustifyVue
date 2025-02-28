@@ -2,6 +2,10 @@ from flask import Blueprint,Response,request,jsonify
 from datetime import datetime
 from config import Config
 from typing import Optional, List, Dict, Union
+import asyncio
+
+from utils.yt_handler_YTDLP import download_stream
+from utils.globalDb import insert_download
 
 downloads_bp = Blueprint('downloads', __name__)
 
@@ -96,3 +100,50 @@ def fetch_downloads(
                     "success": False,
                     "downloads": []
                 }
+
+
+
+@downloads_bp.route('/download', methods=['POST'])
+async def download_video():
+    try:
+        data = request.get_json() 
+        url = data.get('url')
+        itag = data.get('itag')
+        filename = data.get('filename')
+        start_byte = int(data.get('start_byte', 0))
+        song_id = data.get('song_id')
+        user_id = data.get('userId')
+        file_size = data.get('file_size')
+        thumbnail = data.get('thumbnailUrl')
+
+
+        if not url or not itag or not filename :
+            return jsonify({"error": "URL, itag, song ID, and filename are required"}), 400
+
+        if user_id and song_id: 
+            insert_download(
+                user_id=user_id,
+                song_id=song_id,
+                file_name=filename,
+                file_format= itag,
+                itag = itag,
+                file_size=file_size,
+                file_source="youtube",
+                thumbnail = thumbnail,
+                user_agent=request.headers.get('User-Agent'),
+                is_partial=(start_byte > 0),
+            )
+
+        content_type = "video/mp4"  # Adjust based on file format
+        response = Response(
+            download_stream(url, itag, start_byte),
+            content_type=content_type,
+            headers={
+                'Content-Disposition': f'attachment; filename="{filename}"'
+            }
+        )
+        return response
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+

@@ -1,5 +1,5 @@
-//export const BASE_URL = "http://127.0.0.1:5000";
-export const BASE_URL = "http://192.168.100.2:5000";
+export const BASE_URL = "http://127.0.0.1:5000";
+//export const BASE_URL = "http://192.168.100.2:5000";
 
 export const AUTH_WITH_GOOGLE = `${BASE_URL}/login/google`;
 export const MANUAL_LOGIN = `${BASE_URL}/login`;
@@ -108,4 +108,71 @@ export async function getSpotifyThumbnail(songUrl) {
 
     const data = await response.json();
     return data.album?.images[0]?.url || null; // Get the highest-quality image
+}
+
+
+export function convertResolution(res) {
+    if (!res) return 'Unknown';  
+
+    // If the resolution is 'audio only', return 'audio'
+    if (res === 'audio only') {
+        return 'audio';
+    }
+
+    // Extract width and height from the resolution string (e.g., "1920x1080")
+    const [width, height] = res.split('x').map(Number);
+    
+    if (width)console.log('')
+
+    if (isNaN(height)) return 'Unknown';  
+
+    // Map common resolutions to labels based on the height
+    switch (height) {
+        case 144: return '144p';
+        case 240: return '240p';
+        case 360: return '360p';
+        case 480: return '480p';
+        case 720: return '720p';
+        case 1080: return '1080p';
+        case 1440: return '2K';  // For 2K resolution
+        case 2160: return '4K';  // For 4K resolution
+        case 4320: return '8K';  // For 8K resolution
+        default:
+            if (height > 2160) return '8K';  // For anything higher than 4K
+            return 'Unknown';  // For unsupported resolutions
+    }
+}
+
+
+
+export function showfileicon(state) {
+    if (!state) return '';
+
+    if (state.includes('p') || state.includes('K')) {
+        if (state === '8K') {
+            return new URL('../assets/8k-img.png', import.meta.url).href;
+        }
+        if (state === '4K') {
+            return new URL('../assets/4k-img.png', import.meta.url).href;
+        }
+        if (state === '2K') {
+            return new URL('../assets/2k-img.png', import.meta.url).href;
+        }
+        if (state === '1080p') {
+            return new URL('../assets/fhd-img.jpg', import.meta.url).href;
+        }
+        if (state === '720p') {
+            return new URL('../assets/hd-img.png', import.meta.url).href;
+        }
+        if (state === '480p' || state === '360p' || state === '240p' || state === '144p') {
+            return new URL('../assets/vid-img.png', import.meta.url).href;
+        }
+        return new URL('../assets/vid-img.png', import.meta.url).href;
+    }
+
+    if (state === 'audio') {
+        return new URL('../assets/icon1.png', import.meta.url).href;
+    }
+
+    return new URL("../assets/injustify.png", import.meta.url).href;
 }

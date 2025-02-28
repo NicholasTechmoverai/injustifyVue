@@ -62,4 +62,24 @@ def update_view_count(songId, userId, songPercentage):
 
     finally:
         mycursor.fetchall() 
-    
+
+
+
+def insert_download(user_id, song_id, file_name, file_format, itag, file_size, file_source, thumbnail, user_agent=None, is_partial=False):
+    """Insert a new download into the database."""
+    try:
+        query = (
+            "INSERT INTO downloads (user_id, song_id, file_name, file_format, itag, file_size, file_source, thumbnail, user_agent, is_partial) "
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        )
+
+        values = (user_id, song_id, file_name, file_format, itag, file_size, file_source, thumbnail, user_agent, is_partial)
+        mycursor.execute(query, values)
+        mydb.commit()
+
+        print("Download inserted successfully!")
+        return mycursor.lastrowid
+
+    except Exception as e:
+        print(f"Error inserting download: {e}")
+        return None

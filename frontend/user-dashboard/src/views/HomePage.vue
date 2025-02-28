@@ -387,7 +387,7 @@ export default {
   background-color: rgb(89, 85, 85);
   z-index: 100;
   padding: 0 10px;
-
+  box-sizing: border-box;
 }
 .dropdown-container {
   position: relative;

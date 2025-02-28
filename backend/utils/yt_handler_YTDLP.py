@@ -1,5 +1,7 @@
 import yt_dlp
 import re
+import requests
+import asyncio
 import threading
 from queue import Queue
 import urllib.parse
@@ -82,3 +84,34 @@ def get_file_size(stream):
     
     size_in_mb = filesize / (1024 * 1024)
     return round(size_in_mb, 3)
+
+
+
+def download_stream(url, itag, start_byte=0):
+    """
+    Download a specific video stream from YouTube AND SEND IN CHUNKS TO ROUTE FN.
+    """
+    try:
+        ydl_opts = {
+            'format': itag,
+            'noplaylist': True,
+            'quiet': True,
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            video_info = ydl.extract_info(url, download=False)
+            video_url = next(
+                (fmt['url'] for fmt in video_info.get('formats', []) if fmt['format_id'] == itag),
+                None
+            )
+            if not video_url:
+                raise ValueError("Stream URL not found.")
+
+        headers = {'Range': f'bytes={start_byte}-'}
+        with requests.get(video_url, headers=headers, stream=True) as stream:
+            stream.raise_for_status()
+            for chunk in stream.iter_content(chunk_size=1024 * 1024):  # 1 MB chunks
+                yield chunk
+
+    except Exception as e:
+        yield f"Error: {e}".encode()
