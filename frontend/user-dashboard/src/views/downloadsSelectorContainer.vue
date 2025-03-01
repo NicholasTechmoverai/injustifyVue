@@ -3,7 +3,7 @@
     streams:{{ songId }}
     {{ info.title }}
     {{ info.author }}
-    <button @click="toogle"><ion-icon name="chevron-down-outline"></ion-icon></button>
+    <button @click="toogleStreamContainer()"><ion-icon name="chevron-down-outline"></ion-icon></button>
     <transition name="fade">
       <div v-if="isLoading" class="loader-container">
         <div class="loader"></div>
@@ -11,7 +11,7 @@
     </transition>
 
     <transition name="fade">
-      <template v-if="!isLoading">
+      <template v-if="isDroppeddown">
         <!-- Streams (Visible Once Fetched) -->
         <div v-if="streams.length" class="streams-container">
           <div
@@ -67,15 +67,19 @@ export default {
     return {
       streams: [],
       info: {},
-      isLoading: this.streamloading, // Use a local state variable
+      isLoading: this.streamloading,
       showfileicon,
       convertResolution,
       activeItag: null,
       activeService: null,
       userId: computed(() => userStore.userId),
+      isDroppeddown:false,
     };
   },
   methods: {
+    toogleStreamContainer(){
+      this.isDroppeddown =!this.isDroppeddown;
+    },
     ActivateStream(event, itag) {
       event.preventDefault();
       event.stopPropagation();
@@ -83,13 +87,14 @@ export default {
         st.classList.remove("active-stream");
       });
 
-      const clickedElement = event.currentTarget; // Get the clicked element
-      clickedElement.classList.add("active-stream"); // Add class to it
+      const clickedElement = event.currentTarget;
+      clickedElement.classList.add("active-stream");
 
       this.activeItag = itag;
     },
 
     categorize_url() {
+      this.isDroppeddown = false;
       if (this.songId.includes("youtube" || "youtu")) {
         this.activeService = "youtube";
         this.fetchStreams_youtube();
@@ -123,6 +128,7 @@ export default {
           if (response.data.success) {
             this.streams = response.data.streams;
             this.info = response.data.info;
+            this.isDroppeddown = true;
           } else {
             console.error("Stream fetch failed:", response.data.message);
           }
@@ -142,6 +148,7 @@ export default {
         .then((response) => {
           console.log(response.data);
           this.streams = response.data;
+          this.isDroppeddown = true;
         })
         .catch((error) => {
           console.error("Error fetching streams:", error);

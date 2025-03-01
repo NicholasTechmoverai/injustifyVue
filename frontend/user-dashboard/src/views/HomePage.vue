@@ -183,6 +183,7 @@ export default {
       console.log("Downloading:", video);
       this.streamSongID = video;
       this.streamloading = true;
+      this.toggleDropdown();
     },
 
     reset() {
