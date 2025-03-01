@@ -27,9 +27,18 @@
               loading="lazy"
               :alt="convertResolution(stream.resolution) + ' icon'"
             />
-            <p v-if="activeItag === stream.itag "><ion-icon name="checkmark-done-outline"></ion-icon></p>
+            <p v-if="activeItag === stream.itag">
+              <ion-icon name="checkmark-done-outline"></ion-icon>
+            </p>
           </div>
-          <button id="downloadSt" :class="{'disabledDownload': !activeItag}" @click="handleDownload" :disabled="!activeItag">Confirm</button>
+          <button
+            id="downloadSt"
+            :class="{ disabledDownload: !activeItag }"
+            @click="handleDownload"
+            :disabled="!activeItag"
+          >
+            Confirm
+          </button>
         </div>
 
         <!-- No Streams Found -->
@@ -42,6 +51,9 @@
 <script>
 import { BASE_URL, showfileicon, convertResolution } from "@/utils/index.js";
 import axios from "axios";
+import { computed } from "vue";
+import { useUserStore } from "@/store/index.js";
+import { getYouTubeThumbnails } from "@/utils/index.js";
 
 export default {
   props: {
@@ -49,6 +61,8 @@ export default {
     streamloading: Boolean, // Keep this, but use it as an initial value
   },
   data() {
+    const userStore = useUserStore();
+
     return {
       streams: [],
       info: {},
@@ -56,15 +70,17 @@ export default {
       showfileicon,
       convertResolution,
       activeItag: null,
+      activeService: null,
+      userId: computed(() => userStore.userId),
     };
   },
   methods: {
     ActivateStream(event, itag) {
       event.preventDefault();
       event.stopPropagation();
-      document.querySelectorAll(".active-stream").forEach(st=>{
+      document.querySelectorAll(".active-stream").forEach((st) => {
         st.classList.remove("active-stream");
-       });
+      });
 
       const clickedElement = event.currentTarget; // Get the clicked element
       clickedElement.classList.add("active-stream"); // Add class to it
@@ -74,10 +90,13 @@ export default {
 
     categorize_url() {
       if (this.songId.includes("youtube" || "youtu")) {
+        this.activeService = "youtube";
         this.fetchStreams_youtube();
       } else if (this.songId.includes("spotify")) {
+        this.activeService = "spotify";
         this.fetchStreams_spotify();
       } else {
+        this.activeService = "injustify";
         this.fetchStreams_injustify();
       }
     },
@@ -130,6 +149,26 @@ export default {
           this.isLoading = false; // Ensure loading stops after fetch
         });
     },
+    download_stream() {
+      if (!this.activeItag) {
+        console.log("Please select a stream to download.");
+        return;
+      }
+      axios
+        .get(`${BASE_URL}/api/download_stream`, {
+          itag: this.activeItag,
+          service: this.activeService,
+          songId: this.songId,
+          filename: "",
+          start_byte: 0,
+          thumbnailUrl: getYouTubeThumbnails(this.songId),
+          userId: this.userId,
+          file_size: "",
+        })
+        .then((response) => {
+          console.log("Download started:", response.data);
+        });
+    },
   },
   mounted() {
     this.categorize_url();
@@ -146,8 +185,7 @@ export default {
 </script>
 
 <style scoped>
-
-#downloadSt{
+#downloadSt {
   background-color: #0435bc;
   color: white;
   border: none;
@@ -157,9 +195,9 @@ export default {
   font-weight: bold;
   position: absolute;
   bottom: 2px;
-  right:0;
+  right: 0;
 }
-.disabledDownload{
+.disabledDownload {
   background-color: grey !important;
   cursor: not-allowed !important;
 }
