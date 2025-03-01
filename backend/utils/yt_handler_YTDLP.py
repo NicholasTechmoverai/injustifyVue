@@ -32,7 +32,7 @@ def get_streams(link):
             'streams': streams,
             'info': {
                 "title": info.get("title"),
-                "author": info.get("uploader"),
+                "artist": info.get("uploader"),
                 "description": info.get("description"),
                 "views": info.get("view_count", 0)
             }

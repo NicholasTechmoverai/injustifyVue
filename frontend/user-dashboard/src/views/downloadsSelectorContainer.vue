@@ -1,15 +1,23 @@
 <template>
   <div id="stream-container">
-    streams:{{ songId }}
-    {{ info.title }}
-    {{ info.author }}
-    <button @click="toogleStreamContainer()"><ion-icon name="chevron-down-outline"></ion-icon></button>
-    <transition name="fade">
-      <div v-if="isLoading" class="loader-container">
-        <div class="loader"></div>
+    <div id="streams-container-Header">
+      <div>
+        streams:
+        <p v-if="info.title || info.artist">{{ info.title }} - {{ info.artist }}</p>
+        <p v-else>{{ songId }}</p>
+        <button id="closeOpenContainerButton" @click="toogleStreamContainer()">
+          <ion-icon name="chevron-down-outline"></ion-icon>
+        </button>
+        <div v-if="isAboutToDownload" class="inline-loader-container">
+          <div class="lder"></div>
+        </div>
       </div>
-    </transition>
-
+      <transition name="fade">
+        <div v-if="isLoading" class="loader-container">
+          <div class="loader"></div>
+        </div>
+      </transition>
+    </div>
     <transition name="fade">
       <template v-if="isDroppeddown">
         <!-- Streams (Visible Once Fetched) -->
@@ -18,7 +26,7 @@
             v-for="(stream, index) in streams"
             :key="index"
             class="stream-item"
-            @click="ActivateStream($event, stream.itag)"
+            @click="ActivateStream($event, stream)"
           >
             <span class="stream-name">{{ stream.resolution }}</span>
             <p>itag:: {{ stream.itag }}</p>
@@ -35,7 +43,7 @@
           <button
             id="downloadSt"
             :class="{ disabledDownload: !activeItag }"
-            @click="handleDownload"
+            @click="handleDownload()"
             :disabled="!activeItag"
           >
             Confirm
@@ -71,16 +79,19 @@ export default {
       showfileicon,
       convertResolution,
       activeItag: null,
+      activeFilename: null,
+      activeFilesize: null,
       activeService: null,
       userId: computed(() => userStore.userId),
-      isDroppeddown:false,
+      isDroppeddown: false,
+      isAboutToDownload: false,
     };
   },
   methods: {
-    toogleStreamContainer(){
-      this.isDroppeddown =!this.isDroppeddown;
+    toogleStreamContainer() {
+      this.isDroppeddown = !this.isDroppeddown;
     },
-    ActivateStream(event, itag) {
+    ActivateStream(event, stream) {
       event.preventDefault();
       event.stopPropagation();
       document.querySelectorAll(".active-stream").forEach((st) => {
@@ -90,7 +101,20 @@ export default {
       const clickedElement = event.currentTarget;
       clickedElement.classList.add("active-stream");
 
-      this.activeItag = itag;
+      this.activeItag = stream.itag;
+      this.activeFilename = `${this.info.title}-${this.info.artist}`;
+      this.activeFilesize = stream.size_mb;
+      const info = {
+        song_url:this.songId,
+        filename: this.activeFilename,
+        itag: this.activeItag,
+        size_mb: this.activeFilesize,
+        start_byte: 0,
+        thumbnailUrl: getYouTubeThumbnails(this.songId),
+        userId: this.userId,
+      };
+      useUserStore.set_DownloadFileCredential(info)
+      console.log(this.activeItag, this.activeFilesize);
     },
 
     categorize_url() {
@@ -129,6 +153,7 @@ export default {
             this.streams = response.data.streams;
             this.info = response.data.info;
             this.isDroppeddown = true;
+            console.log("info::", this.info);
           } else {
             console.error("Stream fetch failed:", response.data.message);
           }
@@ -157,25 +182,15 @@ export default {
           this.isLoading = false; // Ensure loading stops after fetch
         });
     },
-    download_stream() {
-      if (!this.activeItag) {
-        console.log("Please select a stream to download.");
+
+    handleDownload() {
+      if (this.activeService === null) {
+        console.log("Service not available for this song.");
         return;
+      } else if (this.activeService === "youtube") {
+        console.log("Downloading YouTube video streams.");
+        this.download_yt_stream();
       }
-      axios
-        .get(`${BASE_URL}/api/download_stream`, {
-          itag: this.activeItag,
-          service: this.activeService,
-          songId: this.songId,
-          filename: "",
-          start_byte: 0,
-          thumbnailUrl: getYouTubeThumbnails(this.songId),
-          userId: this.userId,
-          file_size: "",
-        })
-        .then((response) => {
-          console.log("Download started:", response.data);
-        });
     },
   },
   mounted() {
@@ -193,6 +208,19 @@ export default {
 </script>
 
 <style scoped>
+#streams-container-Header {
+  display: flex;
+  flex-direction: column;
+}
+#streams-container-Header p {
+  margin: 0;
+  padding: 0;
+}
+#closeOpenContainerButton {
+  position: absolute;
+  right: 0;
+  top: 5px;
+}
 #downloadSt {
   background-color: #0435bc;
   color: white;

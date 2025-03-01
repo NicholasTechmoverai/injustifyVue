@@ -39,6 +39,9 @@
           <router-link class="inline" :to="`/downloads/${userEmail}`">
             <ion-icon name="cloud-download-outline"></ion-icon>
             <div v-if="isSidebarOpen">Downloads</div>
+            <div v-if="isAboutToDownload" class="inline-loader-container">
+              <div class="lder"></div>
+            </div>
           </router-link>
         </li>
         <li>
@@ -103,6 +106,7 @@
 
 <script>
 import { useUserStore } from "@/store/index.js";
+import { computed } from "vue";
 
 export default {
   props: {
@@ -113,10 +117,12 @@ export default {
     isDarkMode: Boolean,
   },
   data() {
+    const userStore = useUserStore();
+
     return {
-      userStore: useUserStore(), // ✅ Store is correctly initialized in data()
       isSidebarOpen: true,
-      deviceWidth: window.innerWidth, // ✅ Initial value set
+      deviceWidth: window.innerWidth,
+      isAboutToDownload: computed(() => userStore.isAboutToDownload),
     };
   },
   mounted() {
@@ -158,7 +164,11 @@ export default {
 </script>
 
 <style scoped>
-/* Sidebar Styling */
+.inline-loader-container {
+  position: absolute;
+  bottom: 0;
+  width: 100% !important;
+} /* Sidebar Styling */
 .injustifyLogoR {
   position: relative;
   font-size: 1em;

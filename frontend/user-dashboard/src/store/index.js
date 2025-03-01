@@ -37,7 +37,14 @@ export const useUserStore = defineStore('user', {
     //set theme
     setTheme(val) {
       this.isdarkmode = val;
-    }
+    },
+    //set the state of any song that is about to download
+    set_isAboutToDownload(val) {
+      this.isAboutToDownload = val;
+    },
+    set_DownloadFileCredential(info){
+      this.downloadFileCredential = info;
+    },
 
   }
 });
