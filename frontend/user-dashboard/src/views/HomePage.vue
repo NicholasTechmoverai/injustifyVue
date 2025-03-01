@@ -760,5 +760,8 @@ export default {
   .injustifyLogoR {
     font-size: 20px;
   }
+  #streamsContainer{
+    width: 95%;
+  }
 }
 </style>

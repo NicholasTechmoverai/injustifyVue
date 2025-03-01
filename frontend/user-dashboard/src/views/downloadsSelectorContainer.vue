@@ -3,6 +3,7 @@
     streams:{{ songId }}
     {{ info.title }}
     {{ info.author }}
+    <button @click="toogle"><ion-icon name="chevron-down-outline"></ion-icon></button>
     <transition name="fade">
       <div v-if="isLoading" class="loader-container">
         <div class="loader"></div>
