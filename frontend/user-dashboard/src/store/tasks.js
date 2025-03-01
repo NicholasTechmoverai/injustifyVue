@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import axios from 'axios';
 import { BASE_URL } from "@/utils/index.js";
 
-export const useUserStore = defineStore('user', {
+export const adv_UserStore = defineStore('user', {
   state: () => ({
     email: 'injustify@gmail.com',
     name: 'injustify',
