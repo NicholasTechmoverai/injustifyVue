@@ -42,6 +42,9 @@ export const useUserStore = defineStore('user', {
     set_isAboutToDownload(val) {
       this.isAboutToDownload = val;
     },
+    set_streamloading(val) {
+      this.streamloading = val;
+    },
     set_DownloadFileCredential(info){
       this.downloadFileCredential = info;
       console.log(this.downloadFileCredential);

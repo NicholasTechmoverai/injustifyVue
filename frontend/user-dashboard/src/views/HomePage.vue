@@ -118,10 +118,13 @@ export default {
       iscollapsedBig: computed(() => userStore.iscollapsedBig),
       isDarkMode: computed(() => userStore.isdarkmode),
       useremail: computed(() => userStore.email),
+      streamloading: computed(() => userStore.streamloading),
     };
   },
 
   data() {
+    const userStore = useUserStore();
+
     return {
       message: "",
       query: "",
@@ -131,8 +134,8 @@ export default {
       loading: { injustify: false, youtube: false, spotify: false },
       spotifyThumbnails: {}, // Store fetched Spotify thumbnails
       openIndex: null,
-      streamloading: false,
       streamSongID: null,
+      userStore,
     };
   },
 
@@ -182,7 +185,7 @@ export default {
     handleDownload(video) {
       console.log("Downloading:", video);
       this.streamSongID = video;
-      this.streamloading = true;
+      this.userStore.set_streamloading(true);
       this.toggleDropdown();
     },
 

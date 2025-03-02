@@ -37,6 +37,7 @@
         </li>
         <li>
           <router-link class="inline" :to="`/downloads/${userEmail}`">
+          <div id="downloadCount">{{ downloadCount }}</div>
             <ion-icon name="cloud-download-outline"></ion-icon>
             <div v-if="isSidebarOpen">Downloads</div>
             <div v-if="isAboutToDownload" class="inline-loader-container">
@@ -106,6 +107,7 @@
 
 <script>
 import { useUserStore } from "@/store/index.js";
+import { adv_UserStore } from "@/store/tasks.js";
 import { computed } from "vue";
 
 export default {
@@ -118,12 +120,14 @@ export default {
   },
   data() {
     const userStore = useUserStore();
+    const advUserStore = adv_UserStore();
 
     return {
       isSidebarOpen: true,
       deviceWidth: window.innerWidth,
       isAboutToDownload: computed(() => userStore.isAboutToDownload),
       userStore,
+      downloadCount:computed(() => advUserStore.currentDownloadCount),
     };
   },
   mounted() {
@@ -165,6 +169,17 @@ export default {
 </script>
 
 <style scoped>
+#downloadCount{
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: red;
+  color: white;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  text-align: center;
+}
 .inline-loader-container {
   position: absolute;
   bottom: 0;

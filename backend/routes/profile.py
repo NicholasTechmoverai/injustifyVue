@@ -36,6 +36,6 @@ def get_profile(useremail):
 @profile_bp.route('/downloads/<useremail>')
 def get_downloads(useremail):
     print("getting downloads!! for",useremail)
-    return jsonify({"downloads": fetch_downloads(useremail).get('downloads')})
+    return jsonify({"downloads": fetch_downloads(useremail,None,None,None,None,None,'timestamp ASC').get('downloads')})
 
 

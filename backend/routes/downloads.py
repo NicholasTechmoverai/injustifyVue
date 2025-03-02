@@ -12,12 +12,7 @@ mydb = Config.mydb
 mycursor = mydb.cursor()
 
 
-
-
-
 from flask import Blueprint, request, jsonify, Response
-import requests
-import yt_dlp
 import mimetypes
 
 downloads_bp = Blueprint('downloads', __name__)
@@ -29,7 +24,8 @@ async def download_video():
     try:
         # Parse request data
         data = request.get_json()
-        url = data.get('songId')
+        url = data.get('song_url')
+        song_id = data.get('songId')
         itag = data.get('itag')
         filename = data.get('filename')
         start_byte = int(data.get('start_byte', 0))
@@ -45,7 +41,7 @@ async def download_video():
         if user_id:
             insert_download(
                 user_id=user_id,
-                song_id=url,  # Using songId as song identifier
+                song_id=song_id,  # Using songId as song identifier
                 file_name=filename,
                 file_format=itag,
                 itag=itag,
@@ -68,6 +64,7 @@ async def download_video():
             headers={
                 'Content-Disposition': f'attachment; filename="{filename}"',
                 'Accept-Ranges': 'bytes',  # Support resuming downloads
+                'X-Download-URL': url,  
             }
         )
         return response

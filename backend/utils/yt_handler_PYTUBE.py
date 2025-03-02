@@ -1,24 +1,20 @@
-from pytube import Search,YouTube
-import json
-import os
-
-
+from pytube import Search
 import requests
 import logging
-from pytube import Search
+import os
 
 logging.basicConfig(level=logging.INFO)
 
-api_key = os.getenv('YOUTUBE_API_KEY')
+api_key = os.getenv("YOUTUBE_API_KEY")
+api_available = True  # Global state to track API availability
 
 
 def search_videos_pytube(query):
-    """Fetch YouTube search results using PyTube as a fallback."""
+    """Fetch YouTube search results using PyTube."""
     try:
-        logging.info("Using PyTube as fallback for YouTube search...")
+        logging.info("Using PyTube for YouTube search...")
         search = Search(query)
 
-        # Ensure search.results is populated
         if not search.results:
             logging.warning("No results found using PyTube.")
             return []
@@ -32,12 +28,30 @@ def search_videos_pytube(query):
         return []
 
 
+def check_api_health():
+    """Check if the YouTube API is working by making a test request."""
+    global api_available
+    url = "https://www.googleapis.com/youtube/v3/search"
+    params = {"part": "snippet", "q": "test", "maxResults": 1, "key": api_key}
+
+    try:
+        response = requests.get(url, params=params, timeout=5)
+        response.raise_for_status()
+        api_available = True
+        logging.info("YouTube API is available.")
+    except requests.exceptions.RequestException:
+        api_available = False
+        logging.warning("YouTube API is unavailable. Switching to PyTube.")
+
+
 def search_videos_yt(search_query):
     """Fetch YouTube search results using the API, fallback to PyTube on failure."""
+    global api_available
+
+    if not api_available:
+        return search_videos_pytube(search_query)
+
     url = "https://www.googleapis.com/youtube/v3/search"
-
-    #print(f"Searching YouTube for: {search_query}")
-
     params = {
         "part": "snippet",
         "q": search_query,
@@ -47,14 +61,12 @@ def search_videos_yt(search_query):
     }
 
     try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()  # Raises an error for bad responses (4xx, 5xx)
+        response = requests.get(url, params=params, timeout=5)
+        response.raise_for_status()
 
         data = response.json()
-
         if "items" not in data:
-            logging.warning("Invalid API response, falling back to PyTube.")
-            return search_videos_pytube(search_query)
+            raise ValueError("Invalid API response")
 
         return [
             {
@@ -64,9 +76,14 @@ def search_videos_yt(search_query):
             for video in data.get("items", []) if "videoId" in video.get("id", {})
         ]
 
-    except requests.exceptions.RequestException as e:
-        logging.error(f"API request failed: {str(e)}. Falling back to PyTube...")
+    except (requests.exceptions.RequestException, ValueError) as e:
+        logging.error(f"API request failed: {str(e)}. Switching to PyTube...")
+        api_available = False  # Disable API for future calls
         return search_videos_pytube(search_query)
+
+
+check_api_health()
+
 
 
 
@@ -136,4 +153,4 @@ def get_youtube_video_details(video_url):
 # Example usage
 
 
-#print(search_videos_yt('enya only time'))
+print(search_videos_yt('enya only time'))

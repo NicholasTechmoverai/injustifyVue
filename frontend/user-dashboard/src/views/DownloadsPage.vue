@@ -5,14 +5,77 @@
   <div class="MainContainer" :class="{ collabsedBig: iscollapsedBig }">
     <div id="downloads-Main-container">
       downloads
-      <div v-if="downloads.length" id="downloads-container">
+      <div v-if="downloads.length || Object.keys(onGoingDownloads).length" id="downloads-container">
+        <!-- Display Ongoing Downloads -->
+        <div
+          v-for="(download, id) in onGoingDownloads"
+          :key="id"
+          class="downloading-file card"
+          :class="{ 'darktheme-5': isDarkMode }"
+        >
+          <div class="ghg">
+            <div class="dowloadFileInfo">
+              <h3>{{ download.filename }}</h3>
+              <div class="downloadfileMeta">
+                <p>
+                  Total Size: <span>{{ (download.filesize / (1024 * 1024)).toFixed(2) }}</span> MB
+                </p>
+                <p>
+                  Downloaded: <span>{{ (download.downloadedSize / (1024 * 1024)).toFixed(2) }}</span> MB
+                </p>
+                <p>
+                  Remaining: <span>{{ remainingSize(download) }}</span> MB
+                </p>
+                <p>
+                  ETA: <span>{{ eta(download) }}</span>
+                </p>
+                <div class="downloadFileProgressBar">
+                  <div
+                    class="progress-bar"
+                    :style="{ width: download.progress + '%' }"
+                  ></div>
+                  <span class="progress-percentage">{{ download.progress }}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="downloadFilePic">
+              <div class="downloadFileResolution">4K</div>
+              <img :src="download.thumbnail" />
+            </div>
+          </div>
+
+          <div class="progressAndcancel">
+            <p>
+              <span>{{ timeAgo(download.timestamp) }}</span>
+            </p>
+            <div class="speed-info">
+              <p>
+                Speed: <span>{{ speed(download) }} MB/s</span>
+              </p>
+            </div>
+
+            <button type="button" class="pauseDownload" @click="togglePauseResume(download)">
+              <ion-icon :name="download.paused ? 'play-circle-outline' : 'pause-circle-outline'"></ion-icon>
+            </button>
+
+            <button type="button" class="retryDownload" @click="retryDownload(download)">
+              <ion-icon name="refresh-circle-outline"></ion-icon>
+            </button>
+
+            <button type="button" class="cancelDownload" @click="cancelDownload(download.download_id)">
+              <ion-icon name="trash-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Display Completed Downloads -->
         <div
           v-for="(download, index) in downloads"
           :key="download.download_id"
           class="downloading-file card"
           :class="{ 'darktheme-5': isDarkMode }"
         >
-          <!-- File Info -->
           <div class="ghg">
             <div class="dowloadFileInfo">
               <h3>{{ download.filename }}</h3>
@@ -30,23 +93,18 @@
                   ETA: <span>{{ eta(download) }}</span>
                 </p>
                 <div class="downloadFileProgressBar">
-                  <div
-                    class="progress-bar"
-                    :style="{ width: progress(download) + '%' }"
-                  ></div>
+                  <div class="progress-bar" :style="{ width: progress(download) + '%' }"></div>
                   <span class="progress-percentage">{{ progress(download) }}%</span>
                 </div>
               </div>
             </div>
 
-            <!-- File Picture -->
             <div class="downloadFilePic">
               <div class="downloadFileResolution">4K</div>
               <img :src="download.thumbnail" />
             </div>
           </div>
 
-          <!-- Progress and Controls -->
           <div class="progressAndcancel">
             <p>
               <span>{{ timeAgo(download.timestamp) }}</span>
@@ -57,14 +115,8 @@
               </p>
             </div>
 
-            <button
-              type="button"
-              class="pauseDownload"
-              @click="togglePauseResume(download)"
-            >
-              <ion-icon
-                :name="download.paused ? 'play-circle-outline' : 'pause-circle-outline'"
-              ></ion-icon>
+            <button type="button" class="pauseDownload" @click="togglePauseResume(download)">
+              <ion-icon :name="download.paused ? 'play-circle-outline' : 'pause-circle-outline'"></ion-icon>
             </button>
 
             <button type="button" class="retryDownload" @click="retryDownload(download)">
@@ -77,6 +129,7 @@
           </div>
         </div>
       </div>
+
       <p v-else class="No-resultFound-message">
         <img src="../assets/no-search-result.png" alt="No search Found" />
         No downloads found.
@@ -90,6 +143,7 @@ import axios from "axios";
 import { computed } from "vue";
 import { timeAgo } from "@/utils/index";
 import { useUserStore } from "@/store/index.js";
+import { adv_UserStore } from "@/store/tasks.js";
 import { BASE_URL } from "@/utils/index.js";
 export default {
   name: "UserDownloads",
@@ -97,10 +151,12 @@ export default {
 
   setup() {
     const userStore = useUserStore();
+    const advUserStore = adv_UserStore();
 
     return {
       iscollapsedBig: computed(() => userStore.iscollapsedBig),
       isDarkMode: computed(() => userStore.isdarkmode),
+      onGoingDownloads:computed(() => advUserStore.onGoingDownloads),
     };
   },
 
@@ -119,6 +175,7 @@ export default {
       try {
         const response = await axios.get(`${BASE_URL}/api/profile/downloads/${this.useremail}`);
         this.downloads = response.data.downloads;
+        console.log("Downloads: " , this.downloads)
         this.loading = false;
       } catch (error) {
         console.error("Error fetching downloads:", error);
