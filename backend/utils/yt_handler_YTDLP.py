@@ -16,7 +16,7 @@ def get_streams(link):
             'no_warnings': True,
             'simulate': True,
             'skip_download': True,
-            'listformats': True,
+            'listformats': False,
             'socket_timeout': 10,
         }
 
@@ -87,9 +87,10 @@ def get_file_size(stream):
 
 
 
+
 def download_stream(url, itag, start_byte=0):
     """
-    Download a specific video stream from YouTube AND SEND IN CHUNKS TO ROUTE FN.
+    Streams a YouTube video chunk by chunk using yt-dlp.
     """
     try:
         ydl_opts = {
@@ -110,8 +111,12 @@ def download_stream(url, itag, start_byte=0):
         headers = {'Range': f'bytes={start_byte}-'}
         with requests.get(video_url, headers=headers, stream=True) as stream:
             stream.raise_for_status()
-            for chunk in stream.iter_content(chunk_size=1024 * 1024):  # 1 MB chunks
-                yield chunk
+
+            # Stream the content in 1MB chunks
+            for chunk in stream.iter_content(chunk_size=1024 * 1024):
+                if chunk:
+                    yield chunk
 
     except Exception as e:
-        yield f"Error: {e}".encode()
+        print(f"Error streaming video: {str(e)}")
+        yield f"Error: {str(e)}".encode()

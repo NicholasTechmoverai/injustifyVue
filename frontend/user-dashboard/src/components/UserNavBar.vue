@@ -123,6 +123,7 @@ export default {
       isSidebarOpen: true,
       deviceWidth: window.innerWidth,
       isAboutToDownload: computed(() => userStore.isAboutToDownload),
+      userStore,
     };
   },
   mounted() {
@@ -137,7 +138,7 @@ export default {
       const deviceWidth = window.innerWidth;
 
       if (deviceWidth >= 862 && this.isSidebarOpen) {
-        this.userStore.setMainContainerWidthMarginLeft(true);
+       this. userStore.setMainContainerWidthMarginLeft(true);
       } else if (deviceWidth >= 862 && !this.isSidebarOpen) {
         this.userStore.setMainContainerWidthMarginLeft(false);
       }

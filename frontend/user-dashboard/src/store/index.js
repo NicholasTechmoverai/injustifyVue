@@ -44,7 +44,9 @@ export const useUserStore = defineStore('user', {
     },
     set_DownloadFileCredential(info){
       this.downloadFileCredential = info;
-    },
+      console.log(this.downloadFileCredential);
+
+    }
 
   }
 });

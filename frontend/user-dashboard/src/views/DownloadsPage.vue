@@ -117,7 +117,7 @@ export default {
     async fetchDownloads() {
       this.loading = true;
       try {
-        const response = await axios.get(`${BASE_URL}/api/downloads/${this.useremail}`);
+        const response = await axios.get(`${BASE_URL}/api/profile/downloads/${this.useremail}`);
         this.downloads = response.data.downloads;
         this.loading = false;
       } catch (error) {

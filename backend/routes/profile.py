@@ -1,7 +1,7 @@
 from flask import Blueprint,Response,request,jsonify
 import logging
 from config import Config
-from utils.userDb import fetch_user
+from utils.userDb import fetch_user,fetch_downloads
 
 mydb = Config.mydb
 mycursor = mydb.cursor()
@@ -32,4 +32,10 @@ users = {
 def get_profile(useremail):
     print("GET request for user profile: {useremail}")
     return jsonify(fetch_user(useremail).get("user_info", {}))
+
+@profile_bp.route('/downloads/<useremail>')
+def get_downloads(useremail):
+    print("getting downloads!! for",useremail)
+    return jsonify({"downloads": fetch_downloads(useremail).get('downloads')})
+
 

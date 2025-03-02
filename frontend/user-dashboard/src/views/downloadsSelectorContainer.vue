@@ -62,6 +62,8 @@ import { BASE_URL, showfileicon, convertResolution } from "@/utils/index.js";
 import axios from "axios";
 import { computed } from "vue";
 import { useUserStore } from "@/store/index.js";
+import { adv_UserStore } from "@/store/tasks.js";
+
 import { getYouTubeThumbnails } from "@/utils/index.js";
 
 export default {
@@ -71,6 +73,7 @@ export default {
   },
   data() {
     const userStore = useUserStore();
+    const advUserStore = adv_UserStore();
 
     return {
       streams: [],
@@ -84,7 +87,9 @@ export default {
       activeService: null,
       userId: computed(() => userStore.userId),
       isDroppeddown: false,
-      isAboutToDownload: false,
+      isAboutToDownload:  computed(() => userStore.isAboutToDownload),
+      userStore,
+      advUserStore,
     };
   },
   methods: {
@@ -113,7 +118,7 @@ export default {
         thumbnailUrl: getYouTubeThumbnails(this.songId),
         userId: this.userId,
       };
-      useUserStore.set_DownloadFileCredential(info)
+      this.userStore.set_DownloadFileCredential(info)
       console.log(this.activeItag, this.activeFilesize);
     },
 
@@ -189,7 +194,7 @@ export default {
         return;
       } else if (this.activeService === "youtube") {
         console.log("Downloading YouTube video streams.");
-        this.download_yt_stream();
+        this.advUserStore.download_yt_stream();
       }
     },
   },

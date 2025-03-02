@@ -110,7 +110,7 @@ def getStreams():
 
         # Fetch streams using the helper function
         streams = get_streams(link) 
-        print("Streams fetched successfully.",streams)  # Debugging log
+        #print("Streams fetched successfully.",streams)  # Debugging log
 
         if streams.get('success'):
             return jsonify({

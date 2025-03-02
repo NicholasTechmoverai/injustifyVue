@@ -19,7 +19,7 @@ songs_bp = Blueprint('songs', __name__)
 mydb = Config.mydb
 mycursor = mydb.cursor()
 
-@songs_bp.route('/gp<userId>')
+@songs_bp.route('/gp/<userId>')
 def fetchUserTopSongs(userId, limit=10):
     """
     Fetch top songs based on how many times a specific user has viewed them.
