@@ -124,7 +124,7 @@ export function convertResolution(res) {
     
     if (width)console.log('')
 
-    if (isNaN(height)) return 'Unknown';  
+    if (isNaN(height)) return res;  
 
     // Map common resolutions to labels based on the height
     switch (height) {
@@ -139,7 +139,7 @@ export function convertResolution(res) {
         case 4320: return '8K';  // For 8K resolution
         default:
             if (height > 2160) return '8K';  // For anything higher than 4K
-            return 'Unknown';  // For unsupported resolutions
+            return res;  // For unsupported resolutions
     }
 }
 

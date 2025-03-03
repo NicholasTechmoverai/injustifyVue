@@ -94,6 +94,7 @@
       :streamloading="streamloading"
       @selected="handleDownloadSelect"
       v-if="streamloading"
+      :class="{ 'darktheme-4': isDarkMode }"
     />
   </div>
 </template>
@@ -388,10 +389,11 @@ export default {
   left: 50%;
   width: 60%;
   transform: translateX(-50%);
-  background-color: rgb(89, 85, 85);
+  background-color: rgb(222, 217, 217);
   z-index: 100;
   padding: 0 10px;
   box-sizing: border-box;
+  box-shadow: 0px 0px 5px black;
 }
 .dropdown-container {
   position: relative;

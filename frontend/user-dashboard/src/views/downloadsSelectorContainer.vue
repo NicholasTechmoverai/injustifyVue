@@ -5,9 +5,18 @@
         streams:
         <p v-if="info.title || info.artist">{{ info.title }} - {{ info.artist }}</p>
         <p v-else>{{ songId }}</p>
-        <button id="closeOpenContainerButton" @click="toogleStreamContainer()">
-          <ion-icon name="chevron-down-outline"></ion-icon>
-        </button>
+
+        <div id="streamControler">
+          <button id="closeOpenContainerButton" @click="toogleStreamContainer()">
+            <ion-icon name="chevron-down-outline"></ion-icon>
+          </button>
+          <button id="moreOnStreams">more
+          <div class="moreDropdown">
+          <button @click="toggleViewMore"><ion-icon name="information-circle-outline"></ion-icon>All info</button>
+          </div>
+          </button>
+        </div>
+
         <div v-if="isAboutToDownload" class="inline-loader-container">
           <div class="lder"></div>
         </div>
@@ -28,14 +37,18 @@
             class="stream-item"
             @click="ActivateStream($event, stream)"
           >
-            <span class="stream-name">{{ stream.resolution }}</span>
-            <p>itag:: {{ stream.itag }}</p>
             <img
               class="stream-audio-icon"
               :src="showfileicon(convertResolution(stream.resolution))"
               loading="lazy"
               :alt="convertResolution(stream.resolution) + ' icon'"
             />
+            <span class="stream-name">{{ convertResolution(stream.resolution) }}</span>
+            <p>{{ stream.size_mb }}MB</p>
+            <p>({{ stream.ext }})</p>
+            <p v-if="viewMore">audio Codec::{{ stream.audio_codec}}</p>
+            <p v-if="viewMore">video Codec::{{ stream.video_codec}}</p>
+            <p v-if="viewMore">vbr ::{{ stream.vbr}}</p>
             <p v-if="activeItag === stream.itag">
               <ion-icon name="checkmark-done-outline"></ion-icon>
             </p>
@@ -87,12 +100,16 @@ export default {
       activeService: null,
       userId: computed(() => userStore.userId),
       isDroppeddown: false,
-      isAboutToDownload:  computed(() => userStore.isAboutToDownload),
+      isAboutToDownload: computed(() => userStore.isAboutToDownload),
       userStore,
       advUserStore,
+      viewMore:false,
     };
   },
   methods: {
+    toggleViewMore(){
+      this.viewMore = !this.viewMore;
+    },
     toogleStreamContainer() {
       this.isDroppeddown = !this.isDroppeddown;
     },
@@ -110,7 +127,7 @@ export default {
       this.activeFilename = `${this.info.title}-${this.info.artist}`;
       this.activeFilesize = stream.size_mb;
       const info = {
-        song_url:this.songId,
+        song_url: this.songId,
         filename: this.activeFilename,
         itag: this.activeItag,
         size_mb: this.activeFilesize,
@@ -118,7 +135,7 @@ export default {
         thumbnailUrl: getYouTubeThumbnails(this.songId),
         userId: this.userId,
       };
-      this.userStore.set_DownloadFileCredential(info)
+      this.userStore.set_DownloadFileCredential(info);
       console.log(this.activeItag, this.activeFilesize);
     },
 
@@ -213,6 +230,22 @@ export default {
 </script>
 
 <style scoped>
+#moreOnStreams{
+  position:relative;
+}
+.moreDropdown{
+  position:absolute;
+  top:100%;
+  right:0% ;
+  display: none;
+}
+.moreDropdown button{
+  white-space: nowrap;
+}
+#moreOnStreams:hover .moreDropdown{
+  display: flex;
+
+}
 #streams-container-Header {
   display: flex;
   flex-direction: column;
@@ -221,7 +254,7 @@ export default {
   margin: 0;
   padding: 0;
 }
-#closeOpenContainerButton {
+#streamControler {
   position: absolute;
   right: 0;
   top: 5px;
@@ -269,7 +302,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: rgba(102, 100, 100, 0.541);
   color: black;
   border-radius: 8px;
   height: auto;
@@ -282,10 +314,10 @@ export default {
   color: white;
   border-radius: 5px;
   text-align: center;
-  font-weight: bold;
   display: flex;
   flex-direction: row !important;
   align-items: center;
+  gap: 10px;
 }
 
 /* No Streams Found */
