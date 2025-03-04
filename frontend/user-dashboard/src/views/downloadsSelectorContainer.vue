@@ -104,6 +104,8 @@ export default {
       userStore,
       advUserStore,
       viewMore:false,
+      select:null,
+      filter:null,
     };
   },
   methods: {
@@ -307,12 +309,14 @@ export default {
   height: auto;
   max-height: 75vh;
   overflow-y: auto;
+  padding: 2px ;
+  box-sizing:border-box;
 }
 .stream-item {
   padding: 8px;
-  background: #1d242d;
   color: white;
   border-radius: 5px;
+  box-shadow: 0px 0px 5px black;
   text-align: center;
   display: flex;
   flex-direction: row !important;
