@@ -24,101 +24,85 @@ export const adv_UserStore = defineStore('adv_user', {
       userStore,
       currentDownloadCount:0,
       onGoingDownloads: {},
+      status:'',
 
     };
   },
 
   actions: {
-    async download_yt_stream() {
-      if (!this.activeItag) {
+    async download_yt_stream(songId, itag, filename) {
+      if (!itag) {
         console.log("Please select a stream to download.");
         return;
       }
+    
+      const downloadId = songId || `download_${Date.now()}`;
       this.userStore.set_isAboutToDownload(true);
-
+    
       try {
-
         const response = await fetch(`${BASE_URL}/api/download/yt`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            itag: this.activeItag,
-            service: this.activeService,
-            songId: extractYouTubeID(this.songId),
-            song_url: this.songId,
-            filename: this.activeFilename,
-            start_byte: this.start_bytes,
-            thumbnailUrl: this.thumbnailUrl,
+            itag, 
+            song_url: extractYouTubeID(songId), 
+            filename,
             userId: this.userId,
-            file_size: this.activeFilesize,
+            start_byte: this.start_bytes,
+            size_mb: this.activeFilesize,
+            format: this.activeFormat,
+            thumbnailUrl: this.thumbnailUrl,
           })
         });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        this.userStore.set_isAboutToDownload(false);
-
-        this.downloadsCount('+')
-        const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
-        let downloadedSize = this.start_bytes;
-        this.downloadProgress = ((downloadedSize / contentLength) * 100).toFixed(2);
-        console.log(`Download Progress: ${this.downloadProgress}%,  total: ${downloadedSize} bytes downloaded ${contentLength}`);
-
-        // Read response as a stream
+    
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    
+        this.downloadsCount('+');
+    
         const reader = response.body.getReader();
         const chunks = [];
-        let progressInterval = setInterval(() => {
-          this.downloadProgress = ((downloadedSize / contentLength) * 100).toFixed(2);
-          console.log(`Download Progress: ${this.downloadProgress}%,  total: ${downloadedSize} bytes downloaded ${contentLength}`);
-        }, 1000);
-
+        let downloadedSize = 0;
+        const contentLength = this.activeFilesize * 1024 * 1024;
+    
+        // ✅ Ensure the downloadId exists before setting properties
+        if (!this.onGoingDownloads[downloadId]) {
+          this.onGoingDownloads[downloadId] = {};
+        }
+    
+        this.onGoingDownloads[downloadId] = { filename, progress: 0, status: "downloading" };
+    
         let done = false;
         while (!done) {
           const { done: readerDone, value } = await reader.read();
-          if (readerDone) break; // Proper exit condition
-        
+          if (readerDone) break;
+    
           chunks.push(value);
           downloadedSize += value.length;
+    
+          this.onGoingDownloads[downloadId].progress = ((downloadedSize / contentLength) * 100).toFixed(2);
         }
-        
-
-        clearInterval(progressInterval);
-
-        // Merge chunks and create file blob
+    
         const blob = new Blob(chunks, { type: "video/mp4" });
-
-        const contentDisposition = response.headers.get('Content-Disposition');
-        const dwl_Id = response.headers.get('X-Download-URL');
-        const dwn_info = {
-          download_id: dwl_Id,
-          download_url: contentDisposition?.split(';')[1].trim().split('=')[1],
-          filename: this.activeFilename,
-          filesize: contentLength,
-          downloadedSize: downloadedSize,
-          progress: this.downloadProgress,
-          thumbnail: this.thumbnailUrl,
-          timestamp: new Date().toISOString()
+        this.saveToFile(blob, filename);
+    
+        // ✅ Update status safely
+        if (this.onGoingDownloads[downloadId]) {
+          this.onGoingDownloads[downloadId].status = "completed";
         }
-        this.set_onGoingDownloads(dwl_Id,dwn_info)
-
-        // Get format from backend response or default to mp4
-        const fileFormat = this.activeFormat ? `.${this.activeFormat}` : ".mp4";
-        const fullFilename = this.activeFilename + fileFormat; // Append correct format
-
-
-        this.saveToFile(blob, fullFilename);
-        this.downloadsCount('-')
-        this.userStore.set_streamloading(false);
-
+    
+        this.downloadsCount('-');
+    
       } catch (error) {
         console.error("Download failed:", error);
+        
+        if (this.onGoingDownloads[downloadId]) {
+          this.onGoingDownloads[downloadId].status = "failed";
+        }
       } finally {
         this.userStore.set_isAboutToDownload(false);
       }
     },
+    
 
     saveToFile(blob, filename) {
       const downloadLink = document.createElement("a");

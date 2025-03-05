@@ -4,34 +4,39 @@
     class="main_tabs MainContainer"
     :class="{ collabsedBig: iscollapsedBig }"
   >
-    <div id="settings-header" class="card">
+    <div id="settings-header"  :class="{'darkmode4':isDarkMode}">
       <h2>Settings</h2>
       <div id="settings-scroll-select">
-        <router-link to="/settings/profile">Profile</router-link>
-        <router-link to="/settings/notifications">Notifications</router-link>
-        <router-link to="/settings/preferences">Preferences</router-link>
-        <router-link to="/settings/security">Security</router-link>
-        <div class="dropdown">
-          <button class="dropdown-toggle">More</button>
-          <div class="dropdown-content">
-            <a href="#">Help</a>
+        <div id="optSettings">
+          <button id="optButton">///</button>
+          <div id="scrollsSettings">
+            <router-link to="/settings/profile">Profile</router-link>
+            <router-link to="/settings/notifications">Notifications</router-link>
+            <router-link to="/settings/preferences">Preferences</router-link>
+            <router-link to="/settings/security">Security</router-link>
+            <div class="dropdown">
+              <button class="dropdown-toggle">More</button>
+              <div class="dropdown-content">
+                <a href="#">Help</a>
 
-            <router-link class="inline" to="/search">
-              <ion-icon name="code-slash-outline"></ion-icon>
-              devs
-            </router-link>
+                <router-link class="inline" to="/search">
+                  <ion-icon name="code-slash-outline"></ion-icon>
+                  devs
+                </router-link>
 
-            <router-link class="inline" to="/about">
-              <ion-icon name="information-circle-outline"></ion-icon>
-              About
-            </router-link>
+                <router-link class="inline" to="/about">
+                  <ion-icon name="information-circle-outline"></ion-icon>
+                  About
+                </router-link>
 
-            <a href="#">Feedback</a>
+                <a href="#">Feedback</a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div id="settings-body">
+    <div id="settings-body" :class="{'darkmode4':isDarkMode}">
       <router-view></router-view>
       <!-- Render the child route component here -->
     </div>
@@ -43,6 +48,7 @@ import { computed } from "vue";
 import { useUserStore } from "@/store/index.js";
 
 const userStore = useUserStore();
+const isDarkMode = computed(() => userStore.isdarkmode);
 const iscollapsedBig = computed(() => userStore.iscollapsedBig);
 </script>
 
@@ -66,6 +72,7 @@ const iscollapsedBig = computed(() => userStore.iscollapsedBig);
 }
 
 /* Tabs for Navigation */
+#scrollsSettings,
 #settings-scroll-select {
   display: flex;
   align-items: center;
@@ -105,6 +112,7 @@ const iscollapsedBig = computed(() => userStore.iscollapsedBig);
   cursor: pointer;
   font-size: 16px;
   transition: 0.3s;
+  width: 100%;
 }
 
 .dropdown-toggle:hover {
@@ -151,16 +159,47 @@ const iscollapsedBig = computed(() => userStore.iscollapsedBig);
   width: fit-content;
   width: 650px;
 }
-
+.darkmode4{
+  background-color: rgb(115, 112, 112) !important;
+  color:white;
+}
+#optButton{
+  display: none;
+}
 /* Responsive Styles */
-@media (max-width: 650px) {
+@media (max-width: 780px) {
+  #scrollsSettings {
+    display: none;
+    flex-direction: column;
+    gap: 2px !important;
+    border:1px solid;
+    border-radius: 0px 0px 5px 5px;
+  }
+  #scrollsSettings > *{
+    width: 100% !important;
+    color:#007bff;
+    box-sizing: border-box;
+  }
   #settings-scroll-select {
     flex-direction: column;
     gap: 8px;
+    position: relative;
+    background-color: green;
   }
+  #optButton{
+    display: flex;
 
-  .dropdown-content {
+  }
+  #optSettings{
+    display: flex;
+    width:fit-content;
+  }
+  #optSettings:hover #scrollsSettings {
     min-width: 100px;
+    display: flex;
+    position: absolute;
+    top: 100%;
+    right: 0;
   }
   #settings-body {
     width: 97% !important;

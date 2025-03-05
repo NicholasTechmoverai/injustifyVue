@@ -1,16 +1,22 @@
 <template>
-  <div class="profile-settings">
+  <div class="profile-settings" :class="{ 'darkmode4': isDarkMode }">
     <h2>Profile Settings</h2>
-    
+
     <!-- Profile Picture & Name -->
     <div class="section">
       <h3>Profile Info</h3>
       <div class="profile-pic">
-        <img :src="user.picture || defaultProfilePic" alt="Profile Picture" @click="triggerFileInput"/>
-        <input type="file" ref="fileInput" accept="image/*" @change="handleFileChange" hidden />
+        <img :src="userpicture" alt="Profile Picture" @click="triggerFileInput" />
+        <input
+          type="file"
+          ref="fileInput"
+          accept="image/*"
+          @change="handleFileChange"
+          hidden
+        />
       </div>
       <div class="profile-name">
-        <input type="text" v-model="user.name" placeholder="Enter your name"/>
+        <input type="text" v-model="username" placeholder="Enter your name" />
         <button @click="saveProfile">Save</button>
       </div>
     </div>
@@ -19,7 +25,7 @@
     <div class="section">
       <h3>Appearance</h3>
       <label class="toggle">
-        <input type="checkbox" v-model="darkMode" @change="toggleTheme"/>
+        <input type="checkbox" v-model="isDarkMode" @change="toggleTheme" />
         <span class="slider"></span> Dark Mode
       </label>
     </div>
@@ -46,10 +52,10 @@
     <div class="section">
       <h3>Privacy Settings</h3>
       <label>
-        <input type="checkbox" v-model="user.profilePublic"/> Make Profile Public
+        <input type="checkbox" v-model="user.profilePublic" /> Make Profile Public
       </label>
       <label>
-        <input type="checkbox" v-model="user.allowFriendRequests"/> Allow Friend Requests
+        <input type="checkbox" v-model="user.allowFriendRequests" /> Allow Friend Requests
       </label>
     </div>
 
@@ -63,56 +69,78 @@
 </template>
 
 <script>
-
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { useUserStore } from "@/store/index.js";
 
 export default {
-  
   name: "ProfileSettings",
   setup() {
+    const userStore = useUserStore();
+    // User settings (moved outside computed)
     const user = ref({
-      picture: "",
-      name: "",
       favoriteGenre: "Pop",
       playbackQuality: "high",
       profilePublic: true,
       allowFriendRequests: true,
     });
-    const darkMode = ref(false);
-    const defaultProfilePic = "/default-profile.jpg";
+
+    // File input reference
     const fileInput = ref(null);
 
+    // File selection function
     const triggerFileInput = () => fileInput.value.click();
+
     const handleFileChange = (event) => {
       const file = event.target.files[0];
-      if (file) user.value.picture = URL.createObjectURL(file);
+      if (file) {
+        // Update user picture (directly changing computed is incorrect)
+        userStore.updateProfilePic(URL.createObjectURL(file));
+      }
     };
+
     const saveProfile = () => alert("Profile updated!");
-    const toggleTheme = () => (document.body.classList.toggle("dark-mode"));
+
+    const toggleTheme = () => {
+      // Directly updating store instead of computed
+      userStore.setTheme(!userStore.isdarkmode);
+    };
+
     const linkSocialAccount = () => alert("Feature coming soon!");
 
-    return { user, darkMode, fileInput, defaultProfilePic, triggerFileInput, handleFileChange, saveProfile, toggleTheme, linkSocialAccount };
+    return {
+      userpicture: computed(() => userStore.profilePic),
+      username: computed(() => userStore.name),
+      user,
+      isDarkMode: computed(() => userStore.isdarkmode),
+      fileInput,
+      triggerFileInput,
+      handleFileChange,
+      saveProfile,
+      toggleTheme,
+      linkSocialAccount,
+    };
   },
 };
 </script>
 
 <style scoped>
-.profile-settings {
-  max-width: 600px;
-  margin: auto;
-  padding: 20px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
+
+
 .section {
   margin-bottom: 20px;
 }
-.profile-pic img {
+.profile-pic {
   width: 100px;
   height: 100px;
   border-radius: 50%;
+  background-color: gray;
+  overflow: hidden;
+}
+.profile-pic img {
+  width: 100%;
+  height: 100%;
   cursor: pointer;
+  object-fit: cover;
 }
 .profile-name input {
   width: 100%;

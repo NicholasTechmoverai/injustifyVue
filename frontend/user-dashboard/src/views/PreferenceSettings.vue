@@ -3,7 +3,7 @@
     <h3>Preferences</h3>
     
     <!-- Theme Preference -->
-    <div class="preference-item">
+    <div class="preference-item" :class="{'darkmode3':isDarkMode}">
       <h4>Theme</h4>
       <label class="toggle ThemeToggle">
         <span><i class="fa-solid fa-sun"></i> Light</span>
@@ -14,7 +14,7 @@
     </div>
     
     <!-- Name Preference -->
-    <div class="preference-item">
+    <div class="preference-item" :class="{'darkmode3':isDarkMode}">
       <h4>Name Preference</h4>
       <p>Select one of your names below as the default username:</p>
       <div class="name-options">
@@ -28,7 +28,7 @@
     </div>
     
     <!-- Font and Language Preferences -->
-    <div class="preference-item">
+    <div class="preference-item" :class="{'darkmode3':isDarkMode}">
       <h4>Font & Language</h4>
       <label>Font: 
         <select v-model="selectedFont">
@@ -47,7 +47,7 @@
     </div>
     
     <!-- Audio Preferences -->
-    <div class="preference-item">
+    <div class="preference-item" :class="{'darkmode3':isDarkMode}">
       <h4>Audio Preferences</h4>
       <label><input type="checkbox" v-model="enableEqualizer"> Enable Equalizer</label>
       <label><input type="checkbox" v-model="enableCrossfade"> Enable Crossfade</label>
@@ -61,7 +61,7 @@
     </div>
     
     <!-- Streaming Preferences -->
-    <div class="preference-item">
+    <div class="preference-item" :class="{'darkmode3':isDarkMode}">
       <h4>Streaming Preferences</h4>
       <label><input type="checkbox" v-model="enableDataSaver"> Enable Data Saver Mode</label>
       <label>Download Quality:
@@ -74,7 +74,7 @@
     </div>
     
     <!-- Startup Mode -->
-    <div class="preference-item">
+    <div class="preference-item" :class="{'darkmode3':isDarkMode}">
       <h4>On Startup</h4>
       <p>Continue playing the last song before logout?</p>
       <label class="toggle">
@@ -86,14 +86,16 @@
 </template>
 
 <script>
+import { computed } from "vue";
+import { useUserStore } from "@/store/index.js";
 export default {
   props: {
     currentView: String
   },
   data() {
+    const userStore = useUserStore();
     return {
-      isDarkMode: false,
-      selectedName: 'Nicholas',
+       selectedName: 'Nicholas',
       selectedFont: 'Arial',
       selectedLanguage: 'English',
       enableEqualizer: false,
@@ -102,6 +104,8 @@ export default {
       enableDataSaver: false,
       downloadQuality: '256',
       resumeOnStartup: true,
+      isDarkMode:computed(() => userStore.isdarkmode),
+
     };
   },
   methods: {
@@ -116,12 +120,9 @@ export default {
 </script>
 
 <style scoped>
-.preferences-container {
-  padding: 20px;
-  background: #f4f4f4;
-  border-radius: 8px;
-  max-width: 600px;
-  margin: auto;
+.darkmode3{
+  background: #777575 !important;
+  color: #ffffff;
 }
 .preference-item {
   background: white;

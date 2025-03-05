@@ -4,7 +4,7 @@
 
     <div class="security-sections">
       <!-- Password and Security -->
-      <div class="security-card">
+      <div class="security-card" :class="{'darkmode3':isDarkMode}">
         <h3>Password and Security</h3>
 
         <div class="input-group">
@@ -38,7 +38,7 @@
       </div>
 
       <!-- Two-Factor Authentication -->
-      <div class="security-card">
+      <div class="security-card" :class="{'darkmode3':isDarkMode}">
         <h3>Two-Factor Authentication</h3>
 
         <div class="toggle-group">
@@ -57,7 +57,7 @@
       </div>
 
       <!-- Account Deletion -->
-      <div class="security-card">
+      <div class="security-card" :class="{'darkmode3':isDarkMode}">
         <h4>Delete Account</h4>
         <p>This action is irreversible. Are you sure?</p>
 
@@ -66,8 +66,8 @@
     </div>
 
     <!-- Delete Account Modal -->
-    <div v-if="showDeleteAccountCard" class="delete-modal">
-      <div class="delete-card">
+    <div v-if="showDeleteAccountCard" class="delete-modal" >
+      <div class="delete-card" :class="{'darkmode3':isDarkMode}">
         <span class="close-btn" @click="showDeleteAccountCard = false">x</span>
         <h4>Delete Account</h4>
         <p class="warn-delete">Are you sure you want to delete this account?</p>
@@ -77,7 +77,7 @@
           <h3>John Doe</h3>
           <p>User since: March 2021</p>
 
-          <div class="email-card">
+          <div class="email-card" :class="{'darkmode4':isDarkMode}">
             <span class="email-text">Kariuki12nicholas@gmail.com</span>
             <i class="fas fa-check-circle"></i> <span>Verified</span>
           </div>
@@ -94,6 +94,9 @@
 </template>
 
 <script>
+import { computed } from "vue";
+import { useUserStore } from "@/store/index.js";
+
 export default {
   name: "SecuritySettings",
 
@@ -101,6 +104,8 @@ export default {
     currentView: String,
   },
   data() {
+    const userStore = useUserStore();
+
     return {
       oldPassword: '',
       newPassword: '',
@@ -110,6 +115,8 @@ export default {
       twoFactorCode: '',
       showDeleteAccountCard: false,
       deleteAccountPassword: '',
+      isDarkMode:computed(() => userStore.isdarkmode),
+
     };
   },
   methods: {
@@ -138,19 +145,14 @@ export default {
 </script>
 
 <style scoped>
-/* Security Page Container */
-.security-container {
-  width: 100%;
-  max-width: 600px;
-  margin: auto;
-  padding: 20px;
-  background: #f4f4f4;
-  border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  box-sizing: border-box;
+.darkmode4{
+  background: #555353 !important;
+  color: #ffffff;
 }
-
-/* Sections */
+.darkmode3{
+  background: #777575 !important;
+  color: #ffffff;
+}
 .security-sections {
   display: flex;
   flex-direction: column;
@@ -211,10 +213,11 @@ button:disabled {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.819);
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 100;
 }
 
 .delete-card {
@@ -243,9 +246,12 @@ button:disabled {
 }
 
 .circular-profile-pic {
+  min-width: 60px;
+  min-height: 60px;
   width: 60px;
   height: 60px;
   border-radius: 50%;
+  background-color: gray;
 }
 
 .email-card {

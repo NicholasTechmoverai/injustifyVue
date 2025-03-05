@@ -10,7 +10,7 @@
           <button id="closeOpenContainerButton" @click="toogleStreamContainer()">
             <ion-icon name="chevron-down-outline"></ion-icon>
           </button>
-          <button id="moreOnStreams">more
+          <button id="moreOnStreams"><ion-icon name="list-outline"></ion-icon>
           <div class="moreDropdown">
           <button @click="toggleViewMore"><ion-icon name="information-circle-outline"></ion-icon>All info</button>
           </div>
@@ -48,6 +48,7 @@
             <p>({{ stream.ext }})</p>
             <p v-if="viewMore">audio Codec::{{ stream.audio_codec}}</p>
             <p v-if="viewMore">video Codec::{{ stream.video_codec}}</p>
+            <p v-if="viewMore">itag::{{ stream.itag}}</p>
             <p v-if="viewMore">vbr ::{{ stream.vbr}}</p>
             <p v-if="activeItag === stream.itag">
               <ion-icon name="checkmark-done-outline"></ion-icon>
@@ -213,7 +214,7 @@ export default {
         return;
       } else if (this.activeService === "youtube") {
         console.log("Downloading YouTube video streams.");
-        this.advUserStore.download_yt_stream();
+        this.advUserStore.download_yt_stream(this.songId, this.activeItag,this.activeFilename);
       }
     },
   },
@@ -311,18 +312,28 @@ export default {
   overflow-y: auto;
   padding: 2px ;
   box-sizing:border-box;
+  width: 100% !important;
 }
 .stream-item {
   padding: 8px;
-  color: white;
   border-radius: 5px;
   box-shadow: 0px 0px 5px black;
   text-align: center;
   display: flex;
-  flex-direction: row !important;
+  flex-wrap: wrap; /* Allow children to move to a new line */
   align-items: center;
-  gap: 10px;
+  gap: 5px;
+  width: 100% !important;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
 }
+
+
+.stream-item p {
+  color: inherit;
+  word-break: break-word;
+}
+
 
 /* No Streams Found */
 .no-streams {

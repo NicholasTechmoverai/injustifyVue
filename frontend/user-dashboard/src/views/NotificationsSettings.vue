@@ -7,13 +7,13 @@
 
     <div class="notifications-body">
       <!-- Email Notifications Section -->
-      <div class="notifications-section">
+      <div class="notifications-section" :class="{'darkmode4':isDarkMode}">
         <h3>Email Alerts</h3>
         <div class="notifications-content">
           <h2 class="section-title">Email me when:</h2>
           <div class="toggle-group">
-            <div v-for="(option, key) in emailNotifications" :key="key">
-              <label class="toggle">
+            <div v-for="(option, key) in emailNotifications" :key="key" >
+              <label class="toggle" :class="{'darkmode3':isDarkMode}">
                 <span>{{ option.label }}</span>
                 <input type="checkbox" v-model="emailNotifications[key].enabled">
                 <span class="slider"></span>
@@ -24,12 +24,12 @@
       </div>
 
       <!-- Device Notifications Section -->
-      <div class="notifications-section">
+      <div class="notifications-section" :class="{'darkmode4':isDarkMode}">
         <h3>Device Notifications</h3>
         <div class="notifications-content">
-          <div class="toggle-group">
-            <div v-for="(option, key) in deviceNotifications" :key="key">
-              <label class="toggle">
+          <div class="toggle-group" >
+            <div v-for="(option, key) in deviceNotifications" :key="key" >
+              <label class="toggle" :class="{'darkmode3':isDarkMode}">
                 <span>{{ option.label }}</span>
                 <input type="checkbox" v-model="deviceNotifications[key].enabled">
                 <span class="slider"></span>
@@ -37,7 +37,7 @@
             </div>
           </div>
           <div class="toggle-sound">
-            <label class="toggle">
+            <label class="toggle" :class="{'darkmode3':isDarkMode}">
               <span>Enable sound alerts</span>
               <input type="checkbox" v-model="enableSoundAlerts">
               <span class="slider"></span>
@@ -50,13 +50,16 @@
 </template>
 
 <script>
+import { computed } from "vue";
+import { useUserStore } from "@/store/index.js";
 export default {
   name: "NotificationSettings",
-
+  
   props: {
     currentView: String,
   },
   data() {
+    const userStore = useUserStore();
     return {
       emailNotifications: {
         newSignIn: { label: "New sign-in activity", enabled: true },
@@ -71,22 +74,22 @@ export default {
         onlyNewNoty: { label: "Only new notifications", enabled: false },
       },
       enableSoundAlerts: true,
+      isDarkMode:computed(() => userStore.isdarkmode),
+
     };
   },
 };
 </script>
 
 <style scoped>
-/* General Container */
-.notifications-container {
-  width: 100%;
-  max-width: 600px;
-  padding: 10px;
-  border-radius: 10px;
-  background-color: #e9e9e9;
-  box-sizing: border-box;
+.darkmode4{
+  background: #555353 !important;
+  color: #ffffff;
 }
-
+.darkmode3{
+  background: #777575 !important;
+  color: #ffffff;
+}
 /* Section Styling */
 .notifications-header {
   text-align: center;
