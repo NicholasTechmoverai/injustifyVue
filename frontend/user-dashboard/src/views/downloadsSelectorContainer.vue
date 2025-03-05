@@ -83,7 +83,7 @@ import { getYouTubeThumbnails } from "@/utils/index.js";
 export default {
   props: {
     songId: String,
-    streamloading: Boolean, // Keep this, but use it as an initial value
+    streamloading: Boolean, 
   },
   data() {
     const userStore = useUserStore();
@@ -156,7 +156,7 @@ export default {
       }
     },
     fetchStreams_spotify() {
-      this.isLoading = true; // Update local state instead of prop
+      this.isLoading = true;
       axios
         .get(`${BASE_URL}/api/download_streams/spotify/${this.songId}`)
         .then((response) => {
