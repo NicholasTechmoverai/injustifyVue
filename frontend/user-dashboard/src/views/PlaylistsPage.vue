@@ -47,12 +47,22 @@
               :readonly="activeEditableId !== playlist.id"
             />
             {{ playlist.song_count }}
-            {{ formatDate(playlist.created_at)}}
-            <img class="playlistRefPic" :src="playlist.picture " alt="" srcset="">
+            {{ formatDate(playlist.created_at) }}
+            <router-link :to="`/profile/${playlist.created_by}`">
+              <img class="playlistRefPic" :src="playlist.picture" alt="" srcset="" />
+            </router-link>
             <div class="playlist-description">{{ playlist.description }}</div>
-            <button @click.stop="toggleEdit(playlist.id, playlist.name)">
-              {{ activeEditableId === playlist.id ? "Save" : "Edit" }}
-            </button>
+            <div>
+              <ion-icon name="ellipsis-vertical-circle-outline">
+                <div class="playlist_moreinfo">
+                  <button @click.stop="toggleEdit(playlist.id, playlist.name)">
+                    {{ activeEditableId === playlist.id ? "Save" : "Edit" }}
+                  </button>
+                  <button><ion-icon name="trash-outline"></ion-icon> Delete</button>
+                  <button>share</button>
+                </div>
+              </ion-icon>
+            </div>
           </div>
         </div>
         <div
@@ -75,7 +85,7 @@
 <script>
 import axios from "axios";
 import { computed } from "vue";
-import { BASE_URL,formatDate } from "@/utils";
+import { BASE_URL, formatDate } from "@/utils";
 import { useUserStore } from "@/store/index.js";
 
 export default {
@@ -128,7 +138,7 @@ export default {
     toggleEdit(playlistId, playlistName) {
       if (this.activeEditableId === playlistId) {
         console.log("Saving:>>", playlistName);
-        this.renamePlaylist(playlistId, playlistName)
+        this.renamePlaylist(playlistId, playlistName);
         this.activeEditableId = null;
       } else {
         this.activeEditableId = playlistId;
@@ -164,10 +174,10 @@ export default {
       }
     },
     renamePlaylist(pl_id, newName) {
-      if (pl_id && newName ) {
+      if (pl_id && newName) {
         axios
           .post(`${BASE_URL}/api/songs/rnm_pls`, {
-            playlistId:pl_id,
+            playlistId: pl_id,
             newName: newName,
           })
           .then((response) => {
@@ -188,7 +198,7 @@ export default {
 </script>
 
 <style scoped>
-.playlistRefPic{
+.playlistRefPic {
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -263,6 +273,7 @@ export default {
   border-radius: 8px;
   margin-bottom: 10px;
   transition: background 0.3s;
+  display: flex;
 }
 
 .playlist-item:hover {
@@ -276,6 +287,7 @@ export default {
   outline: none;
   cursor: pointer;
   background-color: transparent;
+  
 }
 .playlist-title input {
   background-color: transparent;
