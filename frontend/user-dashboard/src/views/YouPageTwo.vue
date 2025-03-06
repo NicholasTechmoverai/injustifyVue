@@ -468,50 +468,5 @@ export default {
   z-index: 98;
 }
 
-@media (max-width: 668px) {
-  #youMain {
-    flex-direction: column !important;
-    width: 100% !important;
-  }
-  #youSectionC {
-    display: none !important;
-  }
-  #youSectionA {
-    width: 100% !important;
-  }
-  #youSectionB {
-    display: flex !important;
-    height: 1050px !important;
-    transform: scale(0.6);
-    position: fixed;
-    bottom: 0;
-  }
-}
 
-@media (max-width: 480px) {
-  #youMain {
-    flex-direction: column !important;
-    width: 100% !important;
-  }
-  #youSectionA {
-    width: 100% !important;
-  }
-  #playingCardContainer {
-    width: 100% !important;
-    height: 100vh;
-    background-color: rgba(255, 0, 0, 0.857);
-  }
-  #youSectionB {
-    display: flex !important;
-    width: 160% !important;
-    height: 90vh !important;
-    position: fixed;
-    bottom: 0;
-    left: 0 !important;
-    margin-left: -30% !important;
-  }
-  #youSectionC {
-    display: none;
-  }
-}
 </style>

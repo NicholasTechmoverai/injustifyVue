@@ -382,6 +382,7 @@ export default {
 </script>
 
 <style scoped>
+
 #streamsContainer {
   border-radius: 10px 10px 0 0;
   position: fixed;

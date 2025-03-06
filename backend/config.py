@@ -25,7 +25,7 @@ class Config:
     ]
 
     FRONTEND_SERVER = "http://localhost:8080"
-    BACKEND_SERVER = " http://192.168.100.2:5002"
+    BACKEND_SERVER = " http://192.168.100.2:5000"
     #BACKEND_SERVER = "http://127.0.0.1:5000"
 
     

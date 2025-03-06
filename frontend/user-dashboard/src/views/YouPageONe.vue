@@ -65,7 +65,11 @@ const handleScroll = (category, event) => {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  max-width: 350px;
+  width: 350px;
+  height: 85vh !important;
+  overflow-x: hidden;
+  padding: 3px 0;
+  box-sizing: border-box;
 }
 
 #sectionYourTopPlaylistsongs {
@@ -74,11 +78,7 @@ const handleScroll = (category, event) => {
   overflow-y: auto;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.7);
 }
-#youSectionA {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
+
 
 #youSectionA > div {
   border-radius: 3px;

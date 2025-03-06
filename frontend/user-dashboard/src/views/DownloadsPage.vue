@@ -5,7 +5,10 @@
   <div class="MainContainer" :class="{ collabsedBig: iscollapsedBig }">
     <div id="downloads-Main-container">
       downloads
-      <div v-if="downloads.length || Object.keys(onGoingDownloads).length" id="downloads-container">
+      <div
+        v-if="downloads.length || Object.keys(onGoingDownloads).length"
+        id="downloads-container"
+      >
         <!-- Display Ongoing Downloads -->
         <div
           v-for="(download, id) in onGoingDownloads"
@@ -18,10 +21,13 @@
               <h3>{{ download.filename }}</h3>
               <div class="downloadfileMeta">
                 <p>
-                  Total Size: <span>{{ (download.filesize / (1024 * 1024)).toFixed(2) }}</span> MB
+                  Total Size:
+                  <span>{{ (download.filesize / (1024 * 1024)).toFixed(2) }}</span> MB
                 </p>
                 <p>
-                  Downloaded: <span>{{ (download.downloadedSize / (1024 * 1024)).toFixed(2) }}</span> MB
+                  Downloaded:
+                  <span>{{ (download.downloadedSize / (1024 * 1024)).toFixed(2) }}</span>
+                  MB
                 </p>
                 <p>
                   Remaining: <span>{{ remainingSize(download) }}</span> MB
@@ -55,15 +61,25 @@
               </p>
             </div>
 
-            <button type="button" class="pauseDownload" @click="togglePauseResume(download)">
-              <ion-icon :name="download.paused ? 'play-circle-outline' : 'pause-circle-outline'"></ion-icon>
+            <button
+              type="button"
+              class="pauseDownload"
+              @click="togglePauseResume(download)"
+            >
+              <ion-icon
+                :name="download.paused ? 'play-circle-outline' : 'pause-circle-outline'"
+              ></ion-icon>
             </button>
 
             <button type="button" class="retryDownload" @click="retryDownload(download)">
               <ion-icon name="refresh-circle-outline"></ion-icon>
             </button>
 
-            <button type="button" class="cancelDownload" @click="cancelDownload(download.download_id)">
+            <button
+              type="button"
+              class="cancelDownload"
+              @click="cancelDownload(download.download_id)"
+            >
               <ion-icon name="trash-outline"></ion-icon>
             </button>
           </div>
@@ -93,7 +109,10 @@
                   ETA: <span>{{ eta(download) }}</span>
                 </p>
                 <div class="downloadFileProgressBar">
-                  <div class="progress-bar" :style="{ width: progress(download) + '%' }"></div>
+                  <div
+                    class="progress-bar"
+                    :style="{ width: progress(download) + '%' }"
+                  ></div>
                   <span class="progress-percentage">{{ progress(download) }}%</span>
                 </div>
               </div>
@@ -115,8 +134,14 @@
               </p>
             </div>
 
-            <button type="button" class="pauseDownload" @click="togglePauseResume(download)">
-              <ion-icon :name="download.paused ? 'play-circle-outline' : 'pause-circle-outline'"></ion-icon>
+            <button
+              type="button"
+              class="pauseDownload"
+              @click="togglePauseResume(download)"
+            >
+              <ion-icon
+                :name="download.paused ? 'play-circle-outline' : 'pause-circle-outline'"
+              ></ion-icon>
             </button>
 
             <button type="button" class="retryDownload" @click="retryDownload(download)">
@@ -156,7 +181,7 @@ export default {
     return {
       iscollapsedBig: computed(() => userStore.iscollapsedBig),
       isDarkMode: computed(() => userStore.isdarkmode),
-      onGoingDownloads:computed(() => advUserStore.onGoingDownloads),
+      onGoingDownloads: computed(() => advUserStore.onGoingDownloads),
     };
   },
 
@@ -173,9 +198,11 @@ export default {
     async fetchDownloads() {
       this.loading = true;
       try {
-        const response = await axios.get(`${BASE_URL}/api/profile/downloads/${this.useremail}`);
+        const response = await axios.get(
+          `${BASE_URL}/api/profile/downloads/${this.useremail}`
+        );
         this.downloads = response.data.downloads;
-        console.log("Downloads: " , this.downloads)
+        console.log("Downloads: ", this.downloads);
         this.loading = false;
       } catch (error) {
         console.error("Error fetching downloads:", error);
@@ -501,7 +528,7 @@ span {
 }
 
 .darktheme-5 {
-  background: #252525 !important;
+  background: #373737 !important;
   color: #d4d4d4 !important;
 }
 .darktheme-5 .dowloadFileInfo p {

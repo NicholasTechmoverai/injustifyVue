@@ -1,5 +1,5 @@
 //export const BASE_URL = "http://127.0.0.1:5000";
-export const BASE_URL = "http://192.168.100.2:5002";
+export const BASE_URL = "http://192.168.100.2:5000";
 
 export const AUTH_WITH_GOOGLE = `${BASE_URL}/login/google`;
 export const MANUAL_LOGIN = `${BASE_URL}/login`;
@@ -176,3 +176,13 @@ export function showfileicon(state) {
 
     return new URL("../assets/injustify.png", import.meta.url).href;
 }
+
+
+export function formatDate(dateString) {
+    if (!dateString) return "";
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }

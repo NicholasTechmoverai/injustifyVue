@@ -356,7 +356,7 @@ p {
 }
 /* Dark Theme 5 - Video Sections */
 .darktheme-5 {
-  background: #333131 !important;
+  background: #373737 !important;
   color: #d4d4d4 !important;
 }
 

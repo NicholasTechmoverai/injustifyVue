@@ -231,9 +231,7 @@ export default {
 .dropdown-menu li:hover {
   background: #625b5b94;
 }
-</style>
 
-<style scoped>
 #youSectionC {
   height: 85vh;
   overflow-y: auto;

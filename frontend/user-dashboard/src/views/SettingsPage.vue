@@ -4,7 +4,7 @@
     class="main_tabs MainContainer"
     :class="{ collabsedBig: iscollapsedBig }"
   >
-    <div id="settings-header"  :class="{'darkmode4':isDarkMode}">
+    <div id="settings-header" :class="{ darkmode4: isDarkMode }">
       <h2>Settings</h2>
       <div id="settings-scroll-select">
         <div id="optSettings">
@@ -36,7 +36,7 @@
         </div>
       </div>
     </div>
-    <div id="settings-body" :class="{'darkmode4':isDarkMode}">
+    <div id="settings-body" :class="{ darkmode4: isDarkMode }">
       <router-view></router-view>
       <!-- Render the child route component here -->
     </div>
@@ -67,7 +67,6 @@ const iscollapsedBig = computed(() => userStore.iscollapsedBig);
 }
 
 #settings-header h2 {
-  color: var(--primary-color, #333);
   font-weight: 600;
 }
 
@@ -159,11 +158,11 @@ const iscollapsedBig = computed(() => userStore.iscollapsedBig);
   width: fit-content;
   width: 650px;
 }
-.darkmode4{
-  background-color: rgb(115, 112, 112) !important;
-  color:white;
+.darkmode4 {
+  background-color: #373737 !important;
+  color: white !important;
 }
-#optButton{
+#optButton {
   display: none;
 }
 /* Responsive Styles */
@@ -172,12 +171,12 @@ const iscollapsedBig = computed(() => userStore.iscollapsedBig);
     display: none;
     flex-direction: column;
     gap: 2px !important;
-    border:1px solid;
+    border: 1px solid;
     border-radius: 0px 0px 5px 5px;
   }
-  #scrollsSettings > *{
+  #scrollsSettings > * {
     width: 100% !important;
-    color:#007bff;
+    color: #007bff;
     box-sizing: border-box;
   }
   #settings-scroll-select {
@@ -186,13 +185,12 @@ const iscollapsedBig = computed(() => userStore.iscollapsedBig);
     position: relative;
     background-color: green;
   }
-  #optButton{
+  #optButton {
     display: flex;
-
   }
-  #optSettings{
+  #optSettings {
     display: flex;
-    width:fit-content;
+    width: fit-content;
   }
   #optSettings:hover #scrollsSettings {
     min-width: 100px;
