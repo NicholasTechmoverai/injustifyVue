@@ -2,7 +2,8 @@ from flask_socketio import SocketIO
 from flask_socketio import Namespace, emit, join_room, leave_room
 from utils.globalDb import update_view_count
 import logging
-
+from config import Config
+import random
 
 class INJUserNamespace(Namespace):
     def __init__(self, namespace):
@@ -68,3 +69,16 @@ class INJUserNamespace(Namespace):
         # Call function to update view count
         update_view_count(songId, userId, songPercontage)
 
+
+    def on_request_image(self):
+        images = {
+            "1": f"{Config.BACKEND_SERVER}/static/animation_files/1d6cff39a8b9a75245a06b970be123dd.gif",
+            "2": f"{Config.BACKEND_SERVER}/static/animation_files/giphy (3).gif",
+            "3": f"{Config.BACKEND_SERVER}/static/animation_files/5y4jl6.gif",
+            "4": f"{Config.BACKEND_SERVER}/static/animation_files/infinite-the-jackal-rubiks-cube.gif",
+            "5": f"{Config.BACKEND_SERVER}/static/animation_files/background-waterfall.gif",
+            "6": f"{Config.BACKEND_SERVER}/static/animation_files/wp2757861.webp"
+        }
+        
+        image_url = random.choice(list(images.values()))  # Get a random image
+        emit("animatesd_player", {"image": image_url}, broadcast=True)  # Send to frontend

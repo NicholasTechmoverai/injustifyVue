@@ -52,10 +52,8 @@
 </template>
 
 <script>
-import axios from "axios";
-import { BASE_URL } from "@/utils";
 import { useUserStore } from "@/store/index.js";
-import { computed, watch, ref, onMounted, onUnmounted } from "vue";
+import { computed, ref, onMounted, onUnmounted } from "vue";
 
 export default {
   name: "ActivePlaylist",
@@ -64,41 +62,21 @@ export default {
   },
   setup(props, { emit }) {
     const userStore = useUserStore();
-    const songs = ref([]);
-    const playlist_name = ref("");
+    const songs = computed(() => {
+      if (props.songs?.length) {
+        return props.songs.map((song) => ({ ...song, isPlaying: false }));
+      } else if (userStore.songs?.length) {
+        return userStore.songs.flat().map((song) => ({ ...song, isPlaying: false }));
+      }
+      return [];
+    });
+    const playlist_name = computed(() => userStore.playlistName);
     const loading = ref(false);
     const dropdownOpen = ref(false);
     const dropdownRef = ref(null); // ✅ Ref for dropdown
     const playlist_id = computed(() => props.playlist_id || userStore.activePlaylistId);
 
     const isDarkMode = computed(() => userStore.isdarkmode);
-    const fetchVideos = async () => {
-      if (!playlist_id.value) {
-        console.warn("Playlist ID is missing.");
-        songs.value = [];
-        playlist_name.value = "";
-        return;
-      }
-
-      loading.value = true;
-      try {
-        const response = await axios.get(`${BASE_URL}/api/songs/pl/${playlist_id.value}`);
-        //console.log("Playlist Songs:", response.data.songs?.songs || []);
-
-        songs.value = response.data.songs?.songs || [];
-        playlist_name.value = response.data.songs?.playlist_name || "Unknown Playlist";
-
-        //store the songs in userstore
-        userStore.setPlaylistSongs(songs.value);
-      } catch (error) {
-        console.error("API Error:", error);
-        songs.value = [];
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    watch(playlist_id, fetchVideos, { immediate: true });
 
     const sharePlaylist = async () => {
       try {

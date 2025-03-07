@@ -5,7 +5,12 @@
     </button>
 
     <!-- Hidden Audio Player -->
-    <audio ref="audioPlayer" :src="currentSongUrl" @ended="onSongEnd"></audio>
+    <audio
+      ref="audioPlayer"
+      :src="currentSongUrl"
+      @ended="onSongEnd"
+      @timeupdate="updateProgress"
+    ></audio>
 
     <div id="playingCardContainer" :class="{ 'darktheme-2': isDarkMode }">
       <div v-if="loading">loading...</div>
@@ -22,6 +27,15 @@
         }"
       >
         <div class="playingSongDateinfo">{{ song.song_id }}</div>
+        <div class="PlayingAnimation">
+          <transition name="fade" v-if="song.isPlaying">
+            <img
+              v-if="PlayingAnimation_file"
+              :src="PlayingAnimation_file"
+              key="animation"
+            />
+          </transition>
+        </div>
         <div class="playingSongArtwork">
           <img :src="song.thumbnail" alt="Artist Image" />
           <div>
@@ -29,17 +43,45 @@
             <div class="playingSongTitle">{{ song.title }}</div>
           </div>
         </div>
+
+        <div v-if="song.isPlaying">
+          <!-- Progress Bar & Timer -->
+          <div class="progress-container" @click="seek">
+            <div class="progress-bar" :style="{ width: progressPercentage + '%' }"></div>
+          </div>
+          <div class="time-info">
+            {{ formattedCurrentTime }} / {{ formattedDuration }}
+          </div>
+        </div>
         <div class="somethingIntesting">
           <div class="somethingIntestingTitle">Artist</div>
           <div class="cardPlayerControl">
-            <i class="fa fa-step-backward" @click="playPrevious"></i>
+            <i v-if="song.isPlaying" class="fa fa-random" @click="toggleShuffle"></i>
+            <i
+              v-if="song.isPlaying"
+              class="fa fa-step-backward"
+              @click="playPrevious"
+            ></i>
             <i
               :class="song.isPlaying ? 'fa fa-pause' : 'fa fa-play'"
               @click="togglePlay(index)"
             ></i>
-            <i class="fa fa-step-forward" @click="playNext"></i>
+            <i v-if="song.isPlaying" class="fa fa-step-forward" @click="playNext"></i>
+            <i v-if="song.isPlaying" class="fa fa-repeat" @click="toggleLoop"></i>
           </div>
           <div class="playingCardTimer">{{ song.stype }}</div>
+          <div class="volumeToogle" v-if="song.isPlaying">
+            <ion-icon name="volume-high-outline"></ion-icon>
+            <input
+              class="Volume-High-Outline"
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              v-model="volume"
+              @input="updateVolume"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -47,16 +89,17 @@
 </template>
 
 <script>
-import { computed, ref, watch, watchEffect, nextTick, onUnmounted } from "vue";
+import { computed, ref, watch, nextTick, onUnmounted, onMounted } from "vue";
 import { useUserStore } from "@/store/index.js";
 import { BASE_URL } from "@/utils";
 import axios from "axios";
-import socket from "@/services/websocket"; // Ensure WebSocket is imported correctly
+import socket from "@/services/websocket"; // Ensure WebSocket is correctly imported
 
 export default {
   props: {
-    songs: Array, // Optional array of songs
-    songUrl: String, // Optional single song URL
+    playlist_id: String,
+    songs: Array,
+    songUrl: String,
     clickedSongId: String,
   },
   setup(props, { emit }) {
@@ -66,12 +109,28 @@ export default {
     const currentSongUrl = ref("");
     const audioPlayer = ref(null);
     const currentIndex = ref(0);
+    const isPlaying = ref(false);
+    const loading = ref(false);
+    const isShuffle = ref(false);
+    const isLoop = ref(false);
+    const volume = ref(1);
+    const progressPercentage = ref(0);
+    const currentTime = ref(0);
+    const duration = ref(0);
+    let viewUpdateInterval = null;
+    const formattedCurrentTime = computed(() => formatTime(currentTime.value));
+    const formattedDuration = computed(() => formatTime(duration.value));
+    const playlist_id = computed(() => props.playlist_id || userStore.activePlaylistId);
+    const availableSongs = ref([]);
+    const playlist_name = ref("");
+    const PlayingAnimation_file = ref("");
     const userId = computed(() => userStore.userId);
     const isDarkMode = computed(() => userStore.isdarkmode);
+    let intervalId = null;
 
-    let viewUpdateInterval = null;
-    const loading = ref(false);
+    // Compute available songs
 
+    // Watch for song URL changes
     watch(
       () => props.songUrl,
       async (newSongUrl) => {
@@ -82,39 +141,183 @@ export default {
       { immediate: true }
     );
 
-    const availableSongs = computed(() => {
-      if (props.songs?.length) {
-        return props.songs.map((song) => ({ ...song, isPlaying: false }));
-      } else if (userStore.songs?.length) {
-        return userStore.songs.flat().map((song) => ({ ...song, isPlaying: false }));
-      }
-      return [];
-    });
-
-    watchEffect(() => {
+    // Set the current song URL when the list changes
+    watch(availableSongs, () => {
       if (availableSongs.value.length > 0) {
-        if (currentIndex.value >= availableSongs.value.length) {
-          currentIndex.value = 0;
-        }
-        currentSongUrl.value = `${BASE_URL}/api/stream/${
-          availableSongs.value[currentIndex.value].url
-        }`;
+        currentIndex.value = Math.min(
+          currentIndex.value,
+          availableSongs.value.length - 1
+        );
+        currentSongUrl.value = getSongUrl(currentIndex.value);
       }
     });
 
+    // Toggle player view mode
     const toggleViewMode = () => {
       viewPlayersMode.value = !viewPlayersMode.value;
       emit("toggle-viewPlayersMode");
     };
 
+    // Generate the song URL
+    const getSongUrl = (index) =>
+      `${BASE_URL}/api/stream/${availableSongs.value[index]?.url}`;
+
+    const fetchVideos = async () => {
+      if (!playlist_id.value) {
+        console.warn("Playlist ID is missing.");
+        availableSongs.value = [];
+        playlist_name.value = "";
+        return;
+      }
+
+      loading.value = true;
+      try {
+        const response = await axios.get(`${BASE_URL}/api/songs/pl/${playlist_id.value}`);
+        //console.log("Playlist Songs:", response.data.songs?.songs || []);
+
+        availableSongs.value = response.data.songs?.songs || [];
+        playlist_name.value = response.data.songs?.playlist_name || "Unknown Playlist";
+
+        //store the songs in userstore
+        userStore.setPlaylistSongs(availableSongs.value, playlist_name.value);
+      } catch (error) {
+        console.error("API Error:", error);
+        availableSongs.value = [];
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    watch(playlist_id, fetchVideos, { immediate: true });
+    // Play or pause a song
+    const togglePlay = async (index) => {
+      const song = availableSongs.value[index];
+      if (!song) return;
+
+      const player = audioPlayer.value;
+      if (!player) return;
+
+      if (index !== currentIndex.value) {
+        // Switching to a new song
+        availableSongs.value.forEach((s, i) => (s.isPlaying = i === index));
+        currentIndex.value = index;
+        currentSongUrl.value = getSongUrl(index);
+        isPlaying.value = true;
+        await nextTick();
+        player.load();
+        requestNextImage();
+      } else {
+        // Toggle play/pause for the current song
+        isPlaying.value = !isPlaying.value;
+      }
+
+      if (isPlaying.value) {
+        player
+          .play()
+          .then(() => startSendingProgress(player))
+          .catch((err) => console.error("Playback error:", err));
+      } else {
+        player.pause();
+        clearInterval(viewUpdateInterval);
+      }
+    };
+
+    // Handle song ending
+    const onSongEnd = () => {
+      clearInterval(viewUpdateInterval);
+      socket.emit("updateViewCount", {
+        userId: userId.value,
+        songId: availableSongs.value[currentIndex.value]?.song_id,
+        progress: 100.0,
+      });
+      playNext();
+    };
+
+    // Play next song
+    const playNext = () => {
+      let nextIndex = (currentIndex.value + 1) % availableSongs.value.length;
+      togglePlay(nextIndex);
+    };
+
+    // Play previous song
+    const playPrevious = () => {
+      let prevIndex =
+        (currentIndex.value - 1 + availableSongs.value.length) %
+        availableSongs.value.length;
+      togglePlay(prevIndex);
+    };
+
+    // Change song index based on ID
+    const changeIndexBySongID = (songId) => {
+      const newIndex = availableSongs.value.findIndex((s) => s.song_id === songId);
+      if (newIndex !== -1) togglePlay(newIndex);
+    };
+
+    // Auto-scroll to selected song
+    const scrollToview = (event) => {
+      event.currentTarget.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    };
+
+    const toggleShuffle = () => (isShuffle.value = !isShuffle.value);
+    const toggleLoop = () => (isLoop.value = !isLoop.value);
+
+    const updateProgress = () => {
+      if (audioPlayer.value) {
+        currentTime.value = audioPlayer.value.currentTime;
+        duration.value = audioPlayer.value.duration;
+        progressPercentage.value = (currentTime.value / duration.value) * 100;
+      }
+    };
+
+    const seek = (event) => {
+      if (!audioPlayer.value || !duration.value) return;
+      const progressBar = event.currentTarget;
+      const clickPosition = event.offsetX / progressBar.clientWidth;
+      audioPlayer.value.currentTime = clickPosition * duration.value;
+    };
+
+    const updateVolume = () => {
+      if (audioPlayer.value) audioPlayer.value.volume = volume.value;
+    };
+
+    const formatTime = (seconds) => {
+      const minutes = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+    };
+
+    // Watch for clicked song ID change
+    watch(
+      () => props.clickedSongId,
+      (newSongId) => {
+        if (newSongId) changeIndexBySongID(newSongId);
+      }
+    );
+
+    // Fetch song details from API
+    const fetchVideoForPropUrl = async (id) => {
+      loading.value = true;
+      try {
+        const response = await axios.get(`${BASE_URL}/api/songs/song/info/${id}`);
+        const songs = Array.isArray(response.data.songs)
+          ? response.data.songs
+          : [response.data.songs];
+        userStore.setPlaylistSongs(songs);
+      } catch (error) {
+        console.error("API Error:", error);
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    // Send playback progress updates
     const startSendingProgress = (player) => {
       if (viewUpdateInterval) clearInterval(viewUpdateInterval);
-
       viewUpdateInterval = setInterval(() => {
-        if (!socket || !socket.emit) {
-          console.error("Socket is undefined or not ready!");
-          return;
-        }
         if (player && player.currentTime > 0 && player.duration > 0) {
           let progress = (player.currentTime / player.duration) * 100;
           socket.emit("updateViewCount", {
@@ -126,116 +329,19 @@ export default {
       }, 5000);
     };
 
-    // Play/Pause functionality
-    const togglePlay = async (index) => {
-      const song = availableSongs.value[index];
-      if (!song) return;
-
-      const player = audioPlayer.value;
-      if (!player) return;
-
-      if (song.isPlaying) {
-        player.pause();
-        song.isPlaying = false;
-        clearInterval(viewUpdateInterval);
-      } else {
-        availableSongs.value.forEach((s, i) => (s.isPlaying = i === index));
-        currentIndex.value = index;
-        currentSongUrl.value = `${BASE_URL}/api/stream/${song.url}`;
-
-        await nextTick(); // Ensure UI updates before playing
-
-        player.load();
-        player
-          .play()
-          .then(() => startSendingProgress(player))
-          .catch((err) => console.error("Playback error:", err));
-      }
-    };
-
-    const onSongEnd = () => {
-      clearInterval(viewUpdateInterval);
-      socket.emit("updateViewCount", {
-        userId: userId.value,
-        songId: availableSongs.value[currentIndex.value]?.song_id,
-        progress: 100.0,
-      });
-      playNext();
-    };
-
-    const playNext = () => {
-      clearInterval(viewUpdateInterval);
-      if (currentIndex.value < availableSongs.value.length - 1) {
-        togglePlay(++currentIndex.value);
-      } else {
-        togglePlay(0);
-      }
-    };
-
-    const playPrevious = () => {
-      clearInterval(viewUpdateInterval);
-      if (currentIndex.value > 0) {
-        togglePlay(--currentIndex.value);
-      } else {
-        togglePlay(availableSongs.value.length - 1);
-      }
-    };
-
-    const changeIndex_v_sondID = (songId) => {
-      if (!availableSongs.value.length) {
-        console.warn("Song list is empty, cannot change index.");
-        return;
-      }
-
-      const newIndex = availableSongs.value.findIndex((s) => s.song_id === songId);
-
-      if (newIndex === -1) {
-        console.error("Song ID not found in playlist:", songId);
-        return;
-      }
-
-      currentIndex.value = newIndex;
-      togglePlay(currentIndex.value);
-    };
-
-    const scrollToview = (event) => {
-      event.currentTarget.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "center",
-      });
-    };
-
-    watch(
-      () => props.clickedSongId,
-      (newSongId) => {
-        if (newSongId && typeof newSongId === "string") {
-          changeIndex_v_sondID(newSongId);
-        }
-      }
-    );
-
-    const fetchVideoForPropUrl = async (id) => {
-      loading.value = true;
-      try {
-        const response = await axios.get(`${BASE_URL}/api/songs/song/info/${id}`);
-        console.log("Single Song:", response.data.songs || {});
-
-        const songs = Array.isArray(response.data.songs)
-          ? response.data.songs
-          : [response.data.songs];
-
-        userStore.setPlaylistSongs(songs);
-      } catch (error) {
-        console.error("API Error:", error);
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    // Cleanup intervals on component unmount
+    // Cleanup on unmount
     onUnmounted(() => {
       if (viewUpdateInterval) clearInterval(viewUpdateInterval);
+    });
+
+    socket.on("animatesd_player", (data) => {
+      PlayingAnimation_file.value = data.image;
+    });
+    const requestNextImage = () => {
+      socket.emit("request_image");
+    };
+    onMounted(() => {
+      intervalId = setInterval(requestNextImage, 5000);
     });
 
     return {
@@ -243,6 +349,7 @@ export default {
       fullViewMode,
       viewPlayersMode,
       currentSongUrl,
+      currentIndex,
       audioPlayer,
       toggleViewMode,
       togglePlay,
@@ -251,12 +358,92 @@ export default {
       playPrevious,
       scrollToview,
       isDarkMode,
+      progressPercentage,
+      formattedCurrentTime,
+      formattedDuration,
+      toggleShuffle,
+      toggleLoop,
+      seek,
+      updateProgress,
+      volume,
+      updateVolume,
+      PlayingAnimation_file,
+      requestNextImage,
+      intervalId,
     };
   },
 };
 </script>
 
 <style scoped>
+.progress-container {
+  width: 100%;
+  height: 5px;
+  background: #44444453;
+  border-radius: 5px;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(to right, #036db9d5, #1bca01b4);
+  width: 0%;
+  border-radius: 5px;
+  transition: width 0.3s ease-in-out;
+}
+.time-info {
+  font-size: 10px;
+  margin-bottom: 10px;
+}
+.volumeToogle {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.volumeToogle:hover .Volume-High-Outline {
+  display: flex;
+}
+
+.Volume-High-Outline {
+  display: none;
+  transform: rotate(-90deg);
+  position: absolute;
+  top: -50%;
+  left: -20%;
+  width: 50px;
+  height: 5px;
+  cursor: pointer;
+}
+.PlayingAnimation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80%;
+  height: 60%;
+  overflow: hidden;
+  animation: spin 2s linear infinite;
+  margin: 0 auto;
+  border-radius: 10px;
+}
+
+.PlayingAnimation img {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  border-radius: 10px;
+  transition: all 0.5s ease;
+}
+
+.progress-container:hover .progress-bar {
+  background: linear-gradient(to right, #ff9800, #ffeb3b);
+}
 
 /*song card*/
 #youSectionB {
@@ -329,7 +516,6 @@ export default {
   z-index: 90;
   box-sizing: border-box;
   scroll-snap-align: center;
-
 }
 .playingCard:hover {
   box-shadow: 0px 0px 95px rgb(0, 0, 0) !important;
@@ -466,14 +652,36 @@ export default {
 }
 
 .darktheme-2 {
-  background: #2c2c2c ;
+  background: #2c2c2c;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
   color: #e7e7e7 !important;
 }
 .darktheme-card {
-  background: #2c2c2c ;
+  background: #2c2c2c;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
   color: #e7e7e7 !important;
 }
+/* Vue Transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 1.5s ease-in-out, transform 1.5s ease-in-out;
+}
 
+.fade-enter-from {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.fade-leave-to {
+  opacity: 0;
+  transform: scale(1.1);
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 1.5s ease-in-out;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 </style>

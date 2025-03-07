@@ -26,8 +26,9 @@ export const useUserStore = defineStore('user', {
     },
 
     //handle playlist, add song, remove song, etc. methods here
-    setPlaylistSongs(songs) {
+    setPlaylistSongs(songs,playlistName) {
       this.songs =null || [songs]; 
+      this.playlistName = playlistName;
     
     },
     
