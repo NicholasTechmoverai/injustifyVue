@@ -41,6 +41,7 @@ html, body {
   min-height: 90vh;
   position: relative;
   max-width: 1500px;
+  
 }
 .collabsedBig{
   width: calc(100% - 80px ); /* Prevents overflow */
@@ -335,5 +336,24 @@ color: white;
   100% {
     left: 100%;
     width: 3%;
+  }
+}
+
+/* Animated Background */
+@keyframes backgroundAnim {
+  0% {
+    background: linear-gradient(135deg, #5fefff, #007bff);
+  }
+  25% {
+    background: linear-gradient(135deg, #ff5fa2, #ffa07a);
+  }
+  50% {
+    background: linear-gradient(135deg, #ffcc5f, #ff6b6b);
+  }
+  75% {
+    background: linear-gradient(135deg, #8e44ad, #3498db);
+  }
+  100% {
+    background: linear-gradient(135deg, #5fefff, #007bff);
   }
 }

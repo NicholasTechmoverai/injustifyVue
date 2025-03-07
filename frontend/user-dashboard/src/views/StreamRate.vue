@@ -1,5 +1,5 @@
 <template>
-  <div id="youSectionC" class="card common-scrollbar">
+  <div class=" common-scrollbar">
     <div id="sectioncmoststreamedSongs">
       <div id="moststreamedSongsHeader" class="card header">
         <span>Stream Rate</span>
@@ -20,7 +20,7 @@
       </div>
 
       <!-- Loading State -->
-      <div id="moststreamedSongsBody" v-if="loading">
+      <div  v-if="loading">
         <p>Loading stream rate data...</p>
       </div>
 
@@ -131,61 +131,122 @@ export default {
 </script>
 
 <style scoped>
+/* Header Styling */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #aaaaae;
-  padding: 10px 15px;
-  border-radius: 8px;
-  margin: 4px 0;
+  background: rgba(170, 170, 174, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 12px 18px;
+  border-radius: 10px;
+  margin: 6px 0;
   position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease-in-out;
 }
+
+
 
 .options-btn {
   background: none;
   border: none;
   cursor: pointer;
   color: #ffffff;
-  font-size: 20px;
+  font-size: 22px;
+  transition: color 0.3s ease, transform 0.2s ease;
 }
+
+.options-btn:hover {
+  color: #f0f0f0;
+  transform: scale(1.1);
+}
+
+
 #moststreamedHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #dadada;
-  padding: 10px 15px;
-  border-radius: 8px;
+  background: inherit;
+  backdrop-filter: blur(8px);
+  padding: 12px 18px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out;
 }
+
+#moststreamedHeader:hover {
+  transform: scale(1.02);
+}
+
 .profile-img {
-  width: 50px;
-  height: 50px;
+  width: 55px;
+  height: 55px;
   border-radius: 50%;
   object-fit: cover;
-  margin-right: 10px;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease-in-out;
+}
+
+.profile-img:hover {
+  transform: scale(1.1);
 }
 
 .user-item {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: background 0.3s ease-in-out, transform 0.2s ease;
 }
+
+.user-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.02);
+}
+.user-item:hover .profile-img{
+  border: 3px solid #2bb0ce;
+}
+
 
 .user-info {
   display: flex;
   flex-direction: column;
+  margin-left: 10px;
+}
+
+.user-name {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #222;
 }
 
 .user-rank,
 .engagement-score {
   font-size: 14px;
-  color: gray;
+  color: #8f8a8a;
+  transition: color 0.3s ease-in-out;
+}
+
+.user-item:hover .user-rank,
+.user-item:hover .engagement-score {
+  color: #908e8e;
 }
 
 .currentUser {
-  background-color: #2bb0ce66;
+  border-left: 4px solid #2bb0ce;
+  padding-left: 12px;
+  box-shadow: 0 2px 6px rgba(43, 176, 206, 0.5);
+  transition: background 0.5s ease;
+  animation: backgroundAnim 20s infinite alternate ease-in-out;
 }
-/* Dropdown menu */
+.currentUser .profile-img{
+  border: 3px solid #2bb0ce;
+}
+
 .dropdown-menu {
   position: absolute;
   top: 100%;
@@ -214,5 +275,11 @@ export default {
 
 .dropdown-menu li:hover {
   background: #444;
+}
+
+#moststreamedSongsBody{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 </style>

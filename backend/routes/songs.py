@@ -274,6 +274,25 @@ def renamePlaylist():
 
 
 
+@songs_bp.route('/del_pls', methods=['POST'])
+def deletePlaylist():
+    data = request.get_json()
+    playlistId = data.get('playlistId')
+
+    if not playlistId:  
+        return jsonify({'error': True, 'message': 'Playlist ID and name are required!'}), 400
+
+    result = updatePlaylistDB(playlistId, None, 'delete', None)
+
+    if result.get('success'):  
+        return jsonify({
+            'success': True,
+            'message': result['message'],
+            'info': result.get('info', {})  
+        }), 200
+    else:
+        return jsonify({'error': True, 'message': result.get('message', 'Unknown error')}), 500
+
 
 
 

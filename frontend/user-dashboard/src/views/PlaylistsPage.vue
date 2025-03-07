@@ -45,23 +45,32 @@
               v-model="playlist.name"
               :class="{ 'playlist-title-edit': activeEditableId === playlist.id }"
               :readonly="activeEditableId !== playlist.id"
+              @blur="toggleEdit(playlist.id, playlist.name)"
             />
-            {{ playlist.song_count }}
-            {{ formatDate(playlist.created_at) }}
+            <span class="star" @click="toggleStarred($event)"> ★</span>
+            <p class="songCount">{{ playlist.song_count }}</p>
+            <p class="created_at">{{ formatDate(playlist.created_at) }}</p>
             <router-link :to="`/profile/${playlist.created_by}`">
               <img class="playlistRefPic" :src="playlist.picture" alt="" srcset="" />
             </router-link>
             <div class="playlist-description">{{ playlist.description }}</div>
-            <div>
-              <ion-icon name="ellipsis-vertical-circle-outline">
-                <div class="playlist_moreinfo">
-                  <button @click.stop="toggleEdit(playlist.id, playlist.name)">
-                    {{ activeEditableId === playlist.id ? "Save" : "Edit" }}
-                  </button>
-                  <button><ion-icon name="trash-outline"></ion-icon> Delete</button>
-                  <button>share</button>
-                </div>
-              </ion-icon>
+
+            <div class="playlist-options">
+              <ion-icon
+                name="ellipsis-vertical-circle-outline"
+                class="menu-icon"
+              ></ion-icon>
+
+              <!-- Hidden by default, shown on hover -->
+              <div class="playlist_moreinfo">
+                <button @click.stop="toggleEdit(playlist.id, playlist.name)">
+                  {{ activeEditableId === playlist.id ? "Save" : "Edit" }}
+                </button>
+                <button @click="deletePlaylist(playlist.id)" class="delete-btn">
+                  <ion-icon name="trash-outline"></ion-icon> Delete
+                </button>
+                <button>Share</button>
+              </div>
             </div>
           </div>
         </div>
@@ -148,6 +157,17 @@ export default {
       event.stopPropagation();
       this.dropdownOpen = !this.dropdownOpen;
     },
+    toggleStarred(event) {
+      event.stopPropagation();
+      const target = event.target; // Get the clicked element
+
+      if (!target.classList.contains("starred")) {
+        target.classList.add("starred");
+      } else {
+        target.classList.remove("starred");
+      }
+    },
+
     addNewPlaylist() {
       this.addPlaylist = true;
       this.newPlaylistName = "";
@@ -193,11 +213,41 @@ export default {
         alert("Playlist name is required");
       }
     },
+    deletePlaylist(pl_id) {
+      if (pl_id) {
+        axios
+          .post(`${BASE_URL}/api/songs/del_pls`, {
+            playlistId: pl_id,
+          })
+          .then((response) => {
+            console.log("playlist::", response.data.info);
+            this.fetchPlaylists();
+            this.addPlaylist = false;
+          })
+          .catch((error) => {
+            console.error("API Error:", error);
+            alert("Failed to create playlist");
+          });
+      } else {
+        alert("Playlist name is required");
+      }
+    },
   },
 };
 </script>
 
 <style scoped>
+.star {
+  font-size: 20px;
+  color: #444;
+  cursor: pointer;
+  transition: color 0.3s ease-in-out;
+}
+
+.star.starred {
+  color: #fdbc00;
+  transition: color 0.3s ease-in-out;
+}
 .playlistRefPic {
   width: 50px;
   height: 50px;
@@ -208,7 +258,7 @@ export default {
   position: absolute;
   top: 100%;
   right: 0;
-  background: #dcdcde;
+  background: #ababacf1;
   color: rgb(47, 44, 44);
   border-radius: 8px;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
@@ -274,8 +324,16 @@ export default {
   margin-bottom: 10px;
   transition: background 0.3s;
   display: flex;
+  flex-direction: row;
+  position: relative;
 }
-
+.created_at {
+  position: absolute;
+  bottom: 0;
+  right: 2px;
+  white-space: nowrap;
+  font-size: 10px;
+}
 .playlist-item:hover {
   background: #3a3a3c7b;
 }
@@ -287,7 +345,6 @@ export default {
   outline: none;
   cursor: pointer;
   background-color: transparent;
-  
 }
 .playlist-title input {
   background-color: transparent;
@@ -308,5 +365,144 @@ export default {
   background: #2c2c2c !important;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
   color: #e7e7e7 !important;
+}
+.darktheme-2 input {
+  background-color: transparent;
+  color: #bdbdbd;
+}
+
+.playlist-item {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow */
+  padding: 15px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.playlist-item:hover {
+  transform: scale(1.02); /* Subtle zoom effect */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+}
+
+/* Playlist Title Input */
+.playlist-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #585858;
+  border: none;
+  background: transparent;
+  width: 100% !important;
+  outline: none;
+}
+
+.playlist-title-edit {
+  border-bottom: 2px solid #007bff; /* Highlighted input for editing */
+}
+
+/* Playlist Info */
+.songCount,
+.created_at {
+  color: #666;
+}
+.songCount {
+  margin-right: auto;
+  font-size: 10px;
+  position: absolute;
+  left: 5%;
+  bottom: 0;
+}
+.playlist-description {
+  font-size: 14px;
+  color: #444;
+  opacity: 0.85;
+  flex: 1;
+}
+
+/* Profile Picture */
+.playlistRefPic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ddd;
+  transition: transform 0.2s ease-in-out;
+}
+
+.playlistRefPic:hover {
+  transform: scale(1.1);
+  border-color: #007bff;
+}
+
+/* Playlist Options (Three-Dot Menu) */
+.playlist-options {
+  position: relative;
+}
+
+.menu-icon {
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out, color 0.2s;
+}
+
+.menu-icon:hover {
+  transform: scale(1.2);
+  color: #007bff;
+}
+
+/* Dropdown Menu */
+.playlist_moreinfo {
+  position: absolute;
+  top: 80%;
+  right: 0;
+  background: #7a7777e8;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  min-width: 120px;
+  z-index: 10;
+}
+
+.playlist-options:hover .playlist_moreinfo {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Buttons inside dropdown */
+.playlist_moreinfo button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 8px;
+  width: 100%;
+  font-size: 14px;
+  cursor: pointer;
+  color: #333;
+  text-align: left;
+  transition: background 0.2s ease-in-out;
+}
+
+.playlist_moreinfo button:hover {
+  background: rgba(0, 123, 255, 0.1);
+  color: #007bff;
+}
+
+.delete-btn {
+  color: red;
+}
+
+.delete-btn:hover {
+  background: rgba(255, 0, 0, 0.1);
 }
 </style>

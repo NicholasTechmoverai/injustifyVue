@@ -18,7 +18,7 @@
           viewPlayer: viewPlayersMode,
           activePlayingCard: song.isPlaying,
           PlayerModeActivePlayingCard: viewPlayersMode && song.isPlaying,
-          'darktheme-2': isDarkMode,
+          'darktheme-card': isDarkMode,
         }"
       >
         <div class="playingSongDateinfo">{{ song.song_id }}</div>
@@ -257,11 +257,7 @@ export default {
 </script>
 
 <style scoped>
-.darktheme-2 {
-  background: #2c2c2c !important;
-  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
-  color: #e7e7e7 !important;
-}
+
 /*song card*/
 #youSectionB {
   display: flex;
@@ -280,7 +276,7 @@ export default {
 }
 
 .activePlayingCard {
-  box-shadow: inset 0px 0px 5px rgb(1, 201, 91) !important;
+  animation: backgroundAnim 5s infinite alternate ease-in-out;
   margin-right: 70px !important;
   z-index: 91 !important;
 }
@@ -333,6 +329,7 @@ export default {
   z-index: 90;
   box-sizing: border-box;
   scroll-snap-align: center;
+
 }
 .playingCard:hover {
   box-shadow: 0px 0px 95px rgb(0, 0, 0) !important;
@@ -468,5 +465,15 @@ export default {
   z-index: 98;
 }
 
+.darktheme-2 {
+  background: #2c2c2c ;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  color: #e7e7e7 !important;
+}
+.darktheme-card {
+  background: #2c2c2c ;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  color: #e7e7e7 !important;
+}
 
 </style>

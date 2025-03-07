@@ -6,8 +6,12 @@ import UserProfile from '../views/UserProfile.vue';
 import DownloadsPage from '../views/DownloadsPage.vue';
 import UserHistory from '../views/UserHistory.vue';
 import UserNotifications from '../views/UserNotifications.vue';
-import SearchResults from "../views/SearchResults.vue"; 
-import About from "../views/About.vue"; 
+import SearchResults from "../views/DevsPage.vue"; 
+import AboutPage from "../views/AboutPage.vue"; 
+import HelpPage from "../views/HelpPage.vue"; 
+import FeedbackPage from "../views/FeedbackPage.vue"; 
+
+
 import SettingsPage from '../views/SettingsPage.vue'; 
 import ProfileSettings from "@/views/ProfileSettings.vue";
 import NotificationSettings from "@/views/NotificationsSettings.vue";
@@ -25,6 +29,8 @@ import YouplayingSong from "@/views/YouPageTwo.vue";
 
 
 
+
+
 const routes = [
   { path: '/', name: 'Home', component: HomePage, },
   { path: '/profile/:useremail', name: 'Profile', component: UserProfile, props: true },
@@ -32,8 +38,10 @@ const routes = [
   { path: '/history/:useremail', name: 'UserHistory', component: UserHistory, props: true },
   { path: '/notifications/:useremail', name: 'UserNotifications', component: UserNotifications, props: true },
   { path: '/search', name: 'SearchResults', component: SearchResults}, 
-  { path: '/about', name: 'About', component: About }, 
+  { path: '/about', name: 'About', component: AboutPage }, 
   { path: '/you', name:'YouPage',component:YouPage}, 
+  { path: '/help', name: 'HelpPage', component: HelpPage },
+  { path: '/feedback', name: 'FeedbackPage', component: FeedbackPage },
 
   {
     path: "/settings",
