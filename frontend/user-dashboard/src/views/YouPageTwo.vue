@@ -335,13 +335,18 @@ export default {
     });
 
     socket.on("animatesd_player", (data) => {
-      PlayingAnimation_file.value = data.image;
-    });
+        console.log("Image::🛬🛬", data);
+        if (data && data.image) {
+            PlayingAnimation_file.value = data.image;
+        } else {
+            console.error("Received data does not contain an image:", data);
+        }
+  });
     const requestNextImage = () => {
       socket.emit("request_image");
     };
     onMounted(() => {
-      intervalId = setInterval(requestNextImage, 5000);
+      setInterval(requestNextImage, 3000);
     });
 
     return {
@@ -370,6 +375,7 @@ export default {
       PlayingAnimation_file,
       requestNextImage,
       intervalId,
+      loading,
     };
   },
 };

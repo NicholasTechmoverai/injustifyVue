@@ -292,6 +292,8 @@ export default {
         }
 
         console.log("Backend response:", response.data);
+        console.log("Backend response user:", response.data.user);
+
         this.closeModal();
       } catch (error) {
         this.showMessage("Login failed. Check your credentials.", false);
@@ -382,8 +384,9 @@ export default {
       try {
         const response = await axios.post(SIGN_UP, {
           email: this.signupEmail,
-          username: this.signupUsername,
+          name: this.signupUsername,
           password: this.signupPassword,
+
         });
 
         this.showMessage("Signup successful!", true);
