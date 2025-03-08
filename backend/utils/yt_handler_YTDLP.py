@@ -120,3 +120,4 @@ def download_stream(url, itag, start_byte=0):
     except Exception as e:
         print(f"Error streaming video: {str(e)}")
         yield f"Error: {str(e)}".encode()
+

@@ -45,7 +45,8 @@ export const adv_UserStore = defineStore('adv_user', {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             itag, 
-            song_url: extractYouTubeID(songId), 
+            song_url:songId, 
+            songId: extractYouTubeID(songId),
             filename,
             userId: this.userId,
             start_byte: this.start_bytes,
@@ -64,13 +65,13 @@ export const adv_UserStore = defineStore('adv_user', {
         let downloadedSize = 0;
         const contentLength = this.activeFilesize * 1024 * 1024;
     
-        // ✅ Ensure the downloadId exists before setting properties
         if (!this.onGoingDownloads[downloadId]) {
           this.onGoingDownloads[downloadId] = {};
         }
     
         this.onGoingDownloads[downloadId] = { filename, progress: 0, status: "downloading" };
     
+      console.log("Downloading::" , filename , " progress::" , (downloadedSize / contentLength) * 100)
         let done = false;
         while (!done) {
           const { done: readerDone, value } = await reader.read();
@@ -85,7 +86,6 @@ export const adv_UserStore = defineStore('adv_user', {
         const blob = new Blob(chunks, { type: "video/mp4" });
         this.saveToFile(blob, filename);
     
-        // ✅ Update status safely
         if (this.onGoingDownloads[downloadId]) {
           this.onGoingDownloads[downloadId].status = "completed";
         }
