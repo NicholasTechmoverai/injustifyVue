@@ -110,7 +110,7 @@ export default {
       loading.value = true;
       try {
         const response = await axios.get(`${BASE_URL}/api/profile/${useremail.value}`);
-        user.value = response.data;
+        user.value = response.data.user_info?response.data.user_info:response.data;
         playlistId.value = response.data.playlistId; // Assuming the response contains a playlistId
       } catch (error) {
         console.error("Error fetching profile:", error);

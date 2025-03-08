@@ -335,7 +335,6 @@ export default {
     });
 
     socket.on("animatesd_player", (data) => {
-        console.log("Image::🛬🛬", data);
         if (data && data.image) {
             PlayingAnimation_file.value = data.image;
         } else {
