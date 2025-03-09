@@ -62,47 +62,50 @@ const isDarkMode = computed(() => userStore.isdarkmode);
 .injustifyLogoR {
   position: relative;
 }
+
+
+
 @media (max-width: 668px) {
-  #youMain {
-    flex-direction: column !important;
-    width: 100% !important;
+  .injustifyLogoR{
+    display:none;
   }
+
   #youSectionC {
-    display: none !important;
+    display: none;
   }
   #youSectionA {
-    width: 100% !important;
+    width: 100% ;
+    height: 95vh !important;
+
   }
   #youSectionB {
-    display: flex !important;
-    height: 1050px !important;
-    transform: scale(0.6);
-    position: fixed;
-    bottom: 0;
+    display: flex ;
+    width: 100% ;
+    height: 200px ;
+    position: absolute;
+    bottom: 0%;
+    left: 0 !important;
+    margin-left: 0% !important;
+    margin-top: auto;
+    position:absolute;
   }
+
 }
 
 @media (max-width: 480px) {
-  #youMain {
-    flex-direction: column !important;
-    width: 100% !important;
-  }
   #youSectionA {
     width: 100% !important;
   }
-  #playingCardContainer {
-    width: 100% !important;
-    height: 100vh;
-    background-color: rgba(255, 0, 0, 0.857);
-  }
+ 
   #youSectionB {
     display: flex !important;
-    width: 160% !important;
-    height: 90vh !important;
+    width: 100% !important;
+    height: 200px !important;
     position: fixed;
-    bottom: 0;
     left: 0 !important;
-    margin-left: -30% !important;
+    margin-left: 0% !important;
+    margin-top: auto;
+    position:absolute;
   }
   #youSectionC {
     display: none;

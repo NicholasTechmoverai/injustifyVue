@@ -12,7 +12,8 @@
       @timeupdate="updateProgress"
     ></audio>
 
-    <div id="playingCardContainer" :class="{ 'darktheme-2': isDarkMode }">
+    <div id="playingCardContainer" :class="{ 'darktheme-2': isDarkMode }" :style="extend_card ? { height: '350px',position:'absolute',bottom:'0' } : {}"
+    >
       <div v-if="loading">loading...</div>
       <div
         v-for="(song, index) in availableSongs"
@@ -27,7 +28,9 @@
         }"
       >
         <div class="playingSongDateinfo">{{ song.song_id }}</div>
-        <div class="PlayingAnimation">
+
+        <div class="PlayingAnimation" v-if="showAnimate">
+
           <transition name="fade" v-if="song.isPlaying">
             <img
               v-if="PlayingAnimation_file"
@@ -55,6 +58,7 @@
         </div>
         <div class="somethingIntesting">
           <div class="somethingIntestingTitle">Artist</div>
+          <div v-if="song.isPlaying" class="out_of_index">{{currentIndex + 1 }}/{{ availableSongs.length }}</div>
           <div class="cardPlayerControl">
             <i v-if="song.isPlaying" class="fa fa-random" @click="toggleShuffle"></i>
             <i
@@ -127,6 +131,8 @@ export default {
     const userId = computed(() => userStore.userId);
     const isDarkMode = computed(() => userStore.isdarkmode);
     let intervalId = null;
+    const showAnimate = ref(true);
+    const extend_card = ref(false);
 
     // Compute available songs
 
@@ -156,6 +162,9 @@ export default {
     const toggleViewMode = () => {
       viewPlayersMode.value = !viewPlayersMode.value;
       emit("toggle-viewPlayersMode");
+      if(window.innerWidth< 680 ){
+        extend_card.value = !extend_card.value;
+      }
     };
 
     // Generate the song URL
@@ -329,6 +338,19 @@ export default {
       }, 5000);
     };
 
+    const handle_showAnimate = () => {
+      if(window.innerWidth< 680 ){
+        if(extend_card.value){
+          showAnimate.value = true
+        }else if(!extend_card.value){
+            showAnimate.value = false
+        }
+      }else{
+        showAnimate.value = true
+        extend_card.value = true
+      }
+    }
+
     // Cleanup on unmount
     onUnmounted(() => {
       if (viewUpdateInterval) clearInterval(viewUpdateInterval);
@@ -375,12 +397,20 @@ export default {
       requestNextImage,
       intervalId,
       loading,
+      showAnimate,
+      extend_card,
+      handle_showAnimate
     };
   },
 };
 </script>
 
 <style scoped>
+.out_of_index{
+  font-size:12px;
+  padding:0px 5px;
+  color:rgb(172, 168, 168);
+}
 .progress-container {
   width: 100%;
   height: 5px;
@@ -688,5 +718,16 @@ export default {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+@media (max-width: 668px) {
+#youSectionB #playingCardContainer {
+  height: 200px ;
+  width:100%;
+  padding: 10px;
+
+}
+.playingCard .somethingIntesting {
+  margin-top:0px;
+}
 }
 </style>
