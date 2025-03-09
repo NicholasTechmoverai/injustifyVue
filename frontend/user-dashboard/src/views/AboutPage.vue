@@ -56,11 +56,13 @@ const features = ref([
   display: flex;
   justify-content: center;
   align-items: center;
-  height: fit-content !important;
   background: linear-gradient(135deg, #5fefff, #007bff);
   text-align: center;
+  height: 100vh;
   padding: 40px;
   animation: backgroundAnim 40s infinite alternate ease-in-out;
+  box-sizing: border-box;
+
 }
 
 
@@ -74,6 +76,7 @@ const features = ref([
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
   transition: transform 0.3s ease-in-out;
+  box-sizing: border-box;
 }
 
 .about-content:hover {
@@ -150,5 +153,15 @@ ion-icon {
   background: #ff5fa2;
   color: white;
   transform: scale(1.05);
+}
+
+@media (max-width:600px) {
+  .about-container {
+    padding:3px;
+  }
+  .about-content {
+    padding:5px;
+  }
+  
 }
 </style>

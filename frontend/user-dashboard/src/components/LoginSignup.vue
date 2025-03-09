@@ -125,7 +125,7 @@
                 :disabled="!resetEmail.includes('@') || loading"
                 :class="{ 'disabled-btn': !resetEmail.includes('@') || loading }"
               >
-                Send Reset Code
+                Send Reset Code 
               </button>
 
               <p id="password_resetInfo">{{ resetMessage }}</p>
@@ -136,7 +136,7 @@
                   :key="index"
                   v-model="codes[index]"
                   :id="'digit' + (index + 1)"
-                  :class="{ diggitLoader: verifyCodeloading }"
+                  :class="{ diggitLoader: verifyCodeloading, shake: if_not_code }"
                   type="text"
                   maxlength="1"
                   pattern="[0-9]"
@@ -173,7 +173,12 @@
                   <i class="fa-solid fa-eye"></i>
                 </div>
               </div>
-              <button @click="resetPassword" type="submit" :disabled="loading" v-html="saveButton"></button>
+              <button
+                @click="resetPassword"
+                type="submit"
+                :disabled="loading"
+                v-html="saveButton"
+              ></button>
             </div>
 
             <p>Back to <a @click.prevent="switchMode('login')">Login</a></p>
@@ -223,7 +228,8 @@ export default {
       resetMessage: "Enter you Email to get password reset codes.",
       codes: ["", "", "", "", "", ""],
       resetApproved: false,
-      saveButton:"Save"
+      saveButton: "Save",
+      if_not_code: false,
     };
   },
   methods: {
@@ -314,14 +320,15 @@ export default {
           email: this.resetEmail,
         });
 
-        console.log(response.data);
+        console.log(response.data.detail);
+        this.resetMessage = response.data.message
+          ? response.data.message
+          : response.data.detail;
         this.showMessage("Enter Codes sent to your Email", true);
       } catch (error) {
-        console.error("Email resend error:", error);
-
         this.resetMessage = error.response.data.error
           ? error.response.data.error
-          : error.response.data.message;
+          : error.response.data.detail;
 
         this.showMessage(this.resetMessage, false);
       } finally {
@@ -330,8 +337,6 @@ export default {
     },
 
     async verifyCode() {
-      console.log("Verifying:", this.codes.join(""));
-
       if (!this.resetEmail || !this.codes.join("")) {
         this.showMessage("Please fill in all fields!", false);
         return;
@@ -352,9 +357,23 @@ export default {
           this.showMessage("Code verified! You can now reset your password.", true);
         } else {
           this.showMessage(response.data.message || "Invalid code. Try again.", false);
+          this.if_not_code = true;
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.if_not_code = false;
+              this.codes = ["", "", "", "", "", ""];
+            }, 1000);
+          });
         }
       } catch (error) {
         console.error("Verification error:", error);
+        this.if_not_code = true;
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.if_not_code = false;
+              this.codes = ["", "", "", "", "", ""];
+            }, 1000);
+          });
         this.showMessage(
           error.response?.data?.error || "Verification failed. Try again.",
           false
@@ -386,7 +405,6 @@ export default {
           email: this.signupEmail,
           name: this.signupUsername,
           password: this.signupPassword,
-
         });
 
         this.showMessage("Signup successful!", true);
@@ -405,61 +423,59 @@ export default {
       this.loading = false;
     },
     async resetPassword() {
-  console.log(
-    " Reset Password for ",
-    this.resetEmail,
-    this.codes.join(""),
-    this.signupPassword,
-    this.signupConfirmPassword
-  );
+      console.log(
+        " Reset Password for ",
+        this.resetEmail,
+        this.codes.join(""),
+        this.signupPassword,
+        this.signupConfirmPassword
+      );
 
-  if (
-    !this.resetEmail ||
-    !this.codes.join("") ||
-    !this.signupPassword ||
-    !this.signupConfirmPassword
-  ) {
-    this.showMessage("Please fill in all fields!", false);
-    return;
-  }
+      if (
+        !this.resetEmail ||
+        !this.codes.join("") ||
+        !this.signupPassword ||
+        !this.signupConfirmPassword
+      ) {
+        this.showMessage("Please fill in all fields!", false);
+        return;
+      }
 
-  if (this.signupPassword !== this.signupConfirmPassword) {
-    this.showMessage("Passwords do not match!", false);
-    return;
-  }
+      if (this.signupPassword !== this.signupConfirmPassword) {
+        this.showMessage("Passwords do not match!", false);
+        return;
+      }
 
-  this.loading = true;
-  try {
-    const response = await axios.post(RESET_PASSWORD, {
-      email: this.resetEmail,
-      code: this.codes.join(""),
-      password: this.signupPassword,
-    });
+      this.loading = true;
+      try {
+        const response = await axios.post(RESET_PASSWORD, {
+          email: this.resetEmail,
+          code: this.codes.join(""),
+          password: this.signupPassword,
+        });
 
-    if (response.data.success) {
-      this.showMessage(response.data.message, true);
-      this.codes = ["", "", "", "", "", ""];
-      this.resetMessage = "Password Changed Successfully";
-      this.saveButton = `<ion-icon name="checkmark-circle-outline"></ion-icon> Successfully`
+        if (response.data.success) {
+          this.showMessage(response.data.message, true);
+          this.codes = ["", "", "", "", "", ""];
+          this.resetMessage = "Password Changed Successfully";
+          this.saveButton = `<ion-icon name="checkmark-circle-outline"></ion-icon> Successfully`;
 
-      setTimeout(() => {
-        this.resetMessage = "Enter your Email to get password reset codes.";
-        this.resetApproved = false;
-        this.resetEmail = "";
-        this.closeModal();
-      }, 2000);
-    }else{
-      console.log("response from server",response.data)
-    }
-  } catch (error) {
-    this.showMessage("Password reset failed. Try again.", false);
-    console.error("Password reset error:", error);
-  } finally {
-    this.loading = false;
-  }
-},
-
-
+          setTimeout(() => {
+            this.resetMessage = "Enter your Email to get password reset codes.";
+            this.resetApproved = false;
+            this.resetEmail = "";
+            this.closeModal();
+          }, 2000);
+        } else {
+          console.log("response from server", response.data);
+        }
+      } catch (error) {
+        this.showMessage("Password reset failed. Try again.", false);
+        console.error("Password reset error:", error);
+      } finally {
+        this.loading = false;
+      }
+    },
 
     switchMode(v) {
       if (v == "signup") {
@@ -499,7 +515,8 @@ export default {
 </script>
 
 <style scoped>
-/* General Styles */
+
+
 .disabled-btn {
   background: #ccc;
   cursor: not-allowed;
@@ -782,5 +799,25 @@ p a:hover,
 
 .googleLogin img:hover {
   background-color: rgba(128, 128, 128, 0.115);
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-5px);
+  }
+}
+
+.shake {
+  background-color: red !important;
+  animation: shake 0.3s ease-in-out;
 }
 </style>

@@ -45,7 +45,7 @@ export const adv_UserStore = defineStore('adv_user', {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             itag, 
-            song_url:songId, 
+            song_url: songId, 
             songId: extractYouTubeID(songId),
             filename,
             userId: this.userId,
@@ -57,44 +57,56 @@ export const adv_UserStore = defineStore('adv_user', {
         });
     
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-    
         this.downloadsCount('+');
     
-        const reader = response.body.getReader();
-        const chunks = [];
-        let downloadedSize = 0;
-        const contentLength = this.activeFilesize * 1024 * 1024;
-    
+        // ✅ Ensure `onGoingDownloads` is initialized
+        if (!this.onGoingDownloads) this.onGoingDownloads = {};
         if (!this.onGoingDownloads[downloadId]) {
           this.onGoingDownloads[downloadId] = {};
         }
     
-        this.onGoingDownloads[downloadId] = { filename, progress: 0, status: "downloading" };
+        const reader = response.body.getReader();
+        const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
+        let downloadedSize = 0;
+        const progressBarWidth = 40; // Number of characters in progress bar
     
-      console.log("Downloading::" , filename , " progress::" , (downloadedSize / contentLength) * 100)
-        let done = false;
-        while (!done) {
-          const { done: readerDone, value } = await reader.read();
-          if (readerDone) break;
+        const stream = new ReadableStream({
+          start: (controller) => { // ✅ Fix `this` binding issue
+            const push = () => { 
+              reader.read().then(({ done, value }) => {
+                if (done) {
+                  console.log("\nDownload completed!");
+                  this.downloadsCount('-');
+                  this.onGoingDownloads[downloadId].status = "completed"; // ✅ Mark as completed
+                  controller.close();
+                  return;
+                }
     
-          chunks.push(value);
-          downloadedSize += value.length;
+                downloadedSize += value.length;
+                const progress = downloadedSize / contentLength;
+                const filledBar = "█".repeat(Math.floor(progress * progressBarWidth));
+                const emptyBar = " ".repeat(progressBarWidth - filledBar.length);
+                const percent = (progress * 100).toFixed(2);
     
-          this.onGoingDownloads[downloadId].progress = ((downloadedSize / contentLength) * 100).toFixed(2);
-        }
+                this.onGoingDownloads[downloadId] = { filename, progress, status: "downloading" };
     
-        const blob = new Blob(chunks, { type: "video/mp4" });
+                console.clear();
+                console.log(`Downloading: ${filename}`);
+                console.log(`[${filledBar}${emptyBar}] ${percent}% (${(downloadedSize / 1024 / 1024).toFixed(2)}MB / ${contentLength}MB)`);
+    
+                controller.enqueue(value);
+                push();
+              });
+            };
+            push();
+          }
+        });
+    
+        const blob = await new Response(stream).blob();
         this.saveToFile(blob, filename);
-    
-        if (this.onGoingDownloads[downloadId]) {
-          this.onGoingDownloads[downloadId].status = "completed";
-        }
-    
-        this.downloadsCount('-');
     
       } catch (error) {
         console.error("Download failed:", error);
-        
         if (this.onGoingDownloads[downloadId]) {
           this.onGoingDownloads[downloadId].status = "failed";
         }
@@ -102,6 +114,8 @@ export const adv_UserStore = defineStore('adv_user', {
         this.userStore.set_isAboutToDownload(false);
       }
     },
+    
+    
     
 
     saveToFile(blob, filename) {

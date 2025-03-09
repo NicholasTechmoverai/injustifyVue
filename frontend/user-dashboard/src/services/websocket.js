@@ -1,9 +1,10 @@
 import { io } from "socket.io-client";
+import {BASE_URL} from "@/utils/index.js";
 
-const socket = io("http://192.168.100.2:5000/inj-user", {
-    path: "/ws/socket.io", // 🔥 Ensure correct WebSocket path
-    transports: ["websocket"], // 🔥 Avoid long polling
-    withCredentials: true, // 🔥 Send credentials if needed
+const socket = io(`${BASE_URL}/inj-user`, {
+    path: "/ws/socket.io", 
+    transports: ["websocket"], 
+    withCredentials: true, 
 });
 
     

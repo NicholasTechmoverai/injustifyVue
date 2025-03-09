@@ -13,20 +13,6 @@
       </label>
     </div>
     
-    <!-- Name Preference -->
-    <div class="preference-item" :class="{'darkmode3':isDarkMode}">
-      <h4>Name Preference</h4>
-      <p>Select one of your names below as the default username:</p>
-      <div class="name-options">
-        <span @click="setName('Nicholas')">Nicholas</span>
-        <span @click="setName('Kariuki')">Kariuki</span>
-      </div>
-      <div class="name-edit">
-        <input v-model="selectedName" type="text"/>
-        <button @click="saveName">Save</button>
-      </div>
-    </div>
-    
     <!-- Font and Language Preferences -->
     <div class="preference-item" :class="{'darkmode3':isDarkMode}">
       <h4>Font & Language</h4>
@@ -95,7 +81,6 @@ export default {
   data() {
     const userStore = useUserStore();
     return {
-       selectedName: 'Nicholas',
       selectedFont: 'Arial',
       selectedLanguage: 'English',
       enableEqualizer: false,
@@ -124,23 +109,7 @@ export default {
   background: #777575 !important;
   color: #ffffff;
 }
-.preference-item {
-  background: white;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
-.name-options span {
-  cursor: pointer;
-  margin-right: 10px;
-  font-weight: bold;
-}
-.name-edit input {
-  width: 70%;
-  padding: 5px;
-  margin-right: 10px;
-}
+
 button {
   padding: 5px 10px;
   background: #3498db;

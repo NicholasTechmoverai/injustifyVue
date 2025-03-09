@@ -1,5 +1,5 @@
 <template>
-  <div class="profile-settings" :class="{ 'darkmode4': isDarkMode }">
+  <div class="profile-settings" :class="{ darkmode4: isDarkMode }">
     <h2>Profile Settings</h2>
 
     <!-- Profile Picture & Name -->
@@ -18,6 +18,20 @@
       <div class="profile-name">
         <input type="text" v-model="username" placeholder="Enter your name" />
         <button @click="saveProfile">Save</button>
+      </div>
+    </div>
+
+    <!-- Name Preference -->
+    <div class="preference-item" :class="{ darkmode3: isDarkMode }">
+      <h4>Name Preference</h4>
+      <p>Select one of your names below as the default username:</p>
+      <div class="name-options">
+        <span @click="setName('Nicholas')">Nicholas</span>
+        <span @click="setName('Kariuki')">Kariuki</span>
+      </div>
+      <div class="name-edit">
+        <input v-model="selectedName" type="text" />
+        <button @click="saveName">Save</button>
       </div>
     </div>
 
@@ -83,25 +97,26 @@ export default {
       profilePublic: true,
       allowFriendRequests: true,
     });
+    const selectedName = ref("Nicholas");
 
-    // File input reference
     const fileInput = ref(null);
 
-    // File selection function
     const triggerFileInput = () => fileInput.value.click();
 
     const handleFileChange = (event) => {
       const file = event.target.files[0];
       if (file) {
-        // Update user picture (directly changing computed is incorrect)
         userStore.updateProfilePic(URL.createObjectURL(file));
       }
     };
+    const setName = (name) => {
+      selectedName.value = name;
+    };
+    const saveName = () => alert("Name updated!");
 
     const saveProfile = () => alert("Profile updated!");
 
     const toggleTheme = () => {
-      // Directly updating store instead of computed
       userStore.setTheme(!userStore.isdarkmode);
     };
 
@@ -118,14 +133,15 @@ export default {
       saveProfile,
       toggleTheme,
       linkSocialAccount,
+      setName,
+      saveName,
+      selectedName,
     };
   },
 };
 </script>
 
 <style scoped>
-
-
 .section {
   margin-bottom: 20px;
 }
@@ -160,6 +176,23 @@ button {
   align-items: center;
 }
 .toggle input {
+  margin-right: 10px;
+}
+.preference-item {
+  background: rgba(255, 255, 255, 0.149);
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+.name-options span {
+  cursor: pointer;
+  margin-right: 10px;
+  font-weight: bold;
+}
+.name-edit input {
+  width: 70%;
+  padding: 5px;
   margin-right: 10px;
 }
 </style>

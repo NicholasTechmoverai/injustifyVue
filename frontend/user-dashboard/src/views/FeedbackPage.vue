@@ -67,7 +67,6 @@
           </button>
         </form>
 
-        <!-- Success Message -->
         <p v-if="submitted" class="success-message">
           🎉 Thanks for your feedback! We appreciate it. 💙
         </p>
@@ -131,7 +130,6 @@ const submitFeedback = () => {
 </script>
 
 <style scoped>
-/* Main Container */
 .feedback-container {
   display: flex;
   justify-content: center;
@@ -140,6 +138,7 @@ const submitFeedback = () => {
   text-align: center;
   padding: 40px;
   animation: fadeIn 1s ease-in-out;
+  box-sizing: border-box;
 }
 
 /* Fade In Animation */
@@ -154,7 +153,6 @@ const submitFeedback = () => {
   }
 }
 
-/* Glassmorphism Card */
 .feedback-content {
   max-width: 500px;
   background: rgba(255, 255, 255, 0.1);
@@ -163,13 +161,14 @@ const submitFeedback = () => {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
   transition: transform 0.3s ease-in-out;
+  box-sizing: border-box;
+
 }
 
 .feedback-content:hover {
   transform: scale(1.02);
 }
 
-/* Titles */
 .feedback-title {
   font-size: 28px;
   font-weight: bold;
@@ -183,7 +182,6 @@ const submitFeedback = () => {
   margin-bottom: 20px;
 }
 
-/* Rating System */
 .rating-container {
   margin-bottom: 15px;
 }
@@ -203,7 +201,6 @@ const submitFeedback = () => {
   color: #ffd700;
 }
 
-/* Feedback Form */
 .feedback-form {
   display: flex;
   flex-direction: column;
@@ -220,6 +217,7 @@ const submitFeedback = () => {
   background: rgba(255, 255, 255, 0.15);
   color: white;
   outline: none;
+  box-sizing:border-box;
 }
 
 .char-count {
@@ -229,7 +227,6 @@ const submitFeedback = () => {
   margin-top: 5px;
 }
 
-/* Section Title */
 .section-title {
   font-size: 20px;
   color: #5fefff;
@@ -237,7 +234,6 @@ const submitFeedback = () => {
   text-align: left;
 }
 
-/* Dropdown & File Input */
 .dropdown,
 .file-input {
   width: 100%;
@@ -248,9 +244,9 @@ const submitFeedback = () => {
   background: rgba(255, 255, 255, 0.15);
   color: white;
   margin-top: 10px;
+  box-sizing:border-box;
 }
 
-/* Submit Button */
 .submit-btn {
   background: #5fefff;
   color: black;
@@ -273,7 +269,6 @@ const submitFeedback = () => {
   cursor: not-allowed;
 }
 
-/* Success Message */
 .success-message {
   margin-top: 15px;
   font-size: 16px;
@@ -291,5 +286,15 @@ const submitFeedback = () => {
     transform: scale(1);
     opacity: 1;
   }
+}
+
+@media (max-width:600px) {
+  .feedback-container {
+    padding:10px 3px;
+  }
+  .feedback-content {
+    padding:5px;
+  }
+  
 }
 </style>

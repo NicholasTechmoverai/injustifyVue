@@ -66,16 +66,17 @@ const devSections = ref([
 </script>
 
 <style scoped>
-/* Container */
+
 .dev-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: fit-content !important;
+  height: 100% !important;
   background: linear-gradient(135deg, #252525, #1b1b1b);
   text-align: center;
   padding: 40px;
   animation: backgroundAnim 10s infinite alternate ease-in-out;
+  box-sizing: border-box;
 }
 
 /* Animated Background */
@@ -97,6 +98,8 @@ const devSections = ref([
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
   transition: transform 0.3s ease-in-out;
+  box-sizing: border-box;
+
 }
 
 .dev-content:hover {
@@ -185,5 +188,16 @@ ion-icon {
   background: #007bff;
   color: white;
   transform: scale(1.05);
+}
+
+
+@media (max-width:600px) {
+  .dev-container {
+    padding:3px;
+  }
+  .dev-content {
+    padding:5px;
+  }
+  
 }
 </style>

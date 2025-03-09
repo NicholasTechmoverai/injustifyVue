@@ -40,14 +40,15 @@ export default {
     const user = params.get("user");
     if (user) {
       try {
-        const decodedUser = decodeURIComponent(user); // Decode URL-encoded JSON string
-        const userObj = JSON.parse(decodedUser); // Convert to JavaScript object
+        const decodedUser = decodeURIComponent(decodeURIComponent(user));
+        const userObj = JSON.parse(decodedUser).user_info;
         userStore.setUser(userObj);
-        console.log("User logged in successfully:", userObj);
+        
       } catch (error) {
         console.error("Error parsing user data:", error);
       }
     }
+
 
     const userEmail = computed(() => userStore.email);
     const userId = computed(() => userStore.userId);
