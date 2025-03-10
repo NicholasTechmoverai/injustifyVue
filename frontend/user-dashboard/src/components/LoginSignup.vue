@@ -297,8 +297,7 @@ export default {
           this.loading = false;
         }
 
-        console.log("Backend response:", response.data);
-        console.log("Backend response user:", response.data.user);
+        //console.log("Backend response:", response.data);
 
         this.closeModal();
       } catch (error) {
@@ -320,7 +319,7 @@ export default {
           email: this.resetEmail,
         });
 
-        console.log(response.data.detail);
+        //console.log(response.data.detail);
         this.resetMessage = response.data.message
           ? response.data.message
           : response.data.detail;
@@ -350,7 +349,7 @@ export default {
           code: this.codes.join(""),
         });
 
-        console.log("Verification Response:", response.data);
+        //console.log("Verification Response:", response.data);
 
         if (response.data.success) {
           this.resetApproved = true;
@@ -414,7 +413,6 @@ export default {
           this.loading = false;
         }
 
-        console.log("Backend response:", response.data);
         this.closeModal();
       } catch (error) {
         this.showMessage("Signup failed. Try again.", false);
@@ -423,13 +421,13 @@ export default {
       this.loading = false;
     },
     async resetPassword() {
-      console.log(
+      /*console.log(
         " Reset Password for ",
         this.resetEmail,
         this.codes.join(""),
         this.signupPassword,
         this.signupConfirmPassword
-      );
+      );*/
 
       if (
         !this.resetEmail ||
@@ -467,7 +465,7 @@ export default {
             this.closeModal();
           }, 2000);
         } else {
-          console.log("response from server", response.data);
+          console.error("response from server", response.data);
         }
       } catch (error) {
         this.showMessage("Password reset failed. Try again.", false);
@@ -498,7 +496,6 @@ export default {
     },
 
     closeModal() {
-      console.log("Close modal button clicked");
       this.$emit("close");
     },
 

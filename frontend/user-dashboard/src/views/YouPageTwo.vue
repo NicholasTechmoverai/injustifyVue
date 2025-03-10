@@ -97,7 +97,7 @@ import { computed, ref, watch, nextTick, onUnmounted, onMounted } from "vue";
 import { useUserStore } from "@/store/index.js";
 import { BASE_URL } from "@/utils";
 import axios from "axios";
-import socket from "@/services/websocket"; // Ensure WebSocket is correctly imported
+import socket from "@/services/websocket";
 
 export default {
   props: {
@@ -131,10 +131,10 @@ export default {
     const userId = computed(() => userStore.userId);
     const isDarkMode = computed(() => userStore.isdarkmode);
     let intervalId = null;
-    const showAnimate = ref(true);
-    const extend_card = ref(false);
+    const showAnimate = ref(true);//wheather show the animate cards
+    const extend_card = ref(false);//wheather extend the size of the animate cards(for mobile phones)
+    const requestCards = ref(true);//wheather request animatios for playing cards
 
-    // Compute available songs
 
     // Watch for song URL changes
     watch(
@@ -367,7 +367,7 @@ export default {
       socket.emit("request_image");
     };
     onMounted(() => {
-      setInterval(requestNextImage, 3000);
+      setInterval(requestCards.value?requestNextImage:'', 3000);
     });
 
     return {
@@ -399,7 +399,8 @@ export default {
       loading,
       showAnimate,
       extend_card,
-      handle_showAnimate
+      handle_showAnimate,
+      requestCards
     };
   },
 };
@@ -584,7 +585,7 @@ export default {
   width: 100%;
 }
 .playingCard .playingSongLylics > p {
-  font-size: 1em !important; /* Adjusted for readability */
+  font-size: 1em !important; 
 }
 
 .playingCard .playingSongArtwork {
