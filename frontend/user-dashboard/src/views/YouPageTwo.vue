@@ -12,7 +12,10 @@
       @timeupdate="updateProgress"
     ></audio>
 
-    <div id="playingCardContainer" :class="{ 'darktheme-2': isDarkMode }" :style="extend_card ? { height: '350px',position:'absolute',bottom:'0' } : {}"
+    <div
+      id="playingCardContainer"
+      :class="{ 'darktheme-2': isDarkMode }"
+      :style="extend_card ? { height: '350px', position: 'absolute', bottom: '0' } : {}"
     >
       <div v-if="loading">loading...</div>
       <div
@@ -30,12 +33,12 @@
         <div class="playingSongDateinfo">{{ song.song_id }}</div>
 
         <div class="PlayingAnimation" v-if="showAnimate">
-
-          <transition name="fade" v-if="song.isPlaying">
+          <transition name="fade" mode="out-in" v-if="song.isPlaying">
             <img
+              id="animation_gif"
               v-if="PlayingAnimation_file"
               :src="PlayingAnimation_file"
-              key="animation"
+              :key="PlayingAnimation_file"
             />
           </transition>
         </div>
@@ -58,7 +61,9 @@
         </div>
         <div class="somethingIntesting">
           <div class="somethingIntestingTitle">Artist</div>
-          <div v-if="song.isPlaying" class="out_of_index">{{currentIndex + 1 }}/{{ availableSongs.length }}</div>
+          <div v-if="song.isPlaying" class="out_of_index">
+            {{ currentIndex + 1 }}/{{ availableSongs.length }}
+          </div>
           <div class="cardPlayerControl">
             <i v-if="song.isPlaying" class="fa fa-random" @click="toggleShuffle"></i>
             <i
@@ -131,10 +136,9 @@ export default {
     const userId = computed(() => userStore.userId);
     const isDarkMode = computed(() => userStore.isdarkmode);
     let intervalId = null;
-    const showAnimate = ref(true);//wheather show the animate cards
-    const extend_card = ref(false);//wheather extend the size of the animate cards(for mobile phones)
-    const requestCards = ref(true);//wheather request animatios for playing cards
-
+    const showAnimate = ref(true); //wheather show the animate cards
+    const extend_card = ref(false); //wheather extend the size of the animate cards(for mobile phones)
+    const requestCards = ref(true); //wheather request animatios for playing cards
 
     // Watch for song URL changes
     watch(
@@ -162,7 +166,7 @@ export default {
     const toggleViewMode = () => {
       viewPlayersMode.value = !viewPlayersMode.value;
       emit("toggle-viewPlayersMode");
-      if(window.innerWidth< 680 ){
+      if (window.innerWidth < 680) {
         extend_card.value = !extend_card.value;
       }
     };
@@ -198,6 +202,7 @@ export default {
     };
 
     watch(playlist_id, fetchVideos, { immediate: true });
+
     // Play or pause a song
     const togglePlay = async (index) => {
       const song = availableSongs.value[index];
@@ -218,6 +223,14 @@ export default {
       } else {
         // Toggle play/pause for the current song
         isPlaying.value = !isPlaying.value;
+        requestCards.value = !requestCards.value;
+        if (requestCards.value) {
+          requestNextImage()
+          startInterval();
+        } else {
+          PlayingAnimation_file.value = new URL("../assets/injustify.png", import.meta.url).href;
+          clearInterval(intervalId); // Stop interval when paused
+        }
       }
 
       if (isPlaying.value) {
@@ -339,37 +352,42 @@ export default {
     };
 
     const handle_showAnimate = () => {
-      if(window.innerWidth< 680 ){
-        if(extend_card.value){
-          showAnimate.value = true
-        }else if(!extend_card.value){
-            showAnimate.value = false
+      if (window.innerWidth < 680) {
+        if (extend_card.value) {
+          showAnimate.value = true;
+        } else if (!extend_card.value) {
+          showAnimate.value = false;
         }
-      }else{
-        showAnimate.value = true
-        extend_card.value = true
+      } else {
+        showAnimate.value = true;
+        extend_card.value = true;
       }
-    }
-
-    // Cleanup on unmount
-    onUnmounted(() => {
-      if (viewUpdateInterval) clearInterval(viewUpdateInterval);
-    });
+    };
 
     socket.on("animatesd_player", (data) => {
-        if (data && data.image) {
-            PlayingAnimation_file.value = data.image;
-        } else {
-            console.error("Received data does not contain an image:", data);
-        }
-  });
+      if (data && data.image) {
+        PlayingAnimation_file.value = data.image;
+      } else {
+        console.error("Received data does not contain an image:", data);
+      }
+    });
     const requestNextImage = () => {
       socket.emit("request_image");
     };
+    const startInterval = () => {
+      clearInterval(intervalId); // Clear any existing interval
+      intervalId = setInterval(requestNextImage, 3000);
+    };
+
     onMounted(() => {
-      setInterval(requestCards.value?requestNextImage:'', 3000);
+      if (requestCards.value) {
+        startInterval();
+      }
     });
 
+    onUnmounted(() => {
+      clearInterval(intervalId); // Clean up interval on component unmount
+    });
     return {
       availableSongs,
       fullViewMode,
@@ -400,17 +418,17 @@ export default {
       showAnimate,
       extend_card,
       handle_showAnimate,
-      requestCards
+      requestCards,
     };
   },
 };
 </script>
 
 <style scoped>
-.out_of_index{
-  font-size:12px;
-  padding:0px 5px;
-  color:rgb(172, 168, 168);
+.out_of_index {
+  font-size: 12px;
+  padding: 0px 5px;
+  color: rgb(172, 168, 168);
 }
 .progress-container {
   width: 100%;
@@ -585,7 +603,7 @@ export default {
   width: 100%;
 }
 .playingCard .playingSongLylics > p {
-  font-size: 1em !important; 
+  font-size: 1em !important;
 }
 
 .playingCard .playingSongArtwork {
@@ -697,7 +715,7 @@ export default {
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
   color: #e7e7e7 !important;
 }
-/* Vue Transition */
+/* Vue Transition 
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 1.5s ease-in-out, transform 1.5s ease-in-out;
@@ -705,30 +723,56 @@ export default {
 
 .fade-enter-from {
   opacity: 0;
-  transform: scale(0.9);
+  transform: scale(0.7) translateY(20px); 
+}
+
+.fade-enter-to {
+  opacity: 1;
+  transform: scale(1.05) translateY(-5px); 
+}
+
+.fade-leave-from {
+  opacity: 1;
+  transform: scale(1); 
 }
 
 .fade-leave-to {
   opacity: 0;
-  transform: scale(1.1);
+  transform: scale(1.1) translateY(10px);
 }
+*/
+/* Simple Fade Transition */
+/* Ultra-Smooth Fade Transition */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 1.5s ease-in-out;
+  transition: opacity 1.2s ease-in-out;
 }
-.fade-enter-from,
+
+.fade-enter-from {
+  opacity: 0.5;
+}
+
+.fade-enter-to {
+  opacity: 1;
+}
+
+.fade-leave-from {
+  opacity: 1;
+}
+
 .fade-leave-to {
   opacity: 0;
 }
-@media (max-width: 668px) {
-#youSectionB #playingCardContainer {
-  height: 200px ;
-  width:100%;
-  padding: 10px;
 
-}
-.playingCard .somethingIntesting {
-  margin-top:0px;
-}
+
+@media (max-width: 668px) {
+  #youSectionB #playingCardContainer {
+    height: 200px;
+    width: 100%;
+    padding: 10px;
+  }
+  .playingCard .somethingIntesting {
+    margin-top: 0px;
+  }
 }
 </style>
