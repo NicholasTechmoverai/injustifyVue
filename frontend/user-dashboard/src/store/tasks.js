@@ -2,7 +2,8 @@ import { defineStore } from 'pinia';
 import { useUserStore } from "@/store/index.js";
 import { computed } from "vue";
 import { BASE_URL,extractYouTubeID } from "@/utils/index.js";
-
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+//import { fetchFile } from '@ffmpeg/util';
 
 export const adv_UserStore = defineStore('adv_user', {
   state: () => {
@@ -25,7 +26,8 @@ export const adv_UserStore = defineStore('adv_user', {
       currentDownloadCount:0,
       onGoingDownloads: {},
       status:'',
-
+      ffmpeg: new FFmpeg(),
+      isFFmpegLoaded: false
     };
   },
 
@@ -83,7 +85,7 @@ export const adv_UserStore = defineStore('adv_user', {
         let downloadedSize = 0;
         const progressBarWidth = 40; 
 
-        await audio_decider(itag,extension,resolution)
+        const audio_blob = await this.audio_decider(songId, itag, extension, resolution);
     
         const stream = new ReadableStream({
           start: (controller) => { 
@@ -116,9 +118,12 @@ export const adv_UserStore = defineStore('adv_user', {
             push();
           }
         });
-    
-        const blob = await new Response(stream).blob();
-        this.saveToFile(blob, b_filename,b_extension);
+
+        const main_blob = await new Response(stream).blob();
+        if(audio_blob){
+          await this.merge_chunks(audio_blob,main_blob,b_filename,b_filename)
+        }
+        this.saveToFile(main_blob, b_filename,b_extension);
     
       } catch (error) {
         console.error("Download failed:", error);
@@ -129,25 +134,83 @@ export const adv_UserStore = defineStore('adv_user', {
         this.userStore.set_isAboutToDownload(false);
       }
     },
+    async loadFFmpeg() {
+      if (!this.isFFmpegLoaded) {
+        await this.ffmpeg.load();
+        this.isFFmpegLoaded = true;
+        console.log("FFmpeg is loaded and ready to use.");
+      }
+    },
+
+    async blobToUint8Array(blob) {
+      const buffer = await blob.arrayBuffer();
+      return new Uint8Array(buffer);
+    },
+
+    async merge_chunks(audioBlob, videoBlob, filename, ext) {
+      console.log("Merging chunks...");
+      await this.loadFFmpeg();
     
+      // Set Logger for Debugging
+      this.ffmpeg.setLogger(({ type, message }) => {
+        console.log(`[${type}] ${message}`);
+      });
     
+      try {
+        // Convert and write files
+        const videoData = await this.blobToUint8Array(videoBlob);
+        const audioData = await this.blobToUint8Array(audioBlob);
+    
+        await this.ffmpeg.writeFile('/video.mp4', videoData);
+        console.log('Video file written successfully.');
+        await this.ffmpeg.writeFile('/audio.mp4', audioData);
+        console.log('Audio file written successfully.');
+    
+        console.log(await this.ffmpeg.listDir('/'));
+    
+        // Run the merge command
+        await this.ffmpeg.run(
+          '-loglevel', 'verbose',
+          '-i', '/video.mp4',
+          '-i', '/audio.mp4',
+          '-c:v', 'copy',
+          '-c:a', 'aac',
+          '-b:a', '192k',
+          '-shortest',
+          `/output.${ext}`
+        );
+        
+        console.log('FFmpeg merge command executed.');
+    
+        // Read the merged file
+        const data = await this.ffmpeg.readFile(`/output.${ext}`);
+        const mergedBlob = new Blob([data.buffer], { type: `video/${ext}` });
+    
+        this.saveToFile(mergedBlob, filename, ext);
+      } catch (error) {
+        console.error("Merging failed:", error);
+        console.error("Current FS state:", await this.ffmpeg.listDir('/'));
+      }
+    },
     
 
-    saveToFile(blob, filename,extension) {
-      const fileExtension = extension.startsWith(".") ? extension.slice(1) : extension;
 
+    saveToFile(blob, filename, extension) {
+      const cleanExt = extension.startsWith(".") ? extension.slice(1) : extension;
       const downloadLink = document.createElement("a");
       downloadLink.href = URL.createObjectURL(blob);
-      downloadLink.download = `${filename}.${fileExtension}`;
-    
+      downloadLink.download = `${filename}.${cleanExt}`;
+
       document.body.appendChild(downloadLink);
       downloadLink.click();
-    
       URL.revokeObjectURL(downloadLink.href);
-      //document.body.removeChild(downloadLink); 
-      
+
       console.log("Download completed:", filename);
     },
+  
+
+    
+  
     downloadsCount(val) {
       if (val === '+') {
         this.currentDownloadCount++;
@@ -165,19 +228,89 @@ export const adv_UserStore = defineStore('adv_user', {
 
     async audio_decider(songId, itag, extension, resolution) {
       if (itag === '18' || resolution === 'audio only' || extension === 'm4a') {
+        console.log(`Skipping audio download for itag: ${itag}, resolution: ${resolution}, extension: ${extension}`);
         return;
       }
     
       const audioItagMap = {
-        'mp4': '140',   // Standard audio for mp4
-        'webm': '251',  // Standard audio for webm
+        'mp4': '140',
+        'webm': '251',
       };
     
       const audioItag = audioItagMap[extension];
       if (audioItag) {
-        await download_yt_stream_audio(songId, audioItag);
+        console.log(`Downloading audio stream with itag: ${audioItag}`);
+        return await this.download_yt_stream_audio(songId, audioItag);
+      } else {
+        console.log(`No audio download required for extension: ${extension}`);
       }
-    }
+    },
+    
+    async download_yt_stream_audio(songId, itag) {
+      if (!itag) {
+        console.log("Please select a stream to download.");
+        return;
+      }
+    
+      //let download_id;
+      console.log("GETTING AUDIO!!!")
+    
+      try {
+        const response = await fetch(`${BASE_URL}/api/download/yt`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            itag, 
+            song_url: songId, 
+            songId: extractYouTubeID(songId),
+            filename:"audio",
+            start_byte: 0,
+            ext:'mp4'      
+          })
+        });
+    
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        this.downloadsCount('+');
+
+        const reader = response.body.getReader();
+        let downloadedSize = 0;
+
+
+        //const header_info = response.headers;
+        //const contentType = header_info.get("Content-Type");
+
+    
+        const stream = new ReadableStream({
+          start: (controller) => { 
+            const push = () => { 
+              reader.read().then(({ done, value }) => {
+                if (done) {
+                  console.log("\nDownload completed!");
+                  this.downloadsCount('-');
+                  controller.close();
+                  return;
+                }
+    
+                downloadedSize += value.length;    
+ 
+                console.log(`LOADING AUDIO... ${downloadedSize} `);
+    
+                controller.enqueue(value);
+                push();
+              });
+            };
+            push();
+          }
+        });
+    
+        const audio_blob = await new Response(stream).blob();	
+        return audio_blob		
+      } catch (error) {
+        console.error("Download failed:", error);
+        
+      } finally {console.log("audio download completed")
+      }
+    },
     
 
     

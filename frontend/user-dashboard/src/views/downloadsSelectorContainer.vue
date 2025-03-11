@@ -99,6 +99,7 @@ export default {
       activeFilename: null,
       activeFilesize: null,
       activeService: null,
+      activeResolution:null,
       activeExt:'mp4',
       userId: computed(() => userStore.userId),
       isDroppeddown: false,
@@ -131,6 +132,7 @@ export default {
       this.activeFilename = `${this.info.title}-${this.info.artist}`;
       this.activeFilesize = stream.size_mb;
       this.activeExt = stream.ext;
+      this.activeResolution = stream.resolution
       const info = {
         song_url: this.songId,
         filename: this.activeFilename,
@@ -144,6 +146,7 @@ export default {
       this.userStore.set_DownloadFileCredential(info);
       console.log(this.activeItag, this.activeFilesize);
     },
+
 
     categorize_url() {
       this.isDroppeddown = false;
@@ -217,7 +220,7 @@ export default {
         return;
       } else if (this.activeService === "youtube") {
         console.log("Downloading YouTube video streams.");
-        this.advUserStore.download_yt_stream(this.songId, this.activeItag,this.activeFilename,this.activeExt);
+        this.advUserStore.download_yt_stream(this.songId, this.activeItag,this.activeFilename,this.activeExt,this.activeResolution);
       }
     },
   },
