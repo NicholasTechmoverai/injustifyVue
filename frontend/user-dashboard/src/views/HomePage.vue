@@ -11,16 +11,32 @@
         <p class="loadert">Loading...</p>
       </div>
 
-      <div :class="{ 'darktheme-1': isDarkMode }">
-        <h2>Video Filter</h2>
+      <h5>search download</h5>
+      {{ query }}
+      <div id="searchcontrols">
+        <button>tt</button>
+        <ion-icon
+          @click="toggleSearch"
+          :name="showSearch ? 'close-circle-outline' : 'search-circle-outline'"
+        ></ion-icon>
+        <ion-icon name="options-outline"></ion-icon>
+      </div>
+
+      <div id="searchBar" :class="{ 'darktheme-1': isDarkMode }" v-if="showSearch">
         <input
           type="text"
           placeholder="Filter Search"
           v-model="query"
+          @input="fetch_suggestions" 
+
           :class="{ 'darktheme-4': isDarkMode }"
         />
         <button @click="reset" :class="{ 'darktheme-3': isDarkMode }">Clear</button>
         <button @click="searchAll" :class="{ 'darktheme-3': isDarkMode }">Search</button>
+
+        <div v-for="suggestion in search_suggestions" :key="suggestion.name">
+          <div>{{ suggestion.name }} {{ suggestion.artist }}</div>
+        </div>
       </div>
     </div>
 
@@ -101,7 +117,7 @@
 
 <script>
 import DownlodSelectorHold from "./downloadsSelectorContainer.vue";
-
+import socket from "@/services/websocket";
 import { computed } from "vue";
 import axios from "axios";
 import { timeAgo } from "@/utils/index";
@@ -119,6 +135,7 @@ export default {
       iscollapsedBig: computed(() => userStore.iscollapsedBig),
       isDarkMode: computed(() => userStore.isdarkmode),
       useremail: computed(() => userStore.email),
+      userId: computed(() => userStore.userId),
       streamloading: computed(() => userStore.streamloading),
     };
   },
@@ -132,11 +149,13 @@ export default {
       inj_videos: [],
       yt_videos: [],
       sp_videos: [],
+      search_suggestions: [],
       loading: { injustify: false, youtube: false, spotify: false },
       spotifyThumbnails: {}, // Store fetched Spotify thumbnails
       openIndex: null,
       streamSongID: null,
       userStore,
+      showSearch: false,
     };
   },
 
@@ -168,6 +187,9 @@ export default {
   },
 
   methods: {
+    toggleSearch() {
+      this.showSearch = !this.showSearch;
+    },
     getLogo(service) {
       if (service === "injustify") {
         return new URL("../assets/injustify.png", import.meta.url).href;
@@ -197,6 +219,17 @@ export default {
       this.sp_videos = [];
       this.spotifyThumbnails = {};
     },
+
+    async fetch_suggestions() {
+  if (this.query.trim() !== '') {
+    console.log("Getting suggestions for query:", this.query);
+    socket.emit("get_search_suggestions", {
+      userId: this.userId,
+      query: this.query,
+    });
+  }
+},
+
 
     async fetchVideos() {
       this.loading.injustify = true;
@@ -374,6 +407,16 @@ export default {
       }
       return video.artist;
     },
+    mounted() {
+      socket.on("respoce_search_suggestions", (data) => {
+        console.log("found suggeestions::",data.search_suggestions)
+        this.search_suggestions = data.search_suggestions;
+      });
+    },
+    beforeUnmount() {
+      // Remove the listener to prevent memory leaks
+      socket.off("respoce_search_suggestions");
+    },
 
     timeAgo,
     getYouTubeThumbnails,
@@ -382,7 +425,6 @@ export default {
 </script>
 
 <style scoped>
-
 #streamsContainer {
   border-radius: 10px 10px 0 0;
   position: fixed;
@@ -593,12 +635,60 @@ export default {
   padding: 1.5rem;
   padding-top: 0;
   text-align: center;
-  background: #f9f9f9;
+  background: #eae9e9;
   border-radius: 0 0 10px 10px;
   box-shadow: 0 0px 10px rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
-  position: relative;
+  display: flex;
+  flex-direction: row;
+  position: sticky;
+  top: 0;
   z-index: 99;
+
+  .injustifyLogoR {
+    margin-top: 0;
+    padding-top: 0;
+    text-shadow: 0px 2px 5px black;
+  }
+
+  h5 {
+    font-size: 1rem;
+    font-weight: normal;
+    color: inherit;
+    margin: auto;
+    padding: 0;
+    text-align: center;
+    font-variant: small-caps;
+    text-transform: capitalize;
+    font-family: "Arial", sans-serif;
+  }
+
+  #searchBar {
+    position: absolute !important;
+    right: 0;
+    top: 50px;
+  }
+
+  #searchcontrols {
+    position: relative;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    button {
+      background: #007bff;
+      color: white;
+      padding: 3px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease-in-out;
+      &:hover {
+        background: #0069d9;
+      }
+    }
+  }
   h3 {
     font-size: 1.2rem;
     font-weight: bold;
@@ -624,7 +714,8 @@ export default {
     margin-bottom: 1.5rem;
     background-color: rgba(255, 255, 255, 0.169) !important;
     box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.815);
-
+    height: fit-content !important;
+    padding: 4px !important;
     .loadert {
       display: flex;
       align-items: center;
@@ -637,7 +728,16 @@ export default {
       border-radius: 5px;
       animation: pulse 1.5s infinite alternate;
     }
+    .loader {
+      transform: scale(0.6);
+      padding: 0 !important;
+    }
 
+    p,
+    h5 {
+      margin: 0;
+      padding: 0;
+    }
     @keyframes pulse {
       0% {
         transform: scale(1);
@@ -767,7 +867,7 @@ export default {
   .injustifyLogoR {
     font-size: 20px;
   }
-  #streamsContainer{
+  #streamsContainer {
     width: 95%;
   }
 }
