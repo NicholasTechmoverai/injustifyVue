@@ -212,6 +212,8 @@ color: white;
 .injustifyLogoR{
   font-family: 'Sofia', cursive;
   position: absolute;
+  cursor: pointer;
+  user-select: none;
 }
 .circular-profile_pic{
   border-radius: 50%;

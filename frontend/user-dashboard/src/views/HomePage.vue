@@ -1,8 +1,27 @@
 <template>
   <div class="MainContainer" :class="{ collabsedBig: iscollapsedBig }">
     <div id="homepage-header" :class="{ 'darktheme-2': isDarkMode }">
-      <h1 class="injustifyLogoR">Injustify</h1>
-      <p>{{ message }}</p>
+      <div id="iconPlusQuery">
+        <h1 @click="reloadPage" class="injustifyLogoR">Injustify</h1>
+
+        <div id="queryShow">
+          <p id="queryHold" v-if="query" @click="toggleSearch">
+            [ <span>{{ query }}</span> ]
+          </p>
+          <div class="s_result" @click="scrollToService('injustify')">
+            <img :src="injustifyIcon" alt="Justify Icon" />
+            <span>{{ inj_videos.length }}</span>
+          </div>
+          <div class="s_result" @click="scrollToService('YouTube')">
+            <img :src="youtubeIcon" alt="Justify Icon" />
+            <span>{{ yt_videos.length }}</span>
+          </div>
+          <div class="s_result" @click="scrollToService('Spotify')">
+            <img :src="spotifyIcon" alt="Justify Icon" />
+            <span>{{ sp_videos.length }}</span>
+          </div>
+        </div>
+      </div>
       <div
         v-if="loading.injustify || loading.youtube || loading.spotify"
         class="spinner-container"
@@ -11,31 +30,108 @@
         <p class="loadert">Loading...</p>
       </div>
 
-      <h5>search download</h5>
-      {{ query }}
       <div id="searchcontrols">
         <button>tt</button>
         <ion-icon
           @click="toggleSearch"
           :name="showSearch ? 'close-circle-outline' : 'search-circle-outline'"
         ></ion-icon>
-        <ion-icon name="options-outline"></ion-icon>
+        <ion-icon @click="toggleAdvancedFeatures" name="options-outline"></ion-icon>
       </div>
 
       <div id="searchBar" :class="{ 'darktheme-1': isDarkMode }" v-if="showSearch">
-        <input
-          type="text"
-          placeholder="Filter Search"
-          v-model="query"
-          @input="fetch_suggestions" 
+        <div class="input-container">
+          <input
+            type="text"
+            placeholder="Filter Search"
+            v-model="query"
+            @input="fetch_suggestions"
+            :class="{ 'darktheme-4': isDarkMode }"
+          />
+          <button @click="resetSearch" :class="{ 'darktheme-3': isDarkMode }">
+            <ion-icon name="reload-outline"></ion-icon>
+          </button>
+          <button @click="searchAll" :class="{ 'darktheme-3': isDarkMode }">
+            <ion-icon name="search-outline"></ion-icon>
+          </button>
+        </div>
+        <div v-if="search_suggestions.length" id="suggestionContainer">
+          <div
+            v-for="suggestion in search_suggestions"
+            :key="suggestion.name"
+            id="suggestion"
+            @click="FillSuggestion(`${suggestion.name} ${suggestion.artist}`)"
+          >
+            {{ suggestion.name }} - <span class="artist">{{ suggestion.artist }}</span>
+          </div>
+        </div>
+        <p v-else>No suggestions</p>
+      </div>
 
+      <div
+        id="AdvancedFeatures"
+        :class="{ 'darktheme-1': isDarkMode }"
+        v-if="showMoreAdvancedFeatures"
+      >
+        <div class="service-options" :class="{ 'darktheme-4': isDarkMode }">
+          <h6>Select Platforms:</h6>
+          <div>
+            <input
+              type="checkbox"
+              v-model="selectedPlatforms"
+              value="injustify"
+            />Injustify
+          </div>
+          <div>
+            <input type="checkbox" v-model="selectedPlatforms" value="youtube" />YouTube
+          </div>
+          <div>
+            <input type="checkbox" v-model="selectedPlatforms" value="spotify" />Spotify
+          </div>
+        </div>
+
+        <div class="filter-options" :class="{ 'darktheme-4': isDarkMode }">
+          <h6>Filter by:</h6>
+          <div>
+            <input type="checkbox" v-model="selectedFilters" value="artist" />Artist
+          </div>
+          <div>
+            <input type="checkbox" v-model="selectedFilters" value="title" />Title
+          </div>
+          <div><input type="checkbox" v-model="selectedFilters" value="data" />Data</div>
+          <div>
+            <input type="checkbox" v-model="selectedFilters" value="lyrics" />Lyrics
+          </div>
+        </div>
+
+        <div class="advanced-input" :class="{ 'darktheme-4': isDarkMode }">
+          <h6>Advanced Options</h6>
+          <div>
+            <label for="searchUrl">Paste YouTube URL to Download:</label>
+            <input
+              type="text"
+              v-model="youtubeUrl"
+              id="searchUrl"
+              placeholder="Enter YouTube URL"
+            />
+          </div>
+          <button @click="processDownload">Download</button>
+        </div>
+
+        <div
+          class="suggestion-box"
           :class="{ 'darktheme-4': isDarkMode }"
-        />
-        <button @click="reset" :class="{ 'darktheme-3': isDarkMode }">Clear</button>
-        <button @click="searchAll" :class="{ 'darktheme-3': isDarkMode }">Search</button>
-
-        <div v-for="suggestion in search_suggestions" :key="suggestion.name">
-          <div>{{ suggestion.name }} {{ suggestion.artist }}</div>
+          v-if="suggestions.length"
+        >
+          <h6>Suggestions</h6>
+          <div
+            id="suggestion"
+            v-for="suggestion in suggestions"
+            :key="suggestion"
+            @click="selectSuggestion(suggestion)"
+          >
+            {{ suggestion }}
+          </div>
         </div>
       </div>
     </div>
@@ -45,6 +141,7 @@
     <div
       v-for="(videoList, service) in videoSources"
       :key="service"
+      :ref="service"
       id="holder"
       :class="{ 'darktheme-5': isDarkMode }"
     >
@@ -124,6 +221,9 @@ import { timeAgo } from "@/utils/index";
 import { getYouTubeThumbnails, getSpotifyThumbnail } from "@/utils/index.js";
 import { useUserStore } from "@/store/index.js";
 import { BASE_URL } from "@/utils/index.js";
+import injustifyIcon from "../assets/injustify.png";
+import youtubeIcon from "../assets/youtube-icon2.jpg";
+import spotifyIcon from "../assets/spotify-logo.png";
 
 export default {
   name: "HomePage",
@@ -144,6 +244,9 @@ export default {
     const userStore = useUserStore();
 
     return {
+      injustifyIcon,
+      youtubeIcon,
+      spotifyIcon,
       message: "",
       query: "",
       inj_videos: [],
@@ -156,6 +259,11 @@ export default {
       streamSongID: null,
       userStore,
       showSearch: false,
+      showMoreAdvancedFeatures: false,
+      selectedPlatforms: [],
+      selectedFilters: [],
+      youtubeUrl: "",
+      suggestions: ["Suggestion 1", "Suggestion 2", "Suggestion 3"],
     };
   },
 
@@ -170,6 +278,11 @@ export default {
   },
 
   async mounted() {
+    socket.on("respoce_search_suggestions", (data) => {
+      console.log("found suggeestions::", data);
+      this.search_suggestions = data.search_suggestions;
+    });
+
     if (!this.useremail) {
       console.error("User email is undefined");
       return;
@@ -189,16 +302,22 @@ export default {
   methods: {
     toggleSearch() {
       this.showSearch = !this.showSearch;
+      this.showMoreAdvancedFeatures = false;
+    },
+    toggleAdvancedFeatures() {
+      console.log("toogling............");
+      this.showMoreAdvancedFeatures = !this.showMoreAdvancedFeatures;
+      this.showSearch = false;
     },
     getLogo(service) {
       if (service === "injustify") {
-        return new URL("../assets/injustify.png", import.meta.url).href;
+        return injustifyIcon;
       } else if (service === "YouTube") {
-        return new URL("../assets/youtube-icon2.jpg", import.meta.url).href;
+        return youtubeIcon;
       } else if (service === "Spotify") {
-        return new URL("../assets/spotify-logo.png", import.meta.url).href;
+        return spotifyIcon;
       } else {
-        return new URL("../assets/injustify.png", import.meta.url).href;
+        return injustifyIcon;
       }
     },
     toggleDropdown(index) {
@@ -212,24 +331,24 @@ export default {
       this.toggleDropdown();
     },
 
-    reset() {
+    resetSearch() {
       this.query = "";
-      this.inj_videos = [];
+      //this.inj_videos = [];
       this.yt_videos = [];
       this.sp_videos = [];
+      this.search_suggestions = [];
       this.spotifyThumbnails = {};
     },
 
     async fetch_suggestions() {
-  if (this.query.trim() !== '') {
-    console.log("Getting suggestions for query:", this.query);
-    socket.emit("get_search_suggestions", {
-      userId: this.userId,
-      query: this.query,
-    });
-  }
-},
-
+      if (this.query.trim() !== "") {
+        console.log("Getting suggestions for query:", this.query);
+        socket.emit("get_search_suggestions", {
+          userId: this.userId,
+          query: this.query,
+        });
+      }
+    },
 
     async fetchVideos() {
       this.loading.injustify = true;
@@ -267,6 +386,7 @@ export default {
       await this.fetchVideos(); // Search local database
       await this.searchYouTube(); // Search YouTube
       await this.searchSpotify(); // Search Spotify
+      this.showSearch = false;
     },
 
     async pollServiceResults(service, retries = 20, interval = 3000) {
@@ -390,6 +510,11 @@ export default {
       }
       return video.title;
     },
+    FillSuggestion(query_suggest) {
+      this.query = query_suggest;
+      this.searchAll();
+      this.showSearch = false;
+    },
 
     getArtist(video, service) {
       if (service === "YouTube") {
@@ -407,12 +532,28 @@ export default {
       }
       return video.artist;
     },
-    mounted() {
-      socket.on("respoce_search_suggestions", (data) => {
-        console.log("found suggeestions::",data.search_suggestions)
-        this.search_suggestions = data.search_suggestions;
-      });
+    scrollToService(tg, offset = 100) {
+      const target = this.$refs[tg]?.[0]; // Access the first element if in v-f
+
+      if (target) {
+        // Get the element's position relative to the viewport
+        const rect = target.getBoundingClientRect();
+
+        // Calculate the absolute position and add the offset
+        const scrollTop = window.pageYOffset + rect.top - offset;
+
+        window.scrollTo({
+          top: scrollTop,
+          behavior: "smooth",
+        });
+      } else {
+        console.warn(`No element found for: ${tg}`);
+      }
     },
+    reloadPage() {
+      window.location.reload();
+    },
+
     beforeUnmount() {
       // Remove the listener to prevent memory leaks
       socket.off("respoce_search_suggestions");
@@ -646,9 +787,12 @@ export default {
   z-index: 99;
 
   .injustifyLogoR {
-    margin-top: 0;
+    margin: 0 !important;
+    margin-right: auto !important;
+    margin-bottom: 5px !important;
     padding-top: 0;
     text-shadow: 0px 2px 5px black;
+    position: relative;
   }
 
   h5 {
@@ -667,6 +811,247 @@ export default {
     position: absolute !important;
     right: 0;
     top: 50px;
+    padding: 10px 5px !important;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    max-width: 360px;
+    width: 100%;
+    margin: auto;
+    overflow-wrap: break-word;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+    z-index: 100;
+    box-sizing: border-box;
+
+    &.darktheme-1 {
+      background-color: #1e1e1e;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      border: 1px solid #333;
+    }
+
+    input {
+      width: 75%;
+      padding: 10px 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      box-sizing: border-box;
+
+      &:focus {
+        border-color: #5a9;
+        box-shadow: 0 0 8px rgba(90, 170, 100, 0.5);
+        outline: none;
+      }
+
+      &.darktheme-4 {
+        background-color: #2b2b2b;
+        border-color: #555;
+        color: #e0e0e0;
+      }
+    }
+
+    button {
+      padding: 8px 16px;
+      margin-right: 8px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background-color: #5a9;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background-color 0.3s ease, transform 0.2s;
+
+      &:hover {
+        background-color: #48976b;
+        transform: translateY(-2px);
+      }
+
+      &:active {
+        transform: scale(0.98);
+      }
+
+      &.darktheme-3 {
+        background-color: #444;
+        border-color: #555;
+        color: #fff;
+      }
+
+      &.darktheme-3:hover {
+        background-color: #555;
+      }
+    }
+    .input-container {
+      flex-direction: row !important;
+      padding: 3px !important;
+
+      button {
+        font-weight: normal;
+        padding: 3px !important;
+      }
+    }
+    #suggestionContainer {
+      margin-top: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding-right: 4px;
+      border-radius: 8px;
+      box-sizing: border-box;
+      overflow-x: hidden;
+
+      &.darktheme-1 {
+        border-color: #444;
+      }
+    }
+
+    #suggestion {
+      padding: 8px 12px;
+      background-color: #81818171;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      box-sizing: border-box;
+
+      &:hover {
+        background-color: #7f7f7f;
+        transform: translateX(5px);
+      }
+
+      .artist {
+        font-size: 12px;
+        color: #918d8d;
+        font-style: italic;
+      }
+    }
+
+    .darktheme-1 #suggestion {
+      background-color: #2b2b2b;
+      color: #ccc;
+      border: 1px solid #444;
+    }
+
+    .darktheme-1 #suggestion:hover {
+      background-color: #444;
+    }
+
+    #suggestionContainer::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #suggestionContainer::-webkit-scrollbar-thumb {
+      background-color: #ccc;
+      border-radius: 8px;
+    }
+
+    .darktheme-1 #suggestionContainer::-webkit-scrollbar-thumb {
+      background-color: #555;
+    }
+  }
+
+  #iconPlusQuery {
+    display: flex;
+    flex-direction: column;
+    padding: 0px !important;
+
+    div {
+      padding: 0 !important;
+    }
+  }
+
+  #queryShow {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 8px;
+    color: #f1f5f9;
+    font-family: "Arial", sans-serif;
+    box-sizing: border-box;
+
+    #queryHold {
+      width: 120px;
+      height: fit-content;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid #475569;
+      border-radius: 6px;
+      padding: 0;
+      box-shadow: inset 0 0px 4px rgba(0, 0, 0, 0.3);
+
+      span {
+        width: 100px;
+        display: inline-block;
+        white-space: nowrap;
+        animation: scrollText 6s linear infinite;
+        color: #535354;
+        font-size: 12px;
+      }
+
+      div > img {
+        width: 18px !important; /* Adjusted size */
+        height: 18px !important; /* Adjusted size */
+        object-fit: contain;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        transition: transform 0.3s ease;
+      }
+    }
+
+    p {
+      margin: 0;
+    }
+
+    div {
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    div:hover {
+      background-color: #334155;
+      transform: translateY(-2px);
+    }
+
+    .s_result {
+      color: gray;
+      font-style: italic;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      flex-direction: row;
+      gap: 2px;
+    }
+
+    /* Animation for scrolling text */
+    @keyframes scrollText {
+      0% {
+        transform: translateX(100%);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+  }
+
+  /* Styling for images */
+  #queryShow > div img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s ease;
   }
 
   #searchcontrols {
@@ -706,7 +1091,7 @@ export default {
 
   .spinner-container {
     position: fixed;
-    top: 0;
+    top: 60px;
     right: 1%;
     display: flex;
     justify-content: center;
@@ -716,6 +1101,7 @@ export default {
     box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.815);
     height: fit-content !important;
     padding: 4px !important;
+    z-index: 100;
     .loadert {
       display: flex;
       align-items: center;
@@ -870,5 +1256,95 @@ export default {
   #streamsContainer {
     width: 95%;
   }
+}
+</style>
+<style scoped>
+#AdvancedFeatures {
+  position: absolute !important;
+  right: 0;
+  top: 50px;
+  padding: 10px 5px !important;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  max-width: 360px;
+  width: 100%;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  z-index: 100;
+  box-sizing: border-box;
+
+  div {
+  margin:0!important;
+  padding:0 !important;
+  }
+}
+
+.darktheme-1 {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+}
+
+input {
+  width: 75%;
+  padding: 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box;
+}
+
+input:focus {
+  border-color: #5a9;
+  box-shadow: 0 0 8px rgba(90, 170, 100, 0.5);
+  outline: none;
+}
+
+.darktheme-4 input {
+  background-color: #2b2b2b;
+  border-color: #555;
+  color: #e0e0e0;
+}
+
+button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: #5a9;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s;
+}
+
+button:hover {
+  background-color: #48976b;
+  transform: translateY(-2px);
+}
+
+.suggestion-box {
+  margin-top: 10px;
+}
+
+#suggestion {
+  padding: 8px 12px;
+  background-color: #81818171;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s;
+}
+
+#suggestion:hover {
+  background-color: #7f7f7f;
+  transform: translateX(5px);
+}
+
+.darktheme-4 #suggestion {
+  background-color: #2b2b2b;
+  color: #ccc;
+}
+
+.darktheme-4 #suggestion:hover {
+  background-color: #444;
 }
 </style>
