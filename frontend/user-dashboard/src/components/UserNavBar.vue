@@ -37,7 +37,10 @@
         </li>
         <li>
           <router-link class="inline" :to="`/downloads/${userEmail}`">
-          <div id="downloadCount">{{ downloadCount }}</div>
+            <div id="outerProgressBar" :style="{ '--progress': averageProgress + '%' }">
+              <div id="downloadCount">{{ downloadCount }}</div>
+            </div>
+
             <ion-icon name="cloud-download-outline"></ion-icon>
             <div v-if="isSidebarOpen">Downloads</div>
             <div v-if="isAboutToDownload" class="inline-loader-container">
@@ -105,81 +108,129 @@
   </aside>
 </template>
 
-<script>
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useUserStore } from "@/store/index.js";
 import { adv_UserStore } from "@/store/tasks.js";
-import { computed } from "vue";
 
-export default {
-  props: {
-    userEmail: String,
-    userName: String,
-    profilePic: String,
-    isVerified: Boolean,
-    isDarkMode: Boolean,
-  },
-  data() {
-    const userStore = useUserStore();
-    const advUserStore = adv_UserStore();
+// Define props
+defineProps({
+  userEmail: String,
+  userName: String,
+  profilePic: String,
+  isVerified: Boolean,
+  isDarkMode: Boolean,
+});
 
-    return {
-      isSidebarOpen: true,
-      deviceWidth: window.innerWidth,
-      isAboutToDownload: computed(() => userStore.isAboutToDownload),
-      userStore,
-      downloadCount:computed(() => advUserStore.currentDownloadCount),
-    };
-  },
-  mounted() {
-    this.defaultSidebarHandler();
-    window.addEventListener("resize", this.handleResize);
-  },
-  beforeUnmount() {
-    window.removeEventListener("resize", this.handleResize);
-  },
-  methods: {
-    toggleSidebar() {
-      const deviceWidth = window.innerWidth;
+const emit = defineEmits(["toggle-theme"]);
 
-      if (deviceWidth >= 862 && this.isSidebarOpen) {
-       this. userStore.setMainContainerWidthMarginLeft(true);
-      } else if (deviceWidth >= 862 && !this.isSidebarOpen) {
-        this.userStore.setMainContainerWidthMarginLeft(false);
-      }
+const userStore = useUserStore();
+const advUserStore = adv_UserStore();
 
-      this.isSidebarOpen = !this.isSidebarOpen;
-    },
-    toggleThemes() {
-      console.log("Toggled theme in navbar.vue");
-      this.$emit("toggle-theme");
-    },
-    defaultSidebarHandler() {
-      if (this.deviceWidth < 862) {
-        this.isSidebarOpen = false;
-      } else {
-        this.isSidebarOpen = true;
-      }
-    },
-    handleResize() {
-      this.deviceWidth = window.innerWidth;
-      this.defaultSidebarHandler();
-    },
-  },
+const isSidebarOpen = ref(true);
+const deviceWidth = ref(window.innerWidth);
+
+const isAboutToDownload = computed(() => userStore.isAboutToDownload);
+const downloadCount = computed(() => advUserStore.currentDownloadCount);
+
+const activeDownloads = computed(() => {
+  const downloads = advUserStore.onGoingDownloads;
+  return Object.fromEntries(
+    Object.entries(downloads).filter(
+      ([, download]) => download.status !== "completed" && (download.progress || 0) < 1
+    )
+  );
+});
+
+const averageProgress = computed(() => {
+  const downloadArray = Object.values(activeDownloads.value);
+
+  console.log("Active Downloads:", downloadArray.length);
+  console.log("Download Progress Details:", downloadArray);
+
+  if (downloadArray.length === 0) return 0;
+
+  const totalProgress = downloadArray.reduce(
+    (sum, download) => sum + (download.progress || 0),
+    0
+  );
+
+  const avgProgress = Math.round((totalProgress / downloadArray.length) * 100);
+  console.log("Average Progress:", avgProgress, "%");
+
+  return avgProgress;
+});
+
+// Methods
+const toggleSidebar = () => {
+  const deviceWidth = window.innerWidth;
+
+  if (deviceWidth >= 862) {
+    userStore.setMainContainerWidthMarginLeft(isSidebarOpen.value);
+  }
+
+  isSidebarOpen.value = !isSidebarOpen.value;
 };
+
+const toggleThemes = () => {
+  console.log("Toggled theme in navbar.vue");
+  emit("toggle-theme");
+};
+
+const defaultSidebarHandler = () => {
+  isSidebarOpen.value = deviceWidth.value >= 862;
+};
+
+const handleResize = () => {
+  deviceWidth.value = window.innerWidth;
+  defaultSidebarHandler();
+};
+
+// Lifecycle hooks
+onMounted(() => {
+  defaultSidebarHandler();
+  window.addEventListener("resize", handleResize);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", handleResize);
+});
 </script>
 
 <style scoped>
-#downloadCount{
+#outerProgressBar {
   position: absolute;
   top: 0;
   right: 0;
+  padding: 2px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: conic-gradient(
+    rgb(0, 255, 89) var(--progress, 0%),
+    rgba(200, 200, 200, 0.5) 0%
+  );
+  transition: background 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+#downloadCount {
   background-color: red;
   color: white;
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  text-align: center;
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
+
 .inline-loader-container {
   position: absolute;
   bottom: 0;

@@ -153,7 +153,7 @@ export default {
       formData.append("user_id", user.value.id); // Fix: Use `user.value.id` instead of `props.userId`
 
       try {
-        await axios.post(`${BASE_URL}/api/update-profile`, formData);
+        await axios.post(`${BASE_URL}/api/profile/update-profile`, formData);
         console.log("Profile updated successfully!");
       } catch (error) {
         console.error("Error updating profile:", error);

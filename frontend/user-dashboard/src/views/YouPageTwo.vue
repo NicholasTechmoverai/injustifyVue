@@ -225,10 +225,13 @@ export default {
         isPlaying.value = !isPlaying.value;
         requestCards.value = !requestCards.value;
         if (requestCards.value) {
-          requestNextImage()
+          requestNextImage();
           startInterval();
         } else {
-          PlayingAnimation_file.value = new URL("../assets/injustify.png", import.meta.url).href;
+          PlayingAnimation_file.value = new URL(
+            "../assets/injustify.png",
+            import.meta.url
+          ).href;
           clearInterval(intervalId); // Stop interval when paused
         }
       }
@@ -763,7 +766,6 @@ export default {
 .fade-leave-to {
   opacity: 0;
 }
-
 
 @media (max-width: 668px) {
   #youSectionB #playingCardContainer {

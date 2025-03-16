@@ -5,9 +5,9 @@
         <h1 @click="reloadPage" class="injustifyLogoR">Injustify</h1>
 
         <div id="queryShow">
-          <p id="queryHold" v-if="query" @click="toggleSearch">
+          <label for="filterSearch" id="queryHold" v-if="query" @click="toggleSearch">
             [ <span>{{ query }}</span> ]
-          </p>
+          </label>
           <div class="s_result" @click="scrollToService('injustify')">
             <img :src="injustifyIcon" alt="Justify Icon" />
             <span>{{ inj_videos.length }}</span>
@@ -42,6 +42,7 @@
       <div id="searchBar" :class="{ 'darktheme-1': isDarkMode }" v-if="showSearch">
         <div class="input-container">
           <input
+            id="filterSearch"
             type="text"
             placeholder="Filter Search"
             v-model="query"
@@ -73,64 +74,88 @@
         :class="{ 'darktheme-1': isDarkMode }"
         v-if="showMoreAdvancedFeatures"
       >
-        <div class="service-options" :class="{ 'darktheme-4': isDarkMode }">
-          <h6>Select Platforms:</h6>
-          <div>
-            <input
-              type="checkbox"
-              v-model="selectedPlatforms"
-              value="injustify"
-            />Injustify
+        <div id="ft12">
+          <div class="section">
+            <h6>Search from:</h6>
+            <div class="checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  :checked="searchFrom.injustify"
+                  @change="toggleCheckbox('searchFrom', 'injustify')"
+                />
+                Injustify
+              </label>
+
+              <label>
+                <input
+                  type="checkbox"
+                  :checked="searchFrom.youtube"
+                  @change="toggleCheckbox('searchFrom', 'youtube')"
+                />
+                YouTube
+              </label>
+
+              <label>
+                <input
+                  type="checkbox"
+                  :checked="searchFrom.spotify"
+                  @change="toggleCheckbox('searchFrom', 'spotify')"
+                />
+                Spotify
+              </label>
+            </div>
           </div>
-          <div>
-            <input type="checkbox" v-model="selectedPlatforms" value="youtube" />YouTube
-          </div>
-          <div>
-            <input type="checkbox" v-model="selectedPlatforms" value="spotify" />Spotify
+
+          <div class="section">
+            <h6>Filter by:</h6>
+            <div class="checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  :checked="filterBy.artist"
+                  @change="toggleCheckbox('filterBy', 'artist')"
+                />
+                Artist
+              </label>
+
+              <label>
+                <input
+                  type="checkbox"
+                  :checked="filterBy.title"
+                  @change="toggleCheckbox('filterBy', 'title')"
+                />
+                Title
+              </label>
+
+              <label>
+                <input
+                  type="checkbox"
+                  :checked="filterBy.date"
+                  @change="toggleCheckbox('filterBy', 'date')"
+                />
+                Date
+              </label>
+            </div>
           </div>
         </div>
-
-        <div class="filter-options" :class="{ 'darktheme-4': isDarkMode }">
-          <h6>Filter by:</h6>
-          <div>
-            <input type="checkbox" v-model="selectedFilters" value="artist" />Artist
-          </div>
-          <div>
-            <input type="checkbox" v-model="selectedFilters" value="title" />Title
-          </div>
-          <div><input type="checkbox" v-model="selectedFilters" value="data" />Data</div>
-          <div>
-            <input type="checkbox" v-model="selectedFilters" value="lyrics" />Lyrics
-          </div>
+        <div v-if="filterBy.date">
+          <label for="monthYear">Select Month and Year:</label>
+          <input type="month" id="monthYear" name="monthYear" />
         </div>
-
-        <div class="advanced-input" :class="{ 'darktheme-4': isDarkMode }">
-          <h6>Advanced Options</h6>
-          <div>
-            <label for="searchUrl">Paste YouTube URL to Download:</label>
+        <div class="section" :class="{ 'darktheme-4': isDarkMode }">
+          <h6>Advanced</h6>
+          <div class="input-container">
+            <label for="searchUrl">Paste YouTube URL to download</label>
             <input
+              v-model="dwn_url"
               type="text"
-              v-model="youtubeUrl"
               id="searchUrl"
-              placeholder="Enter YouTube URL"
+              placeholder="Enter URL here..."
             />
-          </div>
-          <button @click="processDownload">Download</button>
-        </div>
-
-        <div
-          class="suggestion-box"
-          :class="{ 'darktheme-4': isDarkMode }"
-          v-if="suggestions.length"
-        >
-          <h6>Suggestions</h6>
-          <div
-            id="suggestion"
-            v-for="suggestion in suggestions"
-            :key="suggestion"
-            @click="selectSuggestion(suggestion)"
-          >
-            {{ suggestion }}
+            <button @click="handleDownload(normalizeYouTubeUrl(dwn_url))">
+              Download
+            </button>
           </div>
         </div>
       </div>
@@ -206,7 +231,7 @@
       :songId="streamSongID"
       :streamloading="streamloading"
       @selected="handleDownloadSelect"
-      v-if="streamloading"
+      v-if="streamloading && streamSongID"
       :class="{ 'darktheme-4': isDarkMode }"
     />
   </div>
@@ -254,16 +279,18 @@ export default {
       sp_videos: [],
       search_suggestions: [],
       loading: { injustify: false, youtube: false, spotify: false },
-      spotifyThumbnails: {}, // Store fetched Spotify thumbnails
+      spotifyThumbnails: {},
       openIndex: null,
       streamSongID: null,
+      dwn_url: null,
       userStore,
       showSearch: false,
       showMoreAdvancedFeatures: false,
       selectedPlatforms: [],
       selectedFilters: [],
       youtubeUrl: "",
-      suggestions: ["Suggestion 1", "Suggestion 2", "Suggestion 3"],
+      searchFrom: { injustify: true, youtube: true, spotify: true },
+      filterBy: { artist: true, title: true, date: false },
     };
   },
 
@@ -300,6 +327,9 @@ export default {
   },
 
   methods: {
+    toggleCheckbox(group, key) {
+      this[group][key] = !this[group][key];
+    },
     toggleSearch() {
       this.showSearch = !this.showSearch;
       this.showMoreAdvancedFeatures = false;
@@ -329,6 +359,8 @@ export default {
       this.streamSongID = video;
       this.userStore.set_streamloading(true);
       this.toggleDropdown();
+      this.dwn_url = null;
+      this.showMoreAdvancedFeatures = false;
     },
 
     resetSearch() {
@@ -549,6 +581,18 @@ export default {
       } else {
         console.warn(`No element found for: ${tg}`);
       }
+    },
+    normalizeYouTubeUrl(input) {
+      if(!input)return
+      const regex = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|watch\?v=|v\/|shorts\/)?|src="(?:https:\/\/www\.youtube\.com\/embed\/))([\w-]{11})/;
+
+      const match = input.match(regex);
+
+      if (match && match[1]) {
+        return `https://www.youtube.com/watch?v=${match[1]}`;
+      }
+
+      return null;
     },
     reloadPage() {
       window.location.reload();
@@ -853,13 +897,14 @@ export default {
     }
 
     button {
-      padding: 8px 16px;
-      margin-right: 8px;
       border: 1px solid transparent;
       border-radius: 8px;
       background-color: #5a9;
       color: #fff;
+      height: 100% !important;
       cursor: pointer;
+      margin-left: 0.2rem !important;
+
       font-weight: 500;
       transition: background-color 0.3s ease, transform 0.2s;
 
@@ -888,7 +933,6 @@ export default {
 
       button {
         font-weight: normal;
-        padding: 3px !important;
       }
     }
     #suggestionContainer {
@@ -1073,6 +1117,18 @@ export default {
         background: #0069d9;
       }
     }
+    ion-icon {
+    padding: 3px 5px;
+    min-width: 15px;
+    min-height: 10px;
+    cursor:pointer;
+    font-weight: bolder;
+    font-size: 20px !important;
+    &:hover {
+      color: #0069d9;
+    }
+  }
+    
   }
   h3 {
     font-size: 1.2rem;
@@ -1260,37 +1316,83 @@ export default {
 </style>
 <style scoped>
 #AdvancedFeatures {
-  position: absolute !important;
+  position: absolute;
   right: 0;
   top: 50px;
-  padding: 10px 5px !important;
+  padding: 10px;
   background-color: #fff;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  max-width: 360px;
-  width: 100%;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.1) !important;
+  max-width: 250px;
+  width: fit-content;
+  max-height: 400px;
+  overflow-y: auto;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
   z-index: 100;
   box-sizing: border-box;
 
   div {
-  margin:0!important;
-  padding:0 !important;
+    margin: 0;
+    padding: 0;
   }
+  h6 {
+    margin: 3px;
+    color: gray;
+    text-shadow: 0px 2px 4px black;
+  }
+}
+
+#ft12 {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
 }
 
 .darktheme-1 {
   background-color: #1e1e1e;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   border: 1px solid #333;
 }
 
-input {
-  width: 75%;
-  padding: 10px 15px;
+.section {
+  margin-bottom: 16px;
+  border-radius: 0px !important;
+  padding: 5px 15px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 3px !important;
+  border-radius: 0px !important;
+}
+
+.checkbox-group label {
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-right: auto;
+}
+
+.input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#AdvancedFeatures input[type="text"] {
+  width: 100% !important;
+  padding: 2px 8px !important;
   border: 1px solid #ccc;
   border-radius: 8px;
-  margin-bottom: 12px;
-  font-size: 14px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
   box-sizing: border-box;
 }
@@ -1301,50 +1403,22 @@ input:focus {
   outline: none;
 }
 
-.darktheme-4 input {
-  background-color: #2b2b2b;
-  border-color: #555;
-  color: #e0e0e0;
-}
-
 button {
-  padding: 8px 16px;
+  padding: 8px !important;
   border: none;
   border-radius: 8px;
   background-color: #5a9;
   color: #fff;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s;
+  box-sizing: border-box;
 }
-
 button:hover {
   background-color: #48976b;
   transform: translateY(-2px);
 }
 
-.suggestion-box {
-  margin-top: 10px;
-}
-
-#suggestion {
-  padding: 8px 12px;
-  background-color: #81818171;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s;
-}
-
-#suggestion:hover {
-  background-color: #7f7f7f;
-  transform: translateX(5px);
-}
-
-.darktheme-4 #suggestion {
-  background-color: #2b2b2b;
-  color: #ccc;
-}
-
-.darktheme-4 #suggestion:hover {
-  background-color: #444;
+button:active {
+  transform: scale(0.98);
 }
 </style>

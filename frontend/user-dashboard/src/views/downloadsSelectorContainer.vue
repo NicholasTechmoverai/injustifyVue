@@ -10,10 +10,13 @@
           <button id="closeOpenContainerButton" @click="toogleStreamContainer()">
             <ion-icon name="chevron-down-outline"></ion-icon>
           </button>
-          <button id="moreOnStreams"><ion-icon name="list-outline"></ion-icon>
-          <div class="moreDropdown">
-          <button @click="toggleViewMore"><ion-icon name="information-circle-outline"></ion-icon>All info</button>
-          </div>
+          <button id="moreOnStreams">
+            <ion-icon name="list-outline"></ion-icon>
+            <div class="moreDropdown">
+              <button @click="toggleViewMore">
+                <ion-icon name="information-circle-outline"></ion-icon>All info
+              </button>
+            </div>
           </button>
         </div>
 
@@ -46,10 +49,10 @@
             <span class="stream-name">{{ convertResolution(stream.resolution) }}</span>
             <p>{{ stream.size_mb }}MB</p>
             <p>({{ stream.ext }})</p>
-            <p v-if="viewMore">audio Codec::{{ stream.audio_codec}}</p>
-            <p v-if="viewMore">video Codec::{{ stream.video_codec}}</p>
-            <p v-if="viewMore">itag::{{ stream.itag}}</p>
-            <p v-if="viewMore">vbr ::{{ stream.vbr}}</p>
+            <p v-if="viewMore">audio Codec::{{ stream.audio_codec }}</p>
+            <p v-if="viewMore">video Codec::{{ stream.video_codec }}</p>
+            <p v-if="viewMore">itag::{{ stream.itag }}</p>
+            <p v-if="viewMore">vbr ::{{ stream.vbr }}</p>
             <p v-if="activeItag === stream.itag">
               <ion-icon name="checkmark-done-outline"></ion-icon>
             </p>
@@ -83,7 +86,7 @@ import { getYouTubeThumbnails } from "@/utils/index.js";
 export default {
   props: {
     songId: String,
-    streamloading: Boolean, 
+    streamloading: Boolean,
   },
   data() {
     const userStore = useUserStore();
@@ -99,20 +102,20 @@ export default {
       activeFilename: null,
       activeFilesize: null,
       activeService: null,
-      activeResolution:null,
-      activeExt:'mp4',
+      activeResolution: null,
+      activeExt: "mp4",
       userId: computed(() => userStore.userId),
       isDroppeddown: false,
       isAboutToDownload: computed(() => userStore.isAboutToDownload),
       userStore,
       advUserStore,
-      viewMore:false,
-      select:null,
-      filter:null,
+      viewMore: false,
+      select: null,
+      filter: null,
     };
   },
   methods: {
-    toggleViewMore(){
+    toggleViewMore() {
       this.viewMore = !this.viewMore;
     },
     toogleStreamContainer() {
@@ -132,7 +135,7 @@ export default {
       this.activeFilename = `${this.info.title}-${this.info.artist}`;
       this.activeFilesize = stream.size_mb;
       this.activeExt = stream.ext;
-      this.activeResolution = stream.resolution
+      this.activeResolution = stream.resolution;
       const info = {
         song_url: this.songId,
         filename: this.activeFilename,
@@ -147,18 +150,19 @@ export default {
       console.log(this.activeItag, this.activeFilesize);
     },
 
-
     categorize_url() {
       this.isDroppeddown = false;
-      if (this.songId.includes("youtube" || "youtu")) {
-        this.activeService = "youtube";
-        this.fetchStreams_youtube();
-      } else if (this.songId.includes("spotify")) {
-        this.activeService = "spotify";
-        this.fetchStreams_spotify();
-      } else {
-        this.activeService = "injustify";
-        this.fetchStreams_injustify();
+      if (this.songId) {
+        if (this.songId.includes("youtube" || "youtu")) {
+          this.activeService = "youtube";
+          this.fetchStreams_youtube();
+        } else if (this.songId.includes("spotify")) {
+          this.activeService = "spotify";
+          this.fetchStreams_spotify();
+        } else {
+          this.activeService = "injustify";
+          this.fetchStreams_injustify();
+        }
       }
     },
     fetchStreams_spotify() {
@@ -220,7 +224,14 @@ export default {
         return;
       } else if (this.activeService === "youtube") {
         console.log("Downloading YouTube video streams.");
-        this.advUserStore.download_yt_stream(this.songId, this.activeItag,this.activeFilename,this.activeExt,this.activeResolution);
+        this.isDroppeddown = false;
+        this.advUserStore.download_yt_stream(
+          this.songId,
+          this.activeItag,
+          this.activeFilename,
+          this.activeExt,
+          this.activeResolution
+        );
       }
     },
   },
@@ -239,21 +250,20 @@ export default {
 </script>
 
 <style scoped>
-#moreOnStreams{
-  position:relative;
+#moreOnStreams {
+  position: relative;
 }
-.moreDropdown{
-  position:absolute;
-  top:100%;
-  right:0% ;
+.moreDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0%;
   display: none;
 }
-.moreDropdown button{
+.moreDropdown button {
   white-space: nowrap;
 }
-#moreOnStreams:hover .moreDropdown{
+#moreOnStreams:hover .moreDropdown {
   display: flex;
-
 }
 #streams-container-Header {
   display: flex;
@@ -316,8 +326,8 @@ export default {
   height: auto;
   max-height: 75vh;
   overflow-y: auto;
-  padding: 2px ;
-  box-sizing:border-box;
+  padding: 2px;
+  box-sizing: border-box;
   width: 100% !important;
 }
 .stream-item {
@@ -334,12 +344,10 @@ export default {
   box-sizing: border-box;
 }
 
-
 .stream-item p {
   color: inherit;
   word-break: break-word;
 }
-
 
 /* No Streams Found */
 .no-streams {

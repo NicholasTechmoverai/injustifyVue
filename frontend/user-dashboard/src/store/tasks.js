@@ -3,7 +3,10 @@ import { useUserStore } from "@/store/index.js";
 import { computed } from "vue";
 import { BASE_URL,extractYouTubeID } from "@/utils/index.js";
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-//import { fetchFile } from '@ffmpeg/util';
+
+console.log("FFmpeg",FFmpeg); // Check if this logs the function
+
+
 
 export const adv_UserStore = defineStore('adv_user', {
   state: () => {
@@ -26,15 +29,17 @@ export const adv_UserStore = defineStore('adv_user', {
       currentDownloadCount:0,
       onGoingDownloads: {},
       status:'',
-      ffmpeg: new FFmpeg(),
-      isFFmpegLoaded: false
+      ffmpeg: null,
+      isFFmpegLoaded: false,
     };
   },
 
+
   actions: {
+
     async download_yt_stream(songId, itag, filename,extension,resolution) {
       if (!itag) {
-        console.log("Please select a stream to download.");
+        console.log("Please select a stream to download.",resolution);
         return;
       }
     
@@ -83,9 +88,8 @@ export const adv_UserStore = defineStore('adv_user', {
         const reader = response.body.getReader();
         const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
         let downloadedSize = 0;
-        const progressBarWidth = 40; 
 
-        const audio_blob = await this.audio_decider(songId, itag, extension, resolution);
+        //const audio_blob = await this.audio_decider(songId, itag, extension, resolution);
     
         const stream = new ReadableStream({
           start: (controller) => { 
@@ -93,7 +97,6 @@ export const adv_UserStore = defineStore('adv_user', {
               reader.read().then(({ done, value }) => {
                 if (done) {
                   console.log("\nDownload completed!");
-                  this.downloadsCount('-');
                   this.onGoingDownloads[download_id].status = "completed";
                   controller.close();
                   return;
@@ -101,16 +104,14 @@ export const adv_UserStore = defineStore('adv_user', {
     
                 downloadedSize += value.length;
                 const progress = downloadedSize / contentLength;
-                const filledBar = "█".repeat(Math.floor(progress * progressBarWidth));
-                const emptyBar = " ".repeat(progressBarWidth - filledBar.length);
                 const percent = (progress * 100).toFixed(2);
     
                 this.onGoingDownloads[download_id] = { filename, progress, status: "downloading" };
     
                 console.clear();
-                console.log(`Downloading: ${filename}`);
-                console.log(`[${filledBar}${emptyBar}] ${percent}% (${(downloadedSize / 1024 / 1024).toFixed(2)}MB / ${contentLength}MB)`);
-    
+                console.log(`Downloading: ${filename}`);    
+                console.log("progress::",percent)
+
                 controller.enqueue(value);
                 push();
               });
@@ -120,9 +121,7 @@ export const adv_UserStore = defineStore('adv_user', {
         });
 
         const main_blob = await new Response(stream).blob();
-        if(audio_blob){
-          await this.merge_chunks(audio_blob,main_blob,b_filename,b_filename)
-        }
+  
         this.saveToFile(main_blob, b_filename,b_extension);
     
       } catch (error) {
@@ -134,80 +133,23 @@ export const adv_UserStore = defineStore('adv_user', {
         this.userStore.set_isAboutToDownload(false);
       }
     },
-    async loadFFmpeg() {
-      if (!this.isFFmpegLoaded) {
-        await this.ffmpeg.load();
-        this.isFFmpegLoaded = true;
-        console.log("FFmpeg is loaded and ready to use.");
-      }
+ 
+
+    // Save File to Local System
+    saveToFile(blob, filename, ext) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${filename}.${ext}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+      console.log("File saved successfully:", filename);
+      this.downloadsCount('-');
     },
 
-    async blobToUint8Array(blob) {
-      const buffer = await blob.arrayBuffer();
-      return new Uint8Array(buffer);
-    },
-
-    async merge_chunks(audioBlob, videoBlob, filename, ext) {
-      console.log("Merging chunks...");
-      await this.loadFFmpeg();
-    
-      // Set Logger for Debugging
-      this.ffmpeg.setLogger(({ type, message }) => {
-        console.log(`[${type}] ${message}`);
-      });
-    
-      try {
-        // Convert and write files
-        const videoData = await this.blobToUint8Array(videoBlob);
-        const audioData = await this.blobToUint8Array(audioBlob);
-    
-        await this.ffmpeg.writeFile('/video.mp4', videoData);
-        console.log('Video file written successfully.');
-        await this.ffmpeg.writeFile('/audio.mp4', audioData);
-        console.log('Audio file written successfully.');
-    
-        console.log(await this.ffmpeg.listDir('/'));
-    
-        // Run the merge command
-        await this.ffmpeg.run(
-          '-loglevel', 'verbose',
-          '-i', '/video.mp4',
-          '-i', '/audio.mp4',
-          '-c:v', 'copy',
-          '-c:a', 'aac',
-          '-b:a', '192k',
-          '-shortest',
-          `/output.${ext}`
-        );
-        
-        console.log('FFmpeg merge command executed.');
-    
-        // Read the merged file
-        const data = await this.ffmpeg.readFile(`/output.${ext}`);
-        const mergedBlob = new Blob([data.buffer], { type: `video/${ext}` });
-    
-        this.saveToFile(mergedBlob, filename, ext);
-      } catch (error) {
-        console.error("Merging failed:", error);
-        console.error("Current FS state:", await this.ffmpeg.listDir('/'));
-      }
-    },
-    
 
 
-    saveToFile(blob, filename, extension) {
-      const cleanExt = extension.startsWith(".") ? extension.slice(1) : extension;
-      const downloadLink = document.createElement("a");
-      downloadLink.href = URL.createObjectURL(blob);
-      downloadLink.download = `${filename}.${cleanExt}`;
-
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      URL.revokeObjectURL(downloadLink.href);
-
-      console.log("Download completed:", filename);
-    },
-  
 
     
   
@@ -227,7 +169,8 @@ export const adv_UserStore = defineStore('adv_user', {
     },
 
     async audio_decider(songId, itag, extension, resolution) {
-      if (itag === '18' || resolution === 'audio only' || extension === 'm4a') {
+      console.log("async audio_decider", songId, itag, extension,resolution)
+/*      if (itag === '18' || resolution === 'audio only' || extension === 'm4a') {
         console.log(`Skipping audio download for itag: ${itag}, resolution: ${resolution}, extension: ${extension}`);
         return;
       }
@@ -243,7 +186,7 @@ export const adv_UserStore = defineStore('adv_user', {
         return await this.download_yt_stream_audio(songId, audioItag);
       } else {
         console.log(`No audio download required for extension: ${extension}`);
-      }
+      } */
     },
     
     async download_yt_stream_audio(songId, itag) {
@@ -270,7 +213,6 @@ export const adv_UserStore = defineStore('adv_user', {
         });
     
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        this.downloadsCount('+');
 
         const reader = response.body.getReader();
         let downloadedSize = 0;
@@ -286,7 +228,6 @@ export const adv_UserStore = defineStore('adv_user', {
               reader.read().then(({ done, value }) => {
                 if (done) {
                   console.log("\nDownload completed!");
-                  this.downloadsCount('-');
                   controller.close();
                   return;
                 }
