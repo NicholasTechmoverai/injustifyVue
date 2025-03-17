@@ -583,7 +583,7 @@ export default {
       }
     },
     normalizeYouTubeUrl(input) {
-      if(!input)return
+      if (!input) return;
       const regex = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|watch\?v=|v\/|shorts\/)?|src="(?:https:\/\/www\.youtube\.com\/embed\/))([\w-]{11})/;
 
       const match = input.match(regex);
@@ -817,7 +817,7 @@ export default {
 #homepage-header {
   width: 100%;
   margin: 0 auto !important;
-  padding: 1.5rem;
+  padding: 0.5rem;
   padding-top: 0;
   text-align: center;
   background: #eae9e9;
@@ -834,7 +834,7 @@ export default {
     margin: 0 !important;
     margin-right: auto !important;
     margin-bottom: 5px !important;
-    padding-top: 0;
+    padding-top: 2px !important;
     text-shadow: 0px 2px 5px black;
     position: relative;
   }
@@ -1003,8 +1003,10 @@ export default {
   #iconPlusQuery {
     display: flex;
     flex-direction: column;
-    padding: 0px !important;
-
+    padding: 5px !important;
+    box-shadow: none !important;
+    height:100%;
+    justify-content:space-between;
     div {
       padding: 0 !important;
     }
@@ -1013,13 +1015,14 @@ export default {
   #queryShow {
     display: flex;
     flex-direction: row;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
     padding: 3px 10px;
     border-radius: 8px;
     color: #f1f5f9;
     font-family: "Arial", sans-serif;
     box-sizing: border-box;
+    margin-top: 8px;
 
     #queryHold {
       width: 120px;
@@ -1118,17 +1121,16 @@ export default {
       }
     }
     ion-icon {
-    padding: 3px 5px;
-    min-width: 15px;
-    min-height: 10px;
-    cursor:pointer;
-    font-weight: bolder;
-    font-size: 20px !important;
-    &:hover {
-      color: #0069d9;
+      padding: 3px 5px;
+      min-width: 15px;
+      min-height: 10px;
+      cursor: pointer;
+      font-weight: bolder;
+      font-size: 20px !important;
+      &:hover {
+        color: #0069d9;
+      }
     }
-  }
-    
   }
   h3 {
     font-size: 1.2rem;
