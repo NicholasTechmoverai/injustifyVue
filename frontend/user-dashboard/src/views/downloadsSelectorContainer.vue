@@ -46,7 +46,13 @@
               loading="lazy"
               :alt="convertResolution(stream.resolution) + ' icon'"
             />
-            <span class="stream-name">{{ convertResolution(stream.resolution) }}</span>
+            <span
+              class="stream-name"
+              v-if="
+                stream.itag === '18' && stream.itag === '140' && stream.itag === '152'
+              "
+              >{{ convertResolution(stream.resolution) }}</span
+            >
             <p>{{ stream.size_mb }}MB</p>
             <p>({{ stream.ext }})</p>
             <p v-if="viewMore">audio Codec::{{ stream.audio_codec }}</p>

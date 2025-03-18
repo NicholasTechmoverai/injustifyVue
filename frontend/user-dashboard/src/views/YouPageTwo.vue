@@ -43,6 +43,7 @@
           </transition>
         </div>
         <div class="playingSongArtwork">
+          {{}}
           <img :src="song.thumbnail" alt="Artist Image" />
           <div>
             <div class="playingSongArtist">{{ song.artist }}</div>

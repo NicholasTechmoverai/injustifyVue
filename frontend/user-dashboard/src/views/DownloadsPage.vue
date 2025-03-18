@@ -29,6 +29,7 @@
               @input="
                 () => {
                   offset = 0;
+                  hasMore = true;
                   fetchDownloads(true);
                 }
               "
@@ -39,6 +40,7 @@
                 () => {
                   offset = 0;
                   search = null;
+                  hasMore = true;
                   fetchDownloads(true);
                 }
               "
@@ -50,8 +52,8 @@
               @click="
                 () => {
                   offset = 0;
-
-                  hasMore = true; fetchDownloads(true);
+                  hasMore = true;
+                  fetchDownloads(true);
                 }
               "
               :class="{ 'darktheme-3': isDarkMode }"
@@ -170,15 +172,15 @@
                 <p>
                   Remaining: <span>{{ remainingSize(download) }}</span> MB
                 </p>
+
                 <p>
                   ETA: <span>{{ eta(download) }}</span>
                 </p>
                 <div class="downloadFileProgressBar">
                   <div
                     class="progress-bar"
-                    :style="{ width: download.progress + '%' }"
+                    :style="{ width: (download.progress * 100).toFixed(2) + '%' }"
                   ></div>
-                  <span class="progress-percentage">{{ download.progress }}%</span>
                 </div>
               </div>
             </div>
@@ -359,7 +361,6 @@ export default {
 
       if (scrollTop + windowHeight >= documentHeight - 20) {
         this.offset += this.limit;
-
         this.fetchDownloads(false);
       }
     },
@@ -421,7 +422,7 @@ export default {
     },
 
     progress(download) {
-      return Math.round((download.totalSize / download.contentLength) * 100);
+      return Math.round((download.filesize / download.filesize) * 100);
     },
 
     remainingSize(download) {
@@ -463,7 +464,7 @@ export default {
     },
 
     cancelDownload(index) {
-      console.log("Canceling download:", this.downloads[index].filename);
+      console.log("Canceling download:", this.downloads[index].file_name);
       this.downloads.splice(index, 1);
     },
     timeAgo,
@@ -609,7 +610,7 @@ span {
   border-radius: 3px;
   position: absolute;
   transition: width 0.5s ease-in-out;
-  width: 70%;
+  width: 0%;
 }
 
 .downloading-file .downloadFileProgressBar .progress-percentage {

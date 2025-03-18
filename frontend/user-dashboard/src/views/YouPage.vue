@@ -1,9 +1,20 @@
 <template>
   <div class="MainContainer" :class="{ collabsedBig: iscollapsedBig }">
+    <!-- Logo Section -->
     <h1 class="injustifyLogoR">
-      <ion-icon name="musical-note-outline"></ion-icon>Injustify
+      <ion-icon name="musical-note-outline"></ion-icon>
+      Injustify
       <ion-icon name="musical-note-outline"></ion-icon>
     </h1>
+
+    <!-- Router Views -->
+    <div class="children">
+      <router-view name="childOne"></router-view>
+      <router-view name="childTwo"></router-view>
+      <router-view name="childThree"></router-view>
+    </div>
+
+    <!-- Child Components -->
     <div class="children">
       <ChildOne :isDarkMode="isDarkMode" />
       <ChildTwo
@@ -11,33 +22,37 @@
         :clickedSongId="playSongID"
         @toggle-viewPlayersMode="toggleViewPlayersMode"
       />
-      <ChildThree @play-song="sendId_of_clickedSong" v-if="viewPlayersMode" />
+      <ChildThree v-if="viewPlayersMode" @play-song="handlePlaySong" />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from "vue";
+import { useUserStore } from "@/store/index.js";
 import ChildOne from "./YouPageONe.vue";
 import ChildTwo from "./YouPageTwo.vue";
 import ChildThree from "./YouPageThree.vue";
-import { useUserStore } from "@/store/index.js";
 
+// Reactive State
 const playSongID = ref(null);
 const viewPlayersMode = ref(true);
 const userStore = useUserStore();
 
+// Computed Properties
+const iscollapsedBig = computed(() => userStore.iscollapsedBig);
+const isDarkMode = computed(() => userStore.isdarkmode);
+
+// Event Handlers
 const toggleViewPlayersMode = () => {
-  console.log("Toggled theme in app.vue");
+  console.log("Toggled view players mode in App.vue");
   viewPlayersMode.value = !viewPlayersMode.value;
 };
 
-const sendId_of_clickedSong = (id) => {
-  console.log("Song ID:", id);
+const handlePlaySong = (id) => {
+  console.log("Song ID received:", id);
   playSongID.value = id;
 };
-const iscollapsedBig = computed(() => userStore.iscollapsedBig);
-const isDarkMode = computed(() => userStore.isdarkmode);
 </script>
 
 <style scoped>
@@ -63,40 +78,36 @@ const isDarkMode = computed(() => userStore.isdarkmode);
   position: relative;
 }
 
-
-
 @media (max-width: 668px) {
-  .injustifyLogoR{
-    display:none;
+  .injustifyLogoR {
+    display: none;
   }
 
   #youSectionC {
     display: none;
   }
   #youSectionA {
-    width: 100% ;
+    width: 100%;
     height: 95vh !important;
-
   }
   #youSectionB {
-    display: flex ;
-    width: 100% ;
-    height: 200px ;
+    display: flex;
+    width: 100%;
+    height: 200px;
     position: absolute;
     bottom: 0%;
     left: 0 !important;
     margin-left: 0% !important;
     margin-top: auto;
-    position:absolute;
+    position: absolute;
   }
-
 }
 
 @media (max-width: 480px) {
   #youSectionA {
     width: 100% !important;
   }
- 
+
   #youSectionB {
     display: flex !important;
     width: 100% !important;
@@ -105,7 +116,7 @@ const isDarkMode = computed(() => userStore.isdarkmode);
     left: 0 !important;
     margin-left: 0% !important;
     margin-top: auto;
-    position:absolute;
+    position: absolute;
   }
   #youSectionC {
     display: none;
