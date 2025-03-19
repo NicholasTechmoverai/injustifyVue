@@ -1,41 +1,69 @@
 <template>
   <div id="stream-container">
     <div id="streams-container-Header">
-      <div>
-        streams:
-        <p v-if="info.title || info.artist">{{ info.title }} - {{ info.artist }}</p>
-        <p v-else>{{ songId }}</p>
-
-        <div id="streamControler">
-          <button id="closeOpenContainerButton" @click="toogleStreamContainer()">
-            <ion-icon name="chevron-down-outline"></ion-icon>
-          </button>
-          <button id="moreOnStreams">
-            <ion-icon name="list-outline"></ion-icon>
-            <div class="moreDropdown">
-              <button @click="toggleViewMore">
-                <ion-icon name="information-circle-outline"></ion-icon>All info
-              </button>
-            </div>
-          </button>
+      <div class="header-content">
+        <!-- Stream Title -->
+        <div class="stream-title">
+          <p class="stream-label">Streams:</p>
+          <p v-if="info.title || info.artist" class="song-info">
+            {{ info.title }} - {{ info.artist }}
+          </p>
+          <p v-else class="song-info">{{ songId }}</p>
         </div>
 
+        <!-- Control Buttons -->
+        <div id="streamControler">
+          <!-- Toggle Stream Container -->
+          <button id="closeOpenContainerButton" @click="toogleStreamContainer()">
+            <ion-icon
+              :name="isDroppeddown ? 'chevron-down-outline' : 'chevron-up-outline'"
+            ></ion-icon>
+          </button>
+
+          <!-- More Options Dropdown -->
+          <div class="dropdown-container">
+            <button id="moreOnStreams">
+              <ion-icon name="list-outline"></ion-icon>
+            </button>
+            <div class="moreDropdown">
+              <!-- Toggle Show All Streams -->
+              <button @click="toggleShowAllStreams">
+                <ion-icon
+                  :name="showAll_streams ? 'list-outline' : 'filter-outline'"
+                ></ion-icon>
+                {{ showAll_streams ? "Show Selected Streams" : "Show All Streams" }}
+              </button>
+
+              <!-- Toggle Additional Info -->
+              <button @click="toggleViewMore">
+                <ion-icon :name="viewMore ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+                {{ viewMore ? "Hide Info" : "Show Info" }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Download Indicator (Loader Unchanged) -->
         <div v-if="isAboutToDownload" class="inline-loader-container">
           <div class="lder"></div>
         </div>
       </div>
+
       <transition name="fade">
         <div v-if="isLoading" class="loader-container">
           <div class="loader"></div>
         </div>
       </transition>
     </div>
+
     <transition name="fade">
       <template v-if="isDroppeddown">
         <!-- Streams (Visible Once Fetched) -->
         <div v-if="streams.length" class="streams-container">
           <div
-            v-for="(stream, index) in streams"
+            v-for="(stream, index) in activeService != 'youtube' || showAll_streams
+              ? streams
+              : filteredStreams"
             :key="index"
             class="stream-item"
             @click="ActivateStream($event, stream)"
@@ -46,13 +74,7 @@
               loading="lazy"
               :alt="convertResolution(stream.resolution) + ' icon'"
             />
-            <span
-              class="stream-name"
-              v-if="
-                stream.itag === '18' && stream.itag === '140' && stream.itag === '152'
-              "
-              >{{ convertResolution(stream.resolution) }}</span
-            >
+            <span class="stream-name">{{ convertResolution(stream.resolution) }}</span>
             <p>{{ stream.size_mb }}MB</p>
             <p>({{ stream.ext }})</p>
             <p v-if="viewMore">audio Codec::{{ stream.audio_codec }}</p>
@@ -102,6 +124,7 @@ export default {
       streams: [],
       info: {},
       isLoading: this.streamloading,
+      showAll_streams: false,
       showfileicon,
       convertResolution,
       activeItag: null,
@@ -118,9 +141,17 @@ export default {
       viewMore: false,
       select: null,
       filter: null,
+      filteredStreams: computed(() => {
+        return this.streams.filter(
+          (stream) => ["18", "140", "152"].includes(stream.itag) || this.showAll_streams
+        );
+      }),
     };
   },
   methods: {
+    toggleShowAllStreams() {
+      this.showAll_streams = !this.showAll_streams;
+    },
     toggleViewMore() {
       this.viewMore = !this.viewMore;
     },
@@ -238,6 +269,16 @@ export default {
           this.activeExt,
           this.activeResolution
         );
+      } else if(this.activeService === 'injustify'){
+        console.log('Downloading InJustify video streams.');
+        this.isDroppeddown = false;
+        this.advUserStore.download_injustify_stream(
+          this.songId,
+          this.activeItag,
+          this.activeFilename,
+          this.activeExt,
+          this.activeResolution
+        );
       }
     },
   },
@@ -301,12 +342,29 @@ export default {
   cursor: not-allowed !important;
 }
 .active-stream {
-  background-color: rgba(255, 0, 0, 0.5) !important;
+  background: linear-gradient(
+    to right,
+    rgba(144, 145, 145, 0.438),
+    rgba(126, 172, 217, 0.9)
+  );
   cursor: pointer;
   outline: none;
-  transition: background 0.3s ease-in-out;
-  color: #0435bc;
+  transition: background 0.3s ease-in-out, transform 0.2s ease-in-out;
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  box-shadow: 0px 4px 10px rgba(65, 68, 77, 0.3);
+  transform: scale(1.02);
 }
+
+.active-stream:hover {
+  background: linear-gradient(
+    to right,
+    rgba(130, 159, 218, 0.438),
+    rgba(175, 179, 184, 0.9)
+  );
+}
+
 .stream-audio-icon {
   height: 30px;
 }
@@ -326,7 +384,7 @@ export default {
 .streams-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 7px;
   color: black;
   border-radius: 8px;
   height: auto;
@@ -342,15 +400,17 @@ export default {
   box-shadow: 0px 0px 5px black;
   text-align: center;
   display: flex;
-  flex-wrap: wrap; /* Allow children to move to a new line */
+  flex-wrap: wrap;
   align-items: center;
-  gap: 5px;
+  gap: 3px;
   width: 100% !important;
   overflow-wrap: break-word;
   box-sizing: border-box;
 }
 
 .stream-item p {
+  margin: 0px;
+  padding: 0px;
   color: inherit;
   word-break: break-word;
 }
@@ -398,5 +458,137 @@ export default {
   100% {
     background-position: left;
   }
+}
+/* Light & Dark Themes */
+.light-theme {
+  --bg-color: #fff;
+  --text-color: #333;
+  --header-bg: #f0f0f0;
+  --btn-bg: #ddd;
+  --border-color: #ccc;
+}
+
+.dark-theme {
+  --bg-color: #181818;
+  --text-color: #f5f5f5;
+  --header-bg: #222;
+  --btn-bg: #333;
+  --border-color: #444;
+}
+
+#stream-container {
+  background: var(--bg-color);
+  color: var(--text-color);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+#streams-container-Header {
+  background: var(--header-bg);
+  padding: 10px 15px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.stream-title {
+  text-align: left;
+}
+
+.stream-label {
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.song-info {
+  font-weight: 500;
+}
+
+#streamControler {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  transition: 0.3s;
+  border-radius: 5px;
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+ion-icon {
+  font-size: 1.4rem;
+  color: var(--text-color);
+}
+
+.dropdown-container {
+  position: relative;
+  z-index: 100;
+}
+
+.moreDropdown {
+  background: var(--header-bg);
+  border: 1px solid rgba(128, 128, 128, 0.622);
+  border-radius: 5px;
+}
+
+.dropdown-container:hover .moreDropdown {
+  display: block;
+}
+
+.moreDropdown button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-color);
+  padding: 5px;
+}
+
+.streams-container {
+  padding: 10px;
+}
+
+.stream-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+#downloadSt {
+  background: #007bff;
+  color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#downloadSt:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.no-streams {
+  text-align: center;
+  font-weight: bold;
 }
 </style>
