@@ -5,9 +5,10 @@
         <!-- Stream Title -->
         <div class="stream-title">
           <p class="stream-label">Streams:</p>
-          <p v-if="info.title || info.artist" class="song-info">
-            {{ info.title }} - {{ info.artist }}
+          <p v-if="info.title || info.artist " class="song-info">
+            {{ info.title }} - {{ info.artist }} 
           </p>
+          <p v-else-if="stmName">{{ stmName }}</p>
           <p v-else class="song-info">{{ songId }}</p>
         </div>
 
@@ -114,6 +115,7 @@ import { getYouTubeThumbnails } from "@/utils/index.js";
 export default {
   props: {
     songId: String,
+    stmName:String,
     streamloading: Boolean,
   },
   data() {
@@ -169,7 +171,7 @@ export default {
       clickedElement.classList.add("active-stream");
 
       this.activeItag = stream.itag;
-      this.activeFilename = `${this.info.title}-${this.info.artist}`;
+      this.activeFilename = this.stmName || `${this.info.title}-${this.info.artist}`;
       this.activeFilesize = stream.size_mb;
       this.activeExt = stream.ext;
       this.activeResolution = stream.resolution;
@@ -218,7 +220,7 @@ export default {
       this.isLoading = true; // Use local state
 
       axios
-        .post(`${BASE_URL}/api/download_streams/youtube`, { songId: this.songId }) // ✅ Send data in body
+        .post(`${BASE_URL}/api/download_streams/youtube`, { songId: this.songId })
         .then((response) => {
           console.log("Fetched Streams:", response.data);
           if (response.data.success) {
@@ -276,8 +278,7 @@ export default {
           this.songId,
           this.activeItag,
           this.activeFilename,
-          this.activeExt,
-          this.activeResolution
+          this.activeExt|| 'mp4'
         );
       }
     },

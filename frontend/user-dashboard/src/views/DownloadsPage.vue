@@ -310,6 +310,8 @@ import { timeAgo } from "@/utils/index";
 import { useUserStore } from "@/store/index.js";
 import { adv_UserStore } from "@/store/tasks.js";
 import { BASE_URL } from "@/utils/index.js";
+import { socket } from "@/services/websocket";
+
 export default {
   name: "UserDownloads",
   props: ["useremail"],
@@ -377,7 +379,6 @@ export default {
       this.showMoreAdvancedFeatures = false;
     },
     toggleAdvancedFeatures() {
-      console.log("toogling............");
       this.showMoreAdvancedFeatures = !this.showMoreAdvancedFeatures;
       this.showSearch = false;
     },
@@ -466,6 +467,10 @@ export default {
     cancelDownload(index) {
       console.log("Canceling download:", this.downloads[index].file_name);
       this.downloads.splice(index, 1);
+      socket.emit("deleteDownload", {
+        downloadId: this.downloads[index].download_id,
+        userId: this.$store.state.user.id,
+      });
     },
     timeAgo,
   },

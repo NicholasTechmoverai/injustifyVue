@@ -133,6 +133,98 @@ export const adv_UserStore = defineStore('adv_user', {
         this.userStore.set_isAboutToDownload(false);
       }
     },
+
+    async download_injustify_stream(songId,itag,filename,ext){
+      console.log("Downloading...",filename,"::::::::",this.activeFilename);
+      if(!songId || !filename){
+        console.log("Please enter valid song ID and filename.");
+        return;
+      }
+      this.userStore.set_isAboutToDownload(true);
+      let download_id;
+      try{
+        const response = await fetch(`${BASE_URL}/api/download/injustify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            songId:`${songId.split('.').slice(0, -1).join('.')}`,
+            song_url: songId,
+            filename:this.activeFilename,
+            userId: this.userId,
+            itag,
+            start_byte: this.start_bytes,
+            size_mb: this.activeFilesize,
+            format: this.activeFormat,
+            thumbnailUrl: `th_${songId.split('.').slice(0, -1).join('.')}.jpg`,
+          })
+        });
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        this.downloadsCount('+');
+        const header_info = response.headers;
+        const contentDisposition = header_info.get("Content-Disposition");
+        const b_filename = contentDisposition
+         ? contentDisposition.split("filename=")[1]?.replace(/"/g, "") 
+          : filename; 
+        
+        const b_extension = header_info.get("format") || ext;
+
+        download_id = header_info.get("X-Download-URL") ||songId ;
+
+        
+        if (!this.onGoingDownloads) this.onGoingDownloads = {};
+        if (!this.onGoingDownloads[download_id]) {
+          this.onGoingDownloads[download_id] = {};
+        }
+    
+        const reader = response.body.getReader();
+        const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
+        let downloadedSize = 0;
+
+        //const audio_blob = await this.audio_decider(songId, itag, extension, resolution);
+    
+        const stream = new ReadableStream({
+          start: (controller) => { 
+            const push = () => { 
+              reader.read().then(({ done, value }) => {
+                if (done) {
+                  console.log("\nDownload completed!");
+                  this.onGoingDownloads[download_id].status = "completed";
+                  controller.close();
+                  return;
+                }
+    
+                downloadedSize += value.length;
+                const progress = downloadedSize / contentLength;
+                const percent = (progress * 100).toFixed(2);
+    
+                this.onGoingDownloads[download_id] = { filename, progress, status: "downloading" };
+    
+                console.clear();
+                console.log(`Downloading: ${filename}`);    
+                console.log("progress::",percent)
+
+                controller.enqueue(value);
+                push();
+              });
+            };
+            push();
+          }
+        });
+
+        const main_blob = await new Response(stream).blob();
+  
+        this.saveToFile(main_blob, b_filename,b_extension);
+      } catch (error) {
+        console.error("Download failed:", error);
+        if (this.onGoingDownloads[download_id]) {
+          this.onGoingDownloads[download_id].status = "failed";
+        }
+      } finally {
+        this.userStore.set_isAboutToDownload(false);
+      }
+
+
+    },
  
 
     // Save File to Local System

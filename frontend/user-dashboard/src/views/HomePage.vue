@@ -153,7 +153,7 @@
               id="searchUrl"
               placeholder="Enter URL here..."
             />
-            <button @click="handleDownload(normalizeYouTubeUrl(dwn_url))">
+            <button @click="handleDownload(normalizeYouTubeUrl(dwn_url)),null">
               Download
             </button>
           </div>
@@ -211,7 +211,7 @@
 
               <!-- Dropdown Menu -->
               <div v-if="openIndex === index" class="skull-more-options">
-                <button @click="handleDownload(video.url)">
+                <button @click="handleDownload(video.url,`${getTitle(video, service)} ${ getArtist(video, service)}`)">
                   Injust <ion-icon name="download"></ion-icon>
                 </button>
                 <button>Djust</button>
@@ -229,6 +229,7 @@
     <DownlodSelectorHold
       id="streamsContainer"
       :songId="streamSongID"
+      :stmName="stmName"
       :streamloading="streamloading"
       @selected="handleDownloadSelect"
       v-if="streamloading && streamSongID"
@@ -282,6 +283,7 @@ export default {
       spotifyThumbnails: {},
       openIndex: null,
       streamSongID: null,
+      stmName:null,
       dwn_url: null,
       userStore,
       showSearch: false,
@@ -354,9 +356,10 @@ export default {
       this.openIndex = this.openIndex === index ? null : index;
     },
 
-    handleDownload(video) {
+    handleDownload(video,stmName) {
       console.log("Downloading:", video);
       this.streamSongID = video;
+      this.stmName = stmName;
       this.userStore.set_streamloading(true);
       this.toggleDropdown();
       this.dwn_url = null;
