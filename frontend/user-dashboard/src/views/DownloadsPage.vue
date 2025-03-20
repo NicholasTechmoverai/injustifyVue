@@ -288,7 +288,7 @@
               <ion-icon name="refresh-circle-outline"></ion-icon>
             </button>
 
-            <button type="button" class="cancelDownload" @click="cancelDownload(index)">
+            <button type="button" class="cancelDownload" @click="cancelDownload(index,download.song_id)">
               <ion-icon name="trash-outline"></ion-icon>
             </button>
           </div>
@@ -310,7 +310,7 @@ import { timeAgo } from "@/utils/index";
 import { useUserStore } from "@/store/index.js";
 import { adv_UserStore } from "@/store/tasks.js";
 import { BASE_URL } from "@/utils/index.js";
-import { socket } from "@/services/websocket";
+import socket from "@/services/websocket";
 
 export default {
   name: "UserDownloads",
@@ -328,6 +328,8 @@ export default {
   },
 
   data() {
+    const userStore = useUserStore();
+
     return {
       downloads: [],
       loading: false,
@@ -343,6 +345,8 @@ export default {
       showMoreAdvancedFeatures: false,
       searchFrom: { injustify: true, youtube: true, spotify: true },
       filterBy: { artist: true, title: true, date: false },
+      userId: computed(() => userStore.userId),
+
     };
   },
   mounted() {
@@ -464,12 +468,12 @@ export default {
       this.fetchDownloads(true);
     },
 
-    cancelDownload(index) {
-      console.log("Canceling download:", this.downloads[index].file_name);
+    cancelDownload(index,download_id) {
+      console.log("Canceling download:",download_id);
       this.downloads.splice(index, 1);
       socket.emit("deleteDownload", {
-        downloadId: this.downloads[index].download_id,
-        userId: this.$store.state.user.id,
+        downloadId: download_id,
+        userId: this.userId,
       });
     },
     timeAgo,

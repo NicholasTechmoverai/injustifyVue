@@ -3,7 +3,8 @@ import { defineStore } from 'pinia';
 export const useUserStore = defineStore('user', {
   state: () => ({
     email: 'injustify@gamil.com',
-    name: 'injustify'
+    name: 'injustify',
+    SnackBar_messages:[],
   }),
   actions: {
     setUser(data) {
@@ -50,7 +51,20 @@ export const useUserStore = defineStore('user', {
       this.downloadFileCredential = info;
       console.log(this.downloadFileCredential);
 
+    },
+    set_snackbarMessage(message, type = "info", tm = 10000) {
+      const id = Date.now();
+      this.SnackBar_messages.push({ id, message, type });
+    
+      setTimeout(() => {
+        this.delete_snackBarMessage(id);        
+      }, tm);
+    },
+    
+    delete_snackBarMessage(id) {
+      this.SnackBar_messages = this.SnackBar_messages.filter(msg => msg.id !== id);
     }
+    
 
   }
 });

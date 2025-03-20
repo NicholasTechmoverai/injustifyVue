@@ -214,6 +214,8 @@ export default {
         })
         .catch((error) => {
           console.error("Error fetching streams:", error);
+          this.userStore.set_snackbarMessage('Error fetching streams!,Kindly try again!!','error',10000);
+
         });
     },
     fetchStreams_youtube() {
@@ -227,13 +229,14 @@ export default {
             this.streams = response.data.streams;
             this.info = response.data.info;
             this.isDroppeddown = true;
-            console.log("info::", this.info);
           } else {
             console.error("Stream fetch failed:", response.data.message);
+            this.userStore.set_snackbarMessage('Error fetching streams!,Kindly try again!!','error',10000);
           }
         })
         .catch((error) => {
           console.error("Error fetching streams:", error);
+          this.userStore.set_snackbarMessage('Error fetching streams!,Kindly try again!!','error',10000);
         })
         .finally(() => {
           this.isLoading = false; // Reset loading state
@@ -251,6 +254,7 @@ export default {
         })
         .catch((error) => {
           console.error("Error fetching streams:", error);
+          this.userStore.set_snackbarMessage('Error fetching streams!,Kindly try again!!','error',10000);
         })
         .finally(() => {
           this.isLoading = false; // Ensure loading stops after fetch
@@ -260,9 +264,10 @@ export default {
     handleDownload() {
       if (this.activeService === null) {
         console.log("Service not available for this song.");
+        this.userStore.set_snackbarMessage('Service not available for this song.!','error',10000);
+
         return;
       } else if (this.activeService === "youtube") {
-        console.log("Downloading YouTube video streams.");
         this.isDroppeddown = false;
         this.advUserStore.download_yt_stream(
           this.songId,
@@ -272,7 +277,6 @@ export default {
           this.activeResolution
         );
       } else if(this.activeService === 'injustify'){
-        console.log('Downloading InJustify video streams.');
         this.isDroppeddown = false;
         this.advUserStore.download_injustify_stream(
           this.songId,

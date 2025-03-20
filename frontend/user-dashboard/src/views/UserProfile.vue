@@ -144,21 +144,31 @@ export default {
       }
     };
 
-    // Save profile changes
     const saveProfileChanges = async () => {
-      if (!newProfilePicture.value) return;
+  if (!newProfilePicture.value) return;
 
-      const formData = new FormData();
-      formData.append("profile_picture", newProfilePicture.value);
-      formData.append("user_id", user.value.id); // Fix: Use `user.value.id` instead of `props.userId`
+  const formData = new FormData();
+  formData.append("profilePic", newProfilePicture.value);  
+  formData.append("userId", user.value.id);  
 
-      try {
-        await axios.post(`${BASE_URL}/api/profile/update-profile`, formData);
-        console.log("Profile updated successfully!");
-      } catch (error) {
-        console.error("Error updating profile:", error);
-      }
-    };
+  try {
+    const response = await axios.post(`${BASE_URL}/api/profile/updateProfile`, formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+
+    if (response.data.success) { 
+      userStore.setUser(response.data.user ?? user.value);  
+      userStore.set_snackbarMessage(response.data.message ?? 'Profile updated successfully!', 'success', 5000);
+    } else {
+      userStore.set_snackbarMessage(response.data.message ?? 'Failed to update profile!', 'error', 5000);
+    }
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    userStore.set_snackbarMessage('Failed to update profile!', 'error', 5000);
+  }
+};
+
+
 
     // Fetch profile on mount
     onMounted(fetchUserProfile);

@@ -153,7 +153,7 @@
               id="searchUrl"
               placeholder="Enter URL here..."
             />
-            <button @click="handleDownload(normalizeYouTubeUrl(dwn_url)),null">
+            <button @click="handleDownload(normalizeYouTubeUrl(dwn_url)), null">
               Download
             </button>
           </div>
@@ -211,7 +211,14 @@
 
               <!-- Dropdown Menu -->
               <div v-if="openIndex === index" class="skull-more-options">
-                <button @click="handleDownload(video.url,`${getTitle(video, service)} ${ getArtist(video, service)}`)">
+                <button
+                  @click="
+                    handleDownload(
+                      video.url,
+                      `${getTitle(video, service)} ${getArtist(video, service)}`
+                    )
+                  "
+                >
                   Injust <ion-icon name="download"></ion-icon>
                 </button>
                 <button>Djust</button>
@@ -283,7 +290,7 @@ export default {
       spotifyThumbnails: {},
       openIndex: null,
       streamSongID: null,
-      stmName:null,
+      stmName: null,
       dwn_url: null,
       userStore,
       showSearch: false,
@@ -308,7 +315,6 @@ export default {
 
   async mounted() {
     socket.on("respoce_search_suggestions", (data) => {
-      console.log("found suggeestions::", data);
       this.search_suggestions = data.search_suggestions;
     });
 
@@ -356,7 +362,7 @@ export default {
       this.openIndex = this.openIndex === index ? null : index;
     },
 
-    handleDownload(video,stmName) {
+    handleDownload(video, stmName) {
       console.log("Downloading:", video);
       this.streamSongID = video;
       this.stmName = stmName;
@@ -396,6 +402,8 @@ export default {
         this.inj_videos = response.data.songs || [];
       } catch (error) {
         console.error("API Error:", error);
+        this.userStore.set_snackbarMessage('API Error!!, ',error,'error',10000);
+
       } finally {
         this.loading.injustify = false;
       }
@@ -449,6 +457,7 @@ export default {
 
           if (response.status !== 200) {
             console.error(`${service} server responded with status: ${response.status}`);
+            //this.userStore.set_snackbarMessage(`${service} Polling error, refresh page and retry!`,'error',10000);
             throw new Error(`${service} Error: ${response.statusText}`);
           }
 
@@ -469,6 +478,7 @@ export default {
           }
         } catch (error) {
           console.error(`${service} Polling error:`, error);
+          //this.userStore.set_snackbarMessage(`${service} Polling error, refresh page and retry!`,'error',10000);
         }
 
         retries--;
@@ -476,6 +486,7 @@ export default {
           setTimeout(poll, interval);
         } else {
           console.error(`${service} Polling failed after maximum retries.`);
+          this.userStore.set_snackbarMessage(`${service} search failed after maximum retries, refresh page and retry!`,'error',10000);
           this.loading[service] = false;
         }
       };
@@ -698,6 +709,7 @@ export default {
   columns: 5 200px;
   padding: 5px 0;
   box-sizing: border-box;
+  overflow-x: hidden;
 
   .video-card {
     display: inline-block;
@@ -1008,8 +1020,8 @@ export default {
     flex-direction: column;
     padding: 5px !important;
     box-shadow: none !important;
-    height:100%;
-    justify-content:space-between;
+    height: 100%;
+    justify-content: space-between;
     div {
       padding: 0 !important;
     }

@@ -19,6 +19,8 @@
       :isDarkMode="isDarkMode"
       @close="showSignupModal = false"
     />
+    <SnackBar />
+
   </div>
 </template>
 
@@ -27,11 +29,13 @@ import { computed, ref } from "vue";
 import { useUserStore } from "@/store/index.js";
 import UserNavBar from "@/components/UserNavBar.vue";
 import SignupModal from "@/components/LoginSignup.vue";
+import SnackBar from "@/components/SnackBar";
 
 export default {
   components: {
     UserNavBar,
     SignupModal,
+    SnackBar,
   },
   setup() {
     const userStore = useUserStore();
@@ -43,7 +47,7 @@ export default {
         const decodedUser = decodeURIComponent(decodeURIComponent(user));
         const userObj = JSON.parse(decodedUser).user_info;
         userStore.setUser(userObj);
-        
+
       } catch (error) {
         console.error("Error parsing user data:", error);
       }
