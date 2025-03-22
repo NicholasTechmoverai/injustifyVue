@@ -5,11 +5,18 @@
         <!-- Stream Title -->
         <div class="stream-title">
           <p class="stream-label">Streams:</p>
-          <p v-if="info.title || info.artist " class="song-info">
-            {{ info.title }} - {{ info.artist }} 
+          <p v-if="info.title || info.artist" class="song-info">
+            {{ info.title }} - {{ info.artist }}
           </p>
           <p v-else-if="stmName">{{ stmName }}</p>
           <p v-else class="song-info">{{ songId }}</p>
+          <div id="defultStreamHolder">
+            <p id="descpt">default</p>
+            <div id="itsContent">
+              <div id="theDefultStream"><span>audio</span>(<span>mp4</span>)</div>
+              <ion-icon name="close-outline"></ion-icon>
+            </div>
+          </div>
         </div>
 
         <!-- Control Buttons -->
@@ -115,7 +122,7 @@ import { getYouTubeThumbnails } from "@/utils/index.js";
 export default {
   props: {
     songId: String,
-    stmName:String,
+    stmName: String,
     streamloading: Boolean,
   },
   data() {
@@ -214,8 +221,11 @@ export default {
         })
         .catch((error) => {
           console.error("Error fetching streams:", error);
-          this.userStore.set_snackbarMessage('Error fetching streams!,Kindly try again!!','error',10000);
-
+          this.userStore.set_snackbarMessage(
+            "Error fetching streams!,Kindly try again!!",
+            "error",
+            10000
+          );
         });
     },
     fetchStreams_youtube() {
@@ -231,12 +241,20 @@ export default {
             this.isDroppeddown = true;
           } else {
             console.error("Stream fetch failed:", response.data.message);
-            this.userStore.set_snackbarMessage('Error fetching streams!,Kindly try again!!','error',10000);
+            this.userStore.set_snackbarMessage(
+              "Error fetching streams!,Kindly try again!!",
+              "error",
+              10000
+            );
           }
         })
         .catch((error) => {
           console.error("Error fetching streams:", error);
-          this.userStore.set_snackbarMessage('Error fetching streams!,Kindly try again!!','error',10000);
+          this.userStore.set_snackbarMessage(
+            "Error fetching streams!,Kindly try again!!",
+            "error",
+            10000
+          );
         })
         .finally(() => {
           this.isLoading = false; // Reset loading state
@@ -254,7 +272,11 @@ export default {
         })
         .catch((error) => {
           console.error("Error fetching streams:", error);
-          this.userStore.set_snackbarMessage('Error fetching streams!,Kindly try again!!','error',10000);
+          this.userStore.set_snackbarMessage(
+            "Error fetching streams!,Kindly try again!!",
+            "error",
+            10000
+          );
         })
         .finally(() => {
           this.isLoading = false; // Ensure loading stops after fetch
@@ -264,7 +286,11 @@ export default {
     handleDownload() {
       if (this.activeService === null) {
         console.log("Service not available for this song.");
-        this.userStore.set_snackbarMessage('Service not available for this song.!','error',10000);
+        this.userStore.set_snackbarMessage(
+          "Service not available for this song.!",
+          "error",
+          10000
+        );
 
         return;
       } else if (this.activeService === "youtube") {
@@ -276,13 +302,13 @@ export default {
           this.activeExt,
           this.activeResolution
         );
-      } else if(this.activeService === 'injustify'){
+      } else if (this.activeService === "injustify") {
         this.isDroppeddown = false;
         this.advUserStore.download_injustify_stream(
           this.songId,
           this.activeItag,
           this.activeFilename,
-          this.activeExt|| 'mp4'
+          this.activeExt || "mp4"
         );
       }
     },
@@ -503,6 +529,7 @@ export default {
   flex-direction: column;
   justify-content: flex-start;
   width: 100%;
+  position: relative;
 }
 
 .stream-title {
@@ -548,7 +575,7 @@ ion-icon {
 }
 
 .moreDropdown {
-  background: var(--header-bg);
+  background: rgba(151, 145, 145, 0.928);
   border: 1px solid rgba(128, 128, 128, 0.622);
   border-radius: 5px;
 }
@@ -595,5 +622,75 @@ ion-icon {
 .no-streams {
   text-align: center;
   font-weight: bold;
+}
+
+#defultStreamHolder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
+  padding: 5px 9px;
+  background-color: #08111bef; /* Soft gray */
+  border-radius: 6px;
+  border: 1px solid #dddddd81; /* Light border */
+  color: #555; /* Muted text color */
+  max-width: 100px;
+  position: absolute;
+  right: 5px;
+  top: 100%;
+  font-size: 10px !important;
+}
+#defultStreamHolder >p{
+  margin: 0 !important;
+  padding: 0;
+}
+#defultStreamHolder #descpt {
+  font-size: 8px;
+  color: rgba(113, 110, 110, 0.939);
+  margin: 0 !important;
+  padding: 0;
+}
+#defultStreamHolder #itsContent{
+  display:flex;
+  flex-direction: row;
+  gap: 5px;
+
+}
+
+#defultStreamHolder #itsContent ion-icon {
+  margin-right: 0;
+  color: #777;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  font-size: 12px !important;
+  position: absolute;
+  top:2px;
+  right: 2px;
+}
+
+#defultStreamHolder #itsContent ion-icon:hover {
+  color: #0353c2; /* Darker on hover */
+}
+ #theDefultStream {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #666; /* Softer text */
+}
+
+#theDefultStream span {
+  font-size: 10px; 
+  color: #444; /* Not too strong */
+}
+
+ion-icon {
+  font-size: 18px; /* Adjust icon size */
+  color: #777; /* Muted icon */
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+ion-icon:hover {
+  color: #333; /* Darker on hover */
 }
 </style>

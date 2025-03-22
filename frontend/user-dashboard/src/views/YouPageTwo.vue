@@ -42,8 +42,9 @@
             />
           </transition>
         </div>
+
         <div class="playingSongArtwork">
-          {{}}
+          <!--<div v-if="song.isPlaying" class="arc-border"></div>-->
           <img :src="song.thumbnail" alt="Artist Image" />
           <div>
             <div class="playingSongArtist">{{ song.artist }}</div>

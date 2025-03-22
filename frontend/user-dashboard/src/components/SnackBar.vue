@@ -1,14 +1,13 @@
 <template>
   <div>
-
     <div id="snackbar-container">
       <div
         v-for="(snackbar, index) in snackbars"
         :key="index"
         :class="['snackbar', snackbar.type]"
       >
-        <span>
-          <i>{{ icons[snackbar.type] || "ℹ️" }}</i> {{ snackbar.message }}
+        <span class="snackbarcontent">
+          <ion-icon :name="icons[snackbar.type]"></ion-icon> {{ snackbar.message }}
         </span>
         <button class="close-btn" @click="removeSnackbar(index)">×</button>
       </div>
@@ -27,9 +26,9 @@ export default {
     return {
       snackbars: computed(() => userStore.SnackBar_messages),
       icons: {
-        success: "✔️",
-        error: "❌",
-        info: "ℹ️",
+        success: "checkmark-circle",
+        error: "alert-circle",
+        info: "information-circle",
       },
     };
   },
@@ -79,15 +78,25 @@ body {
   max-width: 420px;
   padding: 15px;
   border-radius: 12px;
-  color: white;
-  font-size: 16px;
+  color: rgb(235, 231, 231);
+  font-size: 14px;
   font-weight: bold;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
   animation: slideIn 0.5s ease, fadeOut 0.5s ease 7s forwards;
   position: relative;
   opacity: 0.9;
 }
-
+.snackbarcontent {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-direction: row;
+}
+.snackbarcontent ion-icon{
+    color: rgb(225, 220, 220);
+    font-weight: bolder;
+    font-size: 20px !important;
+}
 /* Snackbar types */
 .snackbar.error {
   background-color: #e74c3c;

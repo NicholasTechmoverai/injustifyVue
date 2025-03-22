@@ -194,7 +194,10 @@
           </div>
           <div class="video-info-holder">
             <div class="video-Meta-info-holder">
-              <span><i class="fa-solid fa-eye"></i>{{ video.views }}</span>
+              <span
+                ><ion-icon name="cloud-download-outline"></ion-icon
+                >{{ video.views }}</span
+              >
               <span>{{ timeAgo(video.date) || "many hours " }}</span>
               <span class="video-duration">{{
                 convertSeconds(video.duration) || ""
@@ -206,7 +209,7 @@
             <div class="dropdown-container">
               <!-- Skull Icon (Toggle Button) -->
               <div @click="toggleDropdown(index)" class="skull-icon">
-                <ion-icon name="skull-sharp"></ion-icon>
+                <ion-icon name="swap-vertical-outline"></ion-icon>
               </div>
 
               <!-- Dropdown Menu -->
@@ -219,9 +222,23 @@
                     )
                   "
                 >
-                  Injust <ion-icon name="download"></ion-icon>
+                  <ion-icon name="download"></ion-icon>Injust
                 </button>
-                <button>Djust</button>
+                <button
+                  @click="
+                    handleDownload(
+                      video.url,
+                      `${getTitle(video, service)} ${getArtist(video, service)}`
+                    )
+                  "
+                >
+                  <ion-icon name="receipt-outline"></ion-icon>
+                  load streams
+                </button>
+                <button>
+                  <ion-icon name="bag-add-outline"></ion-icon>
+                  add to playlist (best)
+                </button>
               </div>
             </div>
           </div>
@@ -371,6 +388,15 @@ export default {
       this.dwn_url = null;
       this.showMoreAdvancedFeatures = false;
     },
+    handle_stream_Download(video, stmName) {
+      console.log("Downloading:", video);
+      this.streamSongID = video;
+      this.stmName = stmName;
+      this.userStore.set_streamloading(true);
+      this.toggleDropdown();
+      this.dwn_url = null;
+      this.showMoreAdvancedFeatures = false;
+    },
 
     resetSearch() {
       this.query = "";
@@ -402,8 +428,7 @@ export default {
         this.inj_videos = response.data.songs || [];
       } catch (error) {
         console.error("API Error:", error);
-        this.userStore.set_snackbarMessage('API Error!!, ',error,'error',10000);
-
+        this.userStore.set_snackbarMessage("API Error!!, ", error, "error", 10000);
       } finally {
         this.loading.injustify = false;
       }
@@ -486,7 +511,11 @@ export default {
           setTimeout(poll, interval);
         } else {
           console.error(`${service} Polling failed after maximum retries.`);
-          this.userStore.set_snackbarMessage(`${service} search failed after maximum retries, refresh page and retry!`,'error',10000);
+          this.userStore.set_snackbarMessage(
+            `${service} search failed after maximum retries, refresh page and retry!`,
+            "error",
+            10000
+          );
           this.loading[service] = false;
         }
       };

@@ -96,6 +96,7 @@ import axios from "axios";
 import { computed } from "vue";
 import { BASE_URL, formatDate } from "@/utils";
 import { useUserStore } from "@/store/index.js";
+import injustifyIcon from "../assets/injustify.png";
 
 export default {
   name: "PlaylistPage",
@@ -112,6 +113,7 @@ export default {
       dropdownOpen: false,
       addPlaylist: false,
       formatDate,
+      injustifyIcon,
     };
   },
   async mounted() {
@@ -128,9 +130,20 @@ export default {
         .get(`${BASE_URL}/api/songs/pls/${this.userId}`)
         .then((response) => {
           console.log("playlist::", response.data.playlists);
+          const randomPlylist = {
+            id: '3031',
+            name: "Random Playlist",
+            song_count: 20,
+            created_at: new Date(),
+            created_by: 1,
+            picture: this.injustifyIcon,
+            description: "",
+          }
+
           this.playlists = Array.isArray(response.data.playlists)
             ? response.data.playlists
             : [];
+            this.playlists.unshift(randomPlylist);
         })
         .catch((error) => {
           console.error("API Error:", error);
