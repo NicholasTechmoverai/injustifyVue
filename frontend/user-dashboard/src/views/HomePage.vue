@@ -216,9 +216,8 @@
               <div v-if="openIndex === index" class="skull-more-options">
                 <button
                   @click="
-                    handleDownload(
-                      video.url,
-                      `${getTitle(video, service)} ${getArtist(video, service)}`
+                  handle_dwn_Download(
+                      video
                     )
                   "
                 >
@@ -239,6 +238,7 @@
                   <ion-icon name="bag-add-outline"></ion-icon>
                   add to playlist (best)
                 </button>
+
               </div>
             </div>
           </div>
@@ -270,6 +270,7 @@ import axios from "axios";
 import { timeAgo } from "@/utils/index";
 import { getYouTubeThumbnails, getSpotifyThumbnail } from "@/utils/index.js";
 import { useUserStore } from "@/store/index.js";
+import { adv_UserStore } from "@/store/tasks.js";
 import { BASE_URL } from "@/utils/index.js";
 import injustifyIcon from "../assets/injustify.png";
 import youtubeIcon from "../assets/youtube-icon2.jpg";
@@ -280,6 +281,7 @@ export default {
   components: { DownlodSelectorHold },
   setup() {
     const userStore = useUserStore();
+
 
     return {
       iscollapsedBig: computed(() => userStore.iscollapsedBig),
@@ -292,7 +294,7 @@ export default {
 
   data() {
     const userStore = useUserStore();
-
+    const advUserStore = adv_UserStore();
     return {
       injustifyIcon,
       youtubeIcon,
@@ -317,6 +319,8 @@ export default {
       youtubeUrl: "",
       searchFrom: { injustify: true, youtube: true, spotify: true },
       filterBy: { artist: true, title: true, date: false },
+      advUserStore
+
     };
   },
 
@@ -388,14 +392,25 @@ export default {
       this.dwn_url = null;
       this.showMoreAdvancedFeatures = false;
     },
-    handle_stream_Download(video, stmName) {
-      console.log("Downloading:", video);
+    handle_dwn_Download(video) {
+      console.log("Downloading:", video, "from", video.Stype
+      );
+      if(video.Stype == null) {
+        this.userStore.set_snackbarMessage(`Error downloading from  ${video.stype},try downloading from a different source!`, "error", 10000);
+        console.log("Service not selected.");
+        return;
+      }
+      const sname = `${video.artist}-${video.title}`
+      if(video.Stype === 'injustify'){
+        this.advUserStore.download_injustify_stream(video.song_id,video.itag,sname,video.url.split('.').pop());
+      }
+      else if(video.Stype === 'youtube'){
+        this.advUserStore.download_injustify_stream(video.url,video.itag,sname,video.ext,video.resolution);
+      }
       this.streamSongID = video;
-      this.stmName = stmName;
-      this.userStore.set_streamloading(true);
+      this.stmName = sname;
       this.toggleDropdown();
       this.dwn_url = null;
-      this.showMoreAdvancedFeatures = false;
     },
 
     resetSearch() {
