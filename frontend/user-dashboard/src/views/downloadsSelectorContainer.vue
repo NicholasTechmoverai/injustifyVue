@@ -644,6 +644,7 @@ ion-icon {
   margin: 0 !important;
   padding: 0;
 }
+
 #defultStreamHolder #descpt {
   font-size: 8px;
   color: rgba(113, 110, 110, 0.939);
