@@ -7,41 +7,62 @@
       <ion-icon name="musical-note-outline"></ion-icon>
     </h1>
 
-    <!-- Router Views -->
     <div class="children">
-      <router-view name="childOne"></router-view>
-      <router-view name="childTwo"></router-view>
-      <router-view name="childThree"></router-view>
-    </div>
-
-    <!-- Child Components -->
-    <div class="children">
-      <ChildOne :isDarkMode="isDarkMode" />
       <ChildTwo
+        class="common-scroolbar"
+        v-if="currentChild === 'stream' || !currentChild"
         :isDarkMode="isDarkMode"
         :clickedSongId="playSongID"
         @toggle-viewPlayersMode="toggleViewPlayersMode"
       />
-      <ChildThree v-if="viewPlayersMode" @play-song="handlePlaySong" />
+
+      <ChildOne
+        class="common-scroolbar"
+        v-if="currentChild === 'xy' || !currentChild"
+        :isDarkMode="isDarkMode"
+      />
+
+      <ChildThree
+        class="common-scroolbar"
+        v-if="(currentChild === 'yz' || !currentChild) && viewPlayersMode"
+        @play-song="handlePlaySong"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
+import { useRoute } from "vue-router";
 import { useUserStore } from "@/store/index.js";
 import ChildOne from "./YouPageONe.vue";
 import ChildTwo from "./YouPageTwo.vue";
 import ChildThree from "./YouPageThree.vue";
 
 // Reactive State
-const playSongID = ref(null);
+const route = useRoute();
+const playSongID = ref("3031");
 const viewPlayersMode = ref(true);
 const userStore = useUserStore();
 
 // Computed Properties
 const iscollapsedBig = computed(() => userStore.iscollapsedBig);
 const isDarkMode = computed(() => userStore.isdarkmode);
+
+const currentChild = ref(route.params.child ? String(route.params.child) : null);
+
+// Debugging: Log current child properly
+alert(currentChild.value); // ✅ Access the `.value`
+console.log("Current Child:", currentChild.value);
+
+// Watch for route changes and update `currentChild`
+watch(
+  () => route.params.child,
+  (newChild) => {
+    currentChild.value = newChild ? String(newChild) : null;
+    console.log("Updated Child:", currentChild.value);
+  }
+);
 
 // Event Handlers
 const toggleViewPlayersMode = () => {
@@ -75,6 +96,8 @@ const handlePlaySong = (id) => {
   padding: 3px;
 }
 .injustifyLogoR {
+  font-size: 20px;
+  margin: 0 !important;
   position: relative;
 }
 

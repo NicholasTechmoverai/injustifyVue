@@ -30,9 +30,9 @@
           </router-link>
         </li>
         <li>
-          <router-link class="inline" :to="`/history/${userEmail}`">
-            <ion-icon name="time-outline"></ion-icon>
-            <div v-if="isSidebarOpen">History</div>
+          <router-link class="inline" :to="`/analytics/${userEmail}`">
+            <ion-icon name="analytics-outline"></ion-icon>     
+            <div v-if="isSidebarOpen">Analytics</div>
           </router-link>
         </li>
         <li>
@@ -67,10 +67,17 @@
           </router-link>
         </li>
 
-        <li>
+        <li v-if="userId">
+          <a class="inline" href="/logout">
+            <ion-icon name="log-out-outline"></ion-icon>
+            <div v-if="isSidebarOpen">Logout</div>
+          </a>
+        </li>
+
+        <li v-else>
           <a class="inline" href="#" @click.prevent="$emit('open-signup')">
             <ion-icon name="log-in-outline"></ion-icon>
-            <div v-if="isSidebarOpen">Signup/Login</div>
+            <div v-if="isSidebarOpen">Login</div>
           </a>
         </li>
       </ul>
@@ -82,28 +89,58 @@
       <span v-else>❯</span>
     </button>
     <div id="sidebarBottom">
+      <div id="moreONnav" v-if="more_injust">
+        <router-link class="inline" to="/help">
+          <ion-icon name="help-circle-outline"></ion-icon> Help
+        </router-link>
+        <router-link class="inline" to="/search">
+          <ion-icon name="code-slash-outline"></ion-icon>
+          devs
+        </router-link>
+
+        <router-link class="inline" to="/about">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          About
+        </router-link>
+
+        <router-link class="inline" to="/feedback">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          feedback
+        </router-link>
+
+        <div class="globalToogle">
+          <label class="toggle ThemeToggle">
+            <span class="hidden" id="darkthemething"
+              ><i class="fa-solid fa-moon"></i>
+            </span>
+            <input
+              @change="toggleThemes"
+              :checked="isDarkMode"
+              type="checkbox"
+              id="themeToggle"
+            />
+            <span class="slider mode-toggle"></span>
+            <span  class="hidden" id="lighthemething"
+              ><i class="fa-solid fa-sun"></i>
+            </span>
+          </label>
+        </div>
+      </div>
       <h1 class="injustifyLogoR">
         <ion-icon name="musical-note-outline" v-if="isSidebarOpen"></ion-icon>
         Injustify
         <ion-icon name="musical-note-outline" v-if="isSidebarOpen"></ion-icon>
       </h1>
-      <div class="globalToogle">
-        <label class="toggle ThemeToggle">
-          <span v-if="isSidebarOpen" class="hidden" id="darkthemething"
-            ><i class="fa-solid fa-moon"></i>
-          </span>
-          <input
-            @change="toggleThemes"
-            :checked="isDarkMode"
-            type="checkbox"
-            id="themeToggle"
-          />
-          <span class="slider mode-toggle"></span>
-          <span v-if="isSidebarOpen" class="hidden" id="lighthemething"
-            ><i class="fa-solid fa-sun"></i>
-          </span>
-        </label>
-      </div>
+      <button
+      id="moreONnavButton"
+        @click="
+          () => {
+            more_injust = !more_injust;
+          }
+        "
+      >
+        <ion-icon :name="more_injust?'close-circle-outline':'ellipsis-horizontal'"></ion-icon>
+      </button>
     </div>
   </aside>
 </template>
@@ -116,6 +153,7 @@ import { adv_UserStore } from "@/store/tasks.js";
 // Define props
 defineProps({
   userEmail: String,
+  userId: String,
   userName: String,
   profilePic: String,
   isVerified: Boolean,
@@ -129,6 +167,8 @@ const advUserStore = adv_UserStore();
 
 const isSidebarOpen = ref(true);
 const deviceWidth = ref(window.innerWidth);
+
+const more_injust = ref(false);
 
 const isAboutToDownload = computed(() => userStore.isAboutToDownload);
 const downloadCount = computed(() => advUserStore.currentDownloadCount);
@@ -253,7 +293,7 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 :root {
-  --main-color: linear-gradient(45deg, rgb(25, 23, 53) 40%, rgb(95, 239, 255));
+  --main-color: linear-gradient(45deg, rgb(25, 23, 53) 10%, rgb(60, 90, 180) 50%, rgb(95, 239, 255) 90%);
   --hover-color1: rgb(12, 216, 231);
   --hover-color2: red;
   --other-color-balanced: rgba(132, 124, 124, 0.2);
@@ -271,7 +311,7 @@ onBeforeUnmount(() => {
   top: 0;
   width: 250px;
   height: 100%;
-  background: linear-gradient(45deg, rgb(25, 23, 53) 40%, rgb(95, 239, 255));
+  background: linear-gradient(45deg, rgb(25, 23, 53) 10%, rgb(60, 90, 180) 50%, rgb(95, 239, 255) 90%);
   padding: 10px;
   color: rgb(119, 116, 116);
   display: flex;
@@ -431,5 +471,43 @@ ion-icon {
   text-shadow: 0px 0px 5px rgb(0, 0, 0);
   color: rgb(228, 228, 228); /* Change color for active link */
   border-bottom: 3px solid red; /* Optional underline effect */
+}
+
+#moreONnavButton{
+  position: relative;
+  font-size: 20px;
+  margin-bottom:10px;
+  cursor: pointer;
+  border-radius: 5px;
+  background-color: transparent;
+  outline:transparent;
+  border:none;
+  color:white;
+  &:hover{
+    color: rgb(0, 162, 255);
+    background-color: rgba(128, 128, 128, 0.172);
+  }
+}
+.collapsed #moreONnav{
+  right:-150% !important;
+}
+#moreONnav{
+  position:absolute;
+  bottom: 50px;
+  background: linear-gradient(45deg, rgb(25, 23, 53) 10%, rgb(60, 90, 180) 50%, rgb(95, 239, 255) 90%);
+  box-shadow:0px 0px 3px black;
+  border-radius:10px;
+  width: 200px;
+  transition: all 0.3s ease;
+  z-index:100 ;
+
+  a{
+    color: white;
+    padding: 2px !important;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 2px !important;
+  }
 }
 </style>

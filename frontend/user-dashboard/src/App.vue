@@ -2,6 +2,7 @@
   <div id="app" :class="{ 'dark-mode': isDarkMode }">
     <UserNavBar
       :userEmail="userEmail"
+      :userId="userId"
       :user-name="userName"
       :is-verified="isVerified"
       :profile-pic="profilePic"
@@ -20,7 +21,6 @@
       @close="showSignupModal = false"
     />
     <SnackBar />
-
   </div>
 </template>
 
@@ -47,12 +47,10 @@ export default {
         const decodedUser = decodeURIComponent(decodeURIComponent(user));
         const userObj = JSON.parse(decodedUser).user_info;
         userStore.setUser(userObj);
-
       } catch (error) {
         console.error("Error parsing user data:", error);
       }
     }
-
 
     const userEmail = computed(() => userStore.email);
     const userId = computed(() => userStore.userId);

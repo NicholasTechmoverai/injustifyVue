@@ -1,16 +1,19 @@
 <template>
-  <div id="youSectionC" class="card common-scrollbar">
+  <div id="youSectionC" class="common-scrollbar">
     <div id="sectioncmoststreamedSongs">
-      <div id="moststreamedSongsHeader" class="card header">
+      <div class="header">
         <span>Your Top Songs This Month</span>
-        <span>Best</span>
-                <!-- Options Button -->
-                <button class="options-button" @click="toggleDropdown">
+        <!-- Options Button -->
+        <button class="options-btn" @click="toggleDropdown">
           <ion-icon name="options-outline"></ion-icon>
         </button>
 
         <!-- Dropdown Menu -->
-        <div v-if="dropdownOpen" class="dropdown-menu">
+        <div
+          v-if="dropdownOpen"
+          class="dropdown-menu"
+          :class="{ 'darktheme-2': isDarkMode }"
+        >
           <ul>
             <li @click="searchPlaylist">🔍 Search</li>
             <li @click="sharePlaylist">📤 Share</li>
@@ -20,29 +23,50 @@
 
       <div id="moststreamedSongsBody">
         <div v-if="loading" class="loading-text">Loading...</div>
-        <div v-else-if="songs.length === 0" class="empty-text">No songs found</div> 
-        
-        <div v-else>
-          <div 
-            v-for="(song, index) in songs" 
-            :key="index" 
+        <div v-else-if="songs.length === 0" class="empty-text">No songs available</div>
+        <div v-else id="ssfads">
+          <div
+            v-for="(song, index) in songs"
+            :key="song.id || index"
+            :class="{ 'darktheme-2': isDarkMode }"
             class="song-item"
-            :song_id="song.id"
           >
-            <img :src="song.thumbnail" alt="Song thumbnail" class="song-thumbnail">
-            <div class="song-details">
-              <div class="songTitle">{{ song.title }}</div>
-              <div class="songTrendinfo">Rank: {{ song.rank }}</div>
+            <img :src="song.thumbnail" alt="Song thumbnail" class="song-thumbnail" />
+            <div class="song-duration">{{ song.duration || "3:50" }}</div>
+            <div class="song-info">
+              <div class="song-text">
+                <div class="songTitle">{{ song.title }}</div>
+                <div class="songArtist">{{ song.artist }}</div>
+              </div>
+
+              <div class="song-actions-container">
+                <ion-icon
+                  class="song-actions-p-button"
+                  name="ellipsis-vertical"
+                  @click="toggleActions"
+                ></ion-icon>
+                <div class="song-actions" :class="{ 'darktheme-2': isDarkMode }">
+                  <button @click="unlikeSong(song.id)" class="action-btn unlike-btn">
+                    <ion-icon name="heart-dislike-outline"></ion-icon>
+                  </button>
+                  <button @click="downloadSong(song.id)" class="action-btn">
+                    <ion-icon name="download-outline"></ion-icon>
+                  </button>
+                  <button @click="shareSong(song.id)" class="action-btn">
+                    <ion-icon name="share-social-outline"></ion-icon>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      
     </div>
   </div>
 </template>
 
 <script>
+import { computed } from "vue";
 import axios from "axios";
 import { BASE_URL } from "@/utils";
 import { useUserStore } from "@/store/index.js";
@@ -51,15 +75,18 @@ export default {
   props: {
     userId: {
       type: String,
-      required: false, 
+      required: false,
     },
   },
   data() {
+    const userStore = useUserStore();
+
     return {
-      songs: [], 
+      songs: [],
       loading: false,
       dropdownOpen: false,
-      actualUserId: this.userId || useUserStore().userId, 
+      actualUserId: this.userId || useUserStore().userId,
+      isDarkMode: computed(() => userStore.isdarkmode),
     };
   },
   async mounted() {
@@ -74,11 +101,13 @@ export default {
   },
   methods: {
     async fetchSongs() {
-      if (!this.actualUserId) return; 
+      if (!this.actualUserId) return;
 
       this.loading = true;
       try {
-        const response = await axios.get(`${BASE_URL}/api/songs/utr/${this.actualUserId}`);
+        const response = await axios.get(
+          `${BASE_URL}/api/songs/utr/${this.actualUserId}`
+        );
         console.log("playlist::", response.data.songs);
 
         this.songs = Array.isArray(response.data.songs) ? response.data.songs : [];
@@ -111,85 +140,174 @@ export default {
 };
 </script>
 
-
 <style scoped>
 /* 🔥 Overall Container Styling */
 #youSectionC {
   padding: 20px;
   border-radius: 10px;
-  color: #ffffff;
 }
-
-/* 🔥 Header Styling */
+/* Header Styling */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgb(180, 178, 178);
-  padding: 10px 15px;
-  border-radius: 8px;
-  position: relative;
+  padding: 10px 0;
+  font-size: 20px;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
 }
 
 .options-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: #ffffff;
   font-size: 20px;
+  color: #666;
 }
 
-/* 🔥 Song List Styling */
 #moststreamedSongsBody {
-  margin-top: 10px;
+  margin-top: 15px;
+  gap: 2px;
+}
+#ssfads {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 2px !important;
 }
 
-/* 🔥 Loading & Empty States */
-.loading-text, .empty-text {
+.loading-text,
+.empty-text {
   text-align: center;
-  color: #bbb;
+  color: #888;
   margin-top: 20px;
 }
 
+/* Song Item Styling */
 .song-item {
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: 5px;
   border-radius: 8px;
-  margin-bottom: 10px;
-  transition: background 0.3s ease-in-out;
-  background-color: gray;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: visible;
+  background: #dcdcde;
 }
-
-
 .song-item:hover {
-  background: #3a3a3c;
+  background: #f0f0f0;
 }
 
+/* Song Thumbnail */
 .song-thumbnail {
-  width: 200px;
-  min-height: 50px;
-  background-size: cover; 
-  height: auto;
-  border-radius: 8px;
+  width: 100px;
+  height: 65px;
+  border-radius: 5px;
+  object-fit: cover;
   margin-right: 15px;
 }
 
-.song-details {
+/* Song Information and Actions */
+.song-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.song-text {
   display: flex;
   flex-direction: column;
 }
 
 .songTitle {
   font-size: 16px;
-  font-weight: bold;
-  color: #ffffff;
+  color: #222;
+  display: -webkit-box; /* Use a flex-like box for line clamping */
+  -webkit-box-orient: vertical; /* Specify vertical stacking of lines */
+  -webkit-line-clamp: 3; /* Allow only two lines */
+  overflow: hidden; /* Hide overflowed text */
+  text-overflow: ellipsis; /* Add ellipsis (...) for overflowing text */
+  word-wrap: normal; /* Prevent forced breaks */
+  width: 100%;
 }
 
-.songTrendinfo {
+.songArtist {
   font-size: 14px;
-  color: #bbb;
-  margin-top: 5px;
+  color: #555;
+  margin-top: 3px;
+}
+
+.song-actions-container {
+  position: relative;
+  display: inline-block;
+}
+
+.song-actions-p-button {
+  position: absolute;
+  right: 3px;
+  top: 0;
+  font-size: 18px;
+  cursor: pointer;
+  font-weight: bolder;
+  color: grey;
+}
+
+.song-actions-p-button:hover {
+  transform: scale(1.2);
+  color: blue;
+}
+
+.song-actions {
+  display: none;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #fff;
+  padding: 5px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.song-actions-container:hover .song-actions {
+  display: flex;
+  z-index: 102;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+  transition: transform 0.2s ease-in-out;
+}
+
+.action-btn:hover {
+  transform: scale(1.2);
+}
+
+.unlike-btn {
+  color: #e74c3c;
+}
+.song-duration {
+  position: absolute;
+  bottom: 0;
+  border-radius: 4px;
+  padding: 2px 4px;
+  background: #f4f4f4;
+  color: #333;
+  font-size: 10px !important;
+  margin-left: 0px;
+  margin-bottom: 5px;
+}
+
+/*dark theme*/
+.darktheme-2 {
+  background: #2c2c2c !important;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  color: #e7e7e7 !important;
 }
 /* Dropdown menu */
 .dropdown-menu {

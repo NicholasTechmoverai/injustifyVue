@@ -358,3 +358,35 @@ color: white;
     background: linear-gradient(135deg, #5fefff, #007bff);
   }
 }
+
+
+
+
+
+/*scroll bar*/
+.common-scroolbar::-webkit-scrollbar{
+    width: 5px; /* Width of the vertical scrollbar */
+    height: 5px; /* Height of the horizontal scrollbar */
+}
+
+/* Style the scrollbar track */
+.common-scroolbar::-webkit-scrollbar-track {
+    background: #898989; /* Light background color */
+    border-radius: 10px; /* Rounded edges */
+}
+
+/* Style the scrollbar thumb (scroll handle) */
+.common-scroolbar::-webkit-scrollbar-thumb {
+    background: #646161; /* Color of the thumb */
+    border-radius: 10px; /* Rounded edges */
+}
+
+/* Hover effect for the scrollbar thumb */
+.common-scroolbar::-webkit-scrollbar-thumb:hover {
+    background: #282727; /* Darker color on hover */
+}
+
+/* Optional: Style the scrollbar corner for cross-axes */
+.common-scroolbar::-webkit-scrollbar-corner{
+    background: transparent; /* Match the track background */
+}

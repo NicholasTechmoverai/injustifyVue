@@ -31,7 +31,7 @@
       </div>
 
       <div id="searchcontrols">
-        <button>tt</button>
+        <button><ion-icon name="clipboard"></ion-icon></button>
         <ion-icon
           @click="toggleSearch"
           :name="showSearch ? 'close-circle-outline' : 'search-circle-outline'"
@@ -1169,7 +1169,7 @@ export default {
 
     button {
       background: #007bff;
-      color: white;
+      color: rgb(226, 221, 221);
       padding: 3px 10px;
       border: none;
       border-radius: 5px;
@@ -1281,7 +1281,7 @@ export default {
     }
 
     button {
-      padding: 0.6rem 1rem;
+      padding: 0px !important;
       font-size: 1rem;
       font-weight: bold;
       border: none;
@@ -1295,7 +1295,7 @@ export default {
         color: white;
 
         &:hover {
-          background: darkgray;
+          background: rgb(0, 204, 222) !important;
         }
       }
 

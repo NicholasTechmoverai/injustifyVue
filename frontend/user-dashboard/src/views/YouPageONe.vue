@@ -1,23 +1,26 @@
 <template>
   <div id="youSectionA">
     <!-- Scrollable Categories -->
-    <div id="sectionAscroll">
+    <div id="sectionAscroll" :class="{ 'darktheme-2': isDarkMode }">
       <div id="allScrolls">
         <div class="secAscroll" @click="handleScroll('yls', $event)">
-          <router-link :to="`/you/yls/${userId}`">You liked songs</router-link>
+          <router-link :to="`/you/xy/yls/${userId}`">You liked songs</router-link>
         </div>
+
         <div class="secAscroll" @click="handleScroll('pl', $event)">
-          <router-link :to="`/you/pl/${userId}`">Your playlists</router-link>
+          <router-link :to="`/you/xy/pl/${userId}`">Your playlists</router-link>
         </div>
+
         <div class="secAscroll" @click="handleScroll('str', $event)">
-          <router-link :to="`/you/str/${userId}`">Stream rate</router-link>
+          <router-link :to="`/you/xy/str/${userId}`">Stream rate</router-link>
         </div>
+
         <div class="secAscroll" @click="handleScroll('utr', $event)">
-          <router-link :to="`/you/utr/${userId}`">Your top songs</router-link>
+          <router-link :to="`/you/xy/utr/${userId}`">Your top songs</router-link>
         </div>
+
         <div class="secAscroll" @click="handleScroll('tr', $event)">
           <router-link to="/you/tr">Trending</router-link>
-          <!-- This one does not need userId, assuming that's intentional -->
         </div>
       </div>
     </div>
@@ -28,23 +31,20 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed, watch } from "vue";
 import { useUserStore } from "@/store/index.js";
-import { computed } from "vue";
+import { useRoute } from "vue-router";
 
 const userStore = useUserStore();
+const route = useRoute();
 const userId = computed(() => userStore.userId);
 const isDarkMode = computed(() => userStore.isdarkmode);
 
-//const userEmail = computed(() => userStore.email);
-
-// Track the selected category
 const selectedCategory = ref(null);
 
 const handleScroll = (category, event) => {
   selectedCategory.value = category;
 
-  // Ensure the correct div scrolls into view
   event.currentTarget.scrollIntoView({
     behavior: "smooth",
     block: "nearest",
@@ -54,7 +54,24 @@ const handleScroll = (category, event) => {
     isDarkMode,
   };
 };
+
+// Watch route changes to update the active state
+watch(
+  () => route.params.category,
+  (newCategory) => {
+    selectedCategory.value = newCategory || null;
+  }
+);
 </script>
+
+<style scoped>
+/* Highlight active category */
+.secAscroll.active {
+  background-color: #444;
+  color: white;
+  border-radius: 5px;
+}
+</style>
 
 <style scoped>
 #allScrolls::-webkit-scrollbar {
@@ -78,7 +95,6 @@ const handleScroll = (category, event) => {
   overflow-y: auto;
   box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.7);
 }
-
 
 #youSectionA > div {
   border-radius: 3px;
@@ -169,6 +185,7 @@ const handleScroll = (category, event) => {
   );
 }
 #sectionAscroll {
+  background: #dcdcde;
   position: sticky;
   top: 0;
   z-index: 99;
@@ -209,5 +226,10 @@ a.router-link-active {
   text-shadow: 0px 1px 3px rgb(0, 0, 0);
   text-decoration: underline !important;
   color: rgb(75, 75, 190) !important;
+}
+.darktheme-2 {
+  background: #2c2c2c !important;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  color: #e7e7e7 !important;
 }
 </style>

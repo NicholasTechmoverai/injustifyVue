@@ -1,12 +1,11 @@
 <template>
-  <div class=" common-scrollbar">
+  <div class="common-scrollbar">
     <div id="sectioncmoststreamedSongs">
-      <div id="moststreamedSongsHeader" class="card header">
+      <div class="header">
         <span>Stream Rate</span>
-        <span>Best</span>
 
         <!-- Options Button -->
-        <button class="options-button" @click="toggleDropdown">
+        <button class="options-btn" @click="toggleDropdown">
           <ion-icon name="options-outline"></ion-icon>
         </button>
 
@@ -20,7 +19,7 @@
       </div>
 
       <!-- Loading State -->
-      <div  v-if="loading">
+      <div v-if="loading">
         <p>Loading stream rate data...</p>
       </div>
 
@@ -30,7 +29,7 @@
           v-for="(user, index) in users"
           :key="index"
           class="user-item"
-          :class="{ currentUser: user.userId === userId }"
+          :class="{ currentUser: user.userId === userId, 'darktheme-2': isDarkMode }"
         >
           <router-link :to="`/profile/${user.userId}`">
             <img :src="user.profile_image_url" alt="User Profile" class="profile-img" />
@@ -52,7 +51,7 @@
 import axios from "axios";
 import { BASE_URL } from "@/utils";
 import { useUserStore } from "@/store/index.js";
-import { watch, ref, onMounted, onUnmounted } from "vue";
+import { watch, ref, onMounted, onUnmounted, computed } from "vue";
 
 export default {
   props: {
@@ -64,6 +63,8 @@ export default {
     const dropdownOpen = ref(false);
     const userStore = useUserStore();
     const userId = ref(props.userId || userStore.userId);
+
+    const isDarkMode = computed(() => userStore.isdarkmode);
 
     const fetchStreamRate = async () => {
       loading.value = true;
@@ -125,6 +126,7 @@ export default {
       dropdownOpen,
       toggleDropdown,
       sharePlaylist,
+      isDarkMode,
     };
   },
 };
@@ -136,24 +138,23 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(170, 170, 174, 0.8);
   backdrop-filter: blur(10px);
-  padding: 12px 18px;
-  border-radius: 10px;
-  margin: 6px 0;
+  padding: 10px 0;
+  font-size: 20px;
+  font-weight: bold;
   position: relative;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease-in-out;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 5px;
+  color: inherit;
 }
-
-
 
 .options-btn {
   background: none;
   border: none;
   cursor: pointer;
-  color: #ffffff;
-  font-size: 22px;
+  font-size: 20px;
+  color: #666;
   transition: color 0.3s ease, transform 0.2s ease;
 }
 
@@ -161,7 +162,6 @@ export default {
   color: #f0f0f0;
   transform: scale(1.1);
 }
-
 
 #moststreamedHeader {
   display: flex;
@@ -197,7 +197,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #dcdcde;
   border-radius: 10px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   transition: background 0.3s ease-in-out, transform 0.2s ease;
@@ -207,10 +207,9 @@ export default {
   background: rgba(255, 255, 255, 0.2);
   transform: scale(1.02);
 }
-.user-item:hover .profile-img{
+.user-item:hover .profile-img {
   border: 3px solid #2bb0ce;
 }
-
 
 .user-info {
   display: flex;
@@ -243,7 +242,7 @@ export default {
   transition: background 0.5s ease;
   animation: backgroundAnim 20s infinite alternate ease-in-out;
 }
-.currentUser .profile-img{
+.currentUser .profile-img {
   border: 3px solid #2bb0ce;
 }
 
@@ -277,9 +276,16 @@ export default {
   background: #444;
 }
 
-#moststreamedSongsBody{
+#moststreamedSongsBody {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+/*dark theme*/
+.darktheme-2 {
+  background: #2c2c2c !important;
+  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
+  color: #e7e7e7 !important;
 }
 </style>

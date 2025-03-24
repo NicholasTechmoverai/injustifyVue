@@ -1,14 +1,9 @@
 <template>
   <div id="youSectionC" class="card common-scrollbar">
     <div id="sectioncmoststreamedSongs">
-      <div
-        id="moststreamedSongsHeader"
-        :class="{ 'darktheme-2': isDarkMode }"
-        class="header"
-      >
+      <div id="moststreamedSongsHeader" class="header">
         <span>Playlists</span>
-        <span>Best</span>
-        <button class="options-button" @click="toggleDropdown">
+        <button class="options-btn" @click="toggleDropdown">
           <ion-icon name="options-outline"></ion-icon>
         </button>
         <div
@@ -100,13 +95,16 @@ import injustifyIcon from "../assets/injustify.png";
 
 export default {
   name: "PlaylistPage",
+  props: {
+    userId: String,
+  },
 
   data() {
     const userStore = useUserStore();
 
     return {
       playlists: [],
-      userId: null,
+      userIda: this.userId || null,
       loading: false,
       isDarkMode: computed(() => userStore.isdarkmode),
       activeEditableId: null,
@@ -118,8 +116,8 @@ export default {
   },
   async mounted() {
     const userStore = useUserStore();
-    this.userId = userStore.userId;
-    if (this.userId) {
+    this.userIda = this.userId || userStore.userId;
+    if (this.userIda) {
       await this.fetchPlaylists();
     }
   },
@@ -127,23 +125,23 @@ export default {
     fetchPlaylists() {
       this.loading = true;
       axios
-        .get(`${BASE_URL}/api/songs/pls/${this.userId}`)
+        .get(`${BASE_URL}/api/songs/pls/${this.userIda}`)
         .then((response) => {
           console.log("playlist::", response.data.playlists);
           const randomPlylist = {
-            id: '3031',
+            id: "3031",
             name: "Random Playlist",
             song_count: 20,
             created_at: new Date(),
             created_by: 1,
             picture: this.injustifyIcon,
             description: "",
-          }
+          };
 
           this.playlists = Array.isArray(response.data.playlists)
             ? response.data.playlists
             : [];
-            this.playlists.unshift(randomPlylist);
+          this.playlists.unshift(randomPlylist);
         })
         .catch((error) => {
           console.error("API Error:", error);
@@ -307,9 +305,10 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #dadada;
-  padding: 10px 15px;
-  border-radius: 8px;
+  padding: 10px 0;
+  font-size: 20px;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
   position: relative;
 }
 
@@ -318,6 +317,7 @@ export default {
   border: none;
   cursor: pointer;
   font-size: 20px;
+  color: #666;
 }
 
 #moststreamedSongsBody {
