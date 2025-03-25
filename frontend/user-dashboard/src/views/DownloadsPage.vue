@@ -485,14 +485,12 @@ export default {
 </script>
 
 <style scoped>
-/* General container styling */
 .ghg {
   display: flex;
   flex-direction: row;
   width: 100%;
 }
 
-/* Main Downloads Container */
 #downloads-Main-container {
   display: flex;
   flex-direction: column;
