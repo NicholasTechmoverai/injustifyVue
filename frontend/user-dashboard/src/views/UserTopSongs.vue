@@ -46,8 +46,8 @@
                   @click="toggleActions"
                 ></ion-icon>
                 <div class="song-actions" :class="{ 'darktheme-2': isDarkMode }">
-                  <button @click="unlikeSong(song.id)" class="action-btn unlike-btn">
-                    <ion-icon name="heart-dislike-outline"></ion-icon>
+                  <button @click="likeunlikeS(song)" class="action-btn unlike-btn">
+                    <ion-icon :name="song.liked ? 'heart' : 'heart-outline'"></ion-icon>
                   </button>
                   <button @click="downloadSong(song.id)" class="action-btn">
                     <ion-icon name="download-outline"></ion-icon>
@@ -70,6 +70,7 @@ import { computed } from "vue";
 import axios from "axios";
 import { BASE_URL } from "@/utils";
 import { useUserStore } from "@/store/index.js";
+import { likeUnlikeSong } from "@/services/websocket";
 
 export default {
   props: {
@@ -87,6 +88,7 @@ export default {
       dropdownOpen: false,
       actualUserId: this.userId || useUserStore().userId,
       isDarkMode: computed(() => userStore.isdarkmode),
+      likeUnlikeSong,
     };
   },
   async mounted() {
@@ -100,6 +102,10 @@ export default {
     document.removeEventListener("click", this.closeDropdownOutside);
   },
   methods: {
+    async likeunlikeS(song) {
+      song.liked = !song.liked;
+      await likeUnlikeSong(song.song_id, this.userId);
+    },
     async fetchSongs() {
       if (!this.actualUserId) return;
 

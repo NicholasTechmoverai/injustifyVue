@@ -266,7 +266,7 @@
 
           <div class="progressAndcancel">
             <p>
-              <span>{{ timeAgo(download.timestamp) }}</span>
+              <span :title="(download.timestamp)">{{ timeAgo(download.timestamp) }}</span>
             </p>
             <div class="speed-info">
               <p>
@@ -288,7 +288,11 @@
               <ion-icon name="refresh-circle-outline"></ion-icon>
             </button>
 
-            <button type="button" class="cancelDownload" @click="cancelDownload(index,download.song_id)">
+            <button
+              type="button"
+              class="cancelDownload"
+              @click="cancelDownload(index, download.song_id)"
+            >
               <ion-icon name="trash-outline"></ion-icon>
             </button>
           </div>
@@ -346,7 +350,6 @@ export default {
       searchFrom: { injustify: true, youtube: true, spotify: true },
       filterBy: { artist: true, title: true, date: false },
       userId: computed(() => userStore.userId),
-
     };
   },
   mounted() {
@@ -396,7 +399,7 @@ export default {
           {
             params: {
               search: this.search,
-              offset: this.offset,
+              offset: this.downloads.length,
               order_by: this.order_by,
               limit: this.limit,
               name: this.s_name,
@@ -468,8 +471,8 @@ export default {
       this.fetchDownloads(true);
     },
 
-    cancelDownload(index,download_id) {
-      console.log("Canceling download:",download_id);
+    cancelDownload(index, download_id) {
+      console.log("Canceling download:", download_id);
       this.downloads.splice(index, 1);
       socket.emit("deleteDownload", {
         downloadId: download_id,
@@ -1121,7 +1124,7 @@ span {
     }
 
     button {
-      padding: 0!important;
+      padding: 0 !important;
       font-size: 1rem;
       font-weight: bold;
       border: none;

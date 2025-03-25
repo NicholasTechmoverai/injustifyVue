@@ -57,14 +57,15 @@
               ></ion-icon>
 
               <!-- Hidden by default, shown on hover -->
-              <div class="playlist_moreinfo">
+              <div class="playlist_moreinfo" :class="{ 'darktheme-2': isDarkMode }">
                 <button @click.stop="toggleEdit(playlist.id, playlist.name)">
+                  <ion-icon name="pencil-sharp"></ion-icon>
                   {{ activeEditableId === playlist.id ? "Save" : "Edit" }}
                 </button>
                 <button @click="deletePlaylist(playlist.id)" class="delete-btn">
                   <ion-icon name="trash-outline"></ion-icon> Delete
                 </button>
-                <button>Share</button>
+                <button><ion-icon name="share-social-outline"></ion-icon> Share</button>
               </div>
             </div>
           </div>
@@ -473,9 +474,9 @@ export default {
   position: absolute;
   top: 80%;
   right: 0;
-  background: #7a7777e8;
+  background: #dcdcde;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0px 4px rgba(0, 0, 0, 0.15);
   padding: 10px;
   opacity: 0;
   visibility: hidden;
@@ -501,7 +502,7 @@ export default {
   width: 100%;
   font-size: 14px;
   cursor: pointer;
-  color: #333;
+  color: inherit;
   text-align: left;
   transition: background 0.2s ease-in-out;
 }

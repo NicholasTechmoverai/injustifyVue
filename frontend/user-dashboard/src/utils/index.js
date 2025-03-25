@@ -16,17 +16,17 @@ export function timeAgo(time) {
     const diffInSeconds = Math.floor((now - postTime) / 1000);
     //console.log(now , postTime)
     const intervals = [
-        { label: "year", seconds: 31536000 },
-        { label: "mnth", seconds: 2592000 },
+        { label: "y", seconds: 31536000 },
+        { label: "mon", seconds: 2592000 },
         { label: "d", seconds: 86400 },
         { label: "hr", seconds: 3600 },
-        { label: "m", seconds: 60 },
+        { label: "min", seconds: 60 },
     ];
 
     for (const interval of intervals) {
         const count = Math.floor(diffInSeconds / interval.seconds);
         if (count >= 1) {
-            return `${count} ${interval.label}${count > 1 ? "s" : ""} ago`;
+            return `${count}${interval.label}${count > 1 ? "s" : ""} ago`;
         }
     }
 

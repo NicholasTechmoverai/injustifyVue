@@ -8,15 +8,15 @@
           <label for="filterSearch" id="queryHold" v-if="query" @click="toggleSearch">
             [ <span>{{ query }}</span> ]
           </label>
-          <div class="s_result" @click="scrollToService('injustify')">
+          <div class="s_result" @click="setActiveTab('injustify', 100)">
             <img :src="injustifyIcon" alt="Justify Icon" />
             <span>{{ inj_videos.length }}</span>
           </div>
-          <div class="s_result" @click="scrollToService('YouTube')">
+          <div class="s_result" @click="setActiveTab('YouTube', 100)">
             <img :src="youtubeIcon" alt="Justify Icon" />
             <span>{{ yt_videos.length }}</span>
           </div>
-          <div class="s_result" @click="scrollToService('Spotify')">
+          <div class="s_result" @click="setActiveTab('Spotify', 100)">
             <img :src="spotifyIcon" alt="Justify Icon" />
             <span>{{ sp_videos.length }}</span>
           </div>
@@ -164,32 +164,32 @@
     <!-- Video Sections -->
 
     <div
-      v-for="(videoList, service) in videoSources"
-      :key="service"
-      :ref="service"
+      v-if="videoSources[activeTab]"
+      :key="activeTab"
+      :ref="activeTab"
       id="holder"
       :class="{ 'darktheme-5': isDarkMode }"
     >
       <div class="service" :class="{ 'darktheme-1': isDarkMode }">
-        {{ service }} Videos
+        {{ activeTab }} Videos
         <p v-if="loading[service]" class="loadert" :class="{ 'darktheme-2': isDarkMode }">
           Loading...
         </p>
-        <img v-if="getLogo(service)" :src="getLogo(service)" alt="Service Logo" />
+        <img v-if="getLogo(activeTab)" :src="getLogo(activeTab)" alt="Service Logo" />
       </div>
 
-      <div v-if="videoList.length" id="videosContainer">
+      <div v-if="videoSources[activeTab].length" id="videosContainer">
         <div
-          v-for="(video, index) in videoList"
+          v-for="(video, index) in videoSources[activeTab]"
           :key="video.song_id"
           class="video-card"
           :class="{ 'darkthemec-a': isDarkMode }"
         >
           <div @click="playVideo(video)">
-            <img :src="getThumbnail(video, service)" alt="Video Thumbnail" />
+            <img :src="getThumbnail(video, activeTab)" alt="Video Thumbnail" />
             <div>
-              <h4>{{ getTitle(video, service) }}</h4>
-              <p>{{ getArtist(video, service) }}</p>
+              <h4>{{ getTitle(video, activeTab) }}</h4>
+              <p>{{ getArtist(video, activeTab) }}</p>
             </div>
           </div>
           <div class="video-info-holder">
@@ -198,12 +198,12 @@
                 ><ion-icon name="cloud-download-outline"></ion-icon
                 >{{ video.views }}</span
               >
-              <span>{{ timeAgo(video.date) || "many hours " }}</span>
+              <span class="timeAgo">{{ timeAgo(video.date) || "many hours " }}</span>
               <span class="video-duration">{{
                 convertSeconds(video.duration) || ""
               }}</span>
             </div>
-            <div @click="likeVideo(video)">
+            <div @click="likeUnlikeSong(video)">
               <ion-icon :name="video.liked ? 'heart' : 'heart-outline'"></ion-icon>
             </div>
             <div class="dropdown-container">
@@ -214,20 +214,14 @@
 
               <!-- Dropdown Menu -->
               <div v-if="openIndex === index" class="skull-more-options">
-                <button
-                  @click="
-                  handle_dwn_Download(
-                      video
-                    )
-                  "
-                >
+                <button @click="handle_dwn_Download(video)">
                   <ion-icon name="download"></ion-icon>Injust
                 </button>
                 <button
                   @click="
                     handleDownload(
                       video.url,
-                      `${getTitle(video, service)} ${getArtist(video, service)}`
+                      `${getTitle(video, activeTab)} ${getArtist(video, activeTab)}`
                     )
                   "
                 >
@@ -238,7 +232,6 @@
                   <ion-icon name="bag-add-outline"></ion-icon>
                   add to playlist (best)
                 </button>
-
               </div>
             </div>
           </div>
@@ -282,7 +275,6 @@ export default {
   setup() {
     const userStore = useUserStore();
 
-
     return {
       iscollapsedBig: computed(() => userStore.iscollapsedBig),
       isDarkMode: computed(() => userStore.isdarkmode),
@@ -301,6 +293,8 @@ export default {
       spotifyIcon,
       message: "",
       query: "",
+      offset: 0,
+      limit: 24,
       inj_videos: [],
       yt_videos: [],
       sp_videos: [],
@@ -319,8 +313,8 @@ export default {
       youtubeUrl: "",
       searchFrom: { injustify: true, youtube: true, spotify: true },
       filterBy: { artist: true, title: true, date: false },
-      advUserStore
-
+      advUserStore,
+      activeTab: "injustify",
     };
   },
 
@@ -335,6 +329,8 @@ export default {
   },
 
   async mounted() {
+    window.addEventListener("scroll", await this.handleScroll);
+
     socket.on("respoce_search_suggestions", (data) => {
       this.search_suggestions = data.search_suggestions;
     });
@@ -351,11 +347,29 @@ export default {
       })
       .catch((error) => console.error("API Error:", error));
 
-    await this.fetchVideos();
+    await this.fetchVideos(true);
     await this.fetchSpotifyThumbnails(); // Preload Spotify thumbnails
   },
 
   methods: {
+    async handleScroll() {
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      if (scrollTop + windowHeight >= documentHeight - 20) {
+        this.offset += this.limit;
+        await this.fetchVideos(false);
+      }
+    },
+    async likeUnlikeSong(video) {
+      if (!this.userId && video.song_id) {
+        this.userStore.set_snackbarMessage("You need to login!!, ", "error", 10000);
+        return;
+      }
+      video.liked = !video.liked;
+      socket.emit("likeUnlikeSong", { songId: video.song_id, userId: this.userId });
+    },
     toggleCheckbox(group, key) {
       this[group][key] = !this[group][key];
     },
@@ -364,7 +378,6 @@ export default {
       this.showMoreAdvancedFeatures = false;
     },
     toggleAdvancedFeatures() {
-      console.log("toogling............");
       this.showMoreAdvancedFeatures = !this.showMoreAdvancedFeatures;
       this.showSearch = false;
     },
@@ -393,19 +406,32 @@ export default {
       this.showMoreAdvancedFeatures = false;
     },
     handle_dwn_Download(video) {
-      console.log("Downloading:", video, "from", video.Stype
-      );
-      if(video.Stype == null) {
-        this.userStore.set_snackbarMessage(`Error downloading from  ${video.stype},try downloading from a different source!`, "error", 10000);
+      console.log("Downloading:", video, "from", video.Stype);
+      if (video.Stype == null) {
+        this.userStore.set_snackbarMessage(
+          `Error downloading from  ${video.stype},try downloading from a different source!`,
+          "error",
+          10000
+        );
         console.log("Service not selected.");
         return;
       }
-      const sname = `${video.artist}-${video.title}`
-      if(video.Stype === 'injustify'){
-        this.advUserStore.download_injustify_stream(video.song_id,video.itag,sname,video.url.split('.').pop());
-      }
-      else if(video.Stype === 'youtube'){
-        this.advUserStore.download_injustify_stream(video.url,video.itag,sname,video.ext,video.resolution);
+      const sname = `${video.artist}-${video.title}`;
+      if (video.Stype === "injustify") {
+        this.advUserStore.download_injustify_stream(
+          video.song_id,
+          video.itag,
+          sname,
+          video.url.split(".").pop()
+        );
+      } else if (video.Stype === "youtube") {
+        this.advUserStore.download_injustify_stream(
+          video.url,
+          video.itag,
+          sname,
+          video.ext,
+          video.resolution
+        );
       }
       this.streamSongID = video;
       this.stmName = sname;
@@ -432,20 +458,36 @@ export default {
       }
     },
 
-    async fetchVideos() {
+    async fetchVideos(clr = false) {
+      if (this.loading.injustify && this.activeTab === 'injustify') return;
       this.loading.injustify = true;
 
       try {
-        const response = await axios.get(
-          `${BASE_URL}/api/songs/${this.useremail}?search=${this.query}`
-        );
+        const response = await axios.get(`${BASE_URL}/api/songs/${this.userId}`, {
+          params: {
+            search: this.query,
+            offset: this.inj_videos.length,
+            order_by: this.order_by,
+            limit: this.limit,
+          },
+        });
         console.log(response.data);
-        this.inj_videos = response.data.songs || [];
+        if (clr) {this.inj_videos = [];
+          this.offset = 0;
+        }
+        const newsongs = response.data.songs || [];
+
+        if (newsongs.length > 0) {
+          this.inj_videos.push(...newsongs);
+        }else{
+         // this.setActiveTab('YouTube',100)
+        }
       } catch (error) {
         console.error("API Error:", error);
         this.userStore.set_snackbarMessage("API Error!!, ", error, "error", 10000);
       } finally {
         this.loading.injustify = false;
+
       }
     },
 
@@ -466,7 +508,7 @@ export default {
     },
 
     async searchAll() {
-      await this.fetchVideos(); // Search local database
+      await this.fetchVideos(true); // Search injustify database
       await this.searchYouTube(); // Search YouTube
       await this.searchSpotify(); // Search Spotify
       this.showSearch = false;
@@ -547,12 +589,6 @@ export default {
         videoPlayer.play();
       }
     },
-
-    likeVideo(video) {
-      console.log("Like video:", video.song_id);
-      video.liked = !video.liked;
-    },
-
     handleChat(video) {
       console.log("Chat about video:", video.song_id);
       this.$emit("open-chat", video.song_id);
@@ -622,7 +658,9 @@ export default {
       }
       return video.artist;
     },
-    scrollToService(tg, offset = 100) {
+    setActiveTab(tg, offset = 100) {
+      this.activeTab = tg;
+
       const target = this.$refs[tg]?.[0]; // Access the first element if in v-f
 
       if (target) {
@@ -750,14 +788,16 @@ export default {
   gap: 3px;
   width: 100%;
   margin: 0 auto;
-  columns: 5 200px;
+  columns: 5 230px;
   padding: 5px 0;
   box-sizing: border-box;
   overflow-x: hidden;
+  scroll-behavior: smooth;
 
   .video-card {
     display: inline-block;
     width: 100%;
+
     break-inside: avoid;
     background: #fff;
     border: solid 2px #ddd;
@@ -845,6 +885,10 @@ export default {
         border-radius: 4px;
         font-size: 0.8rem;
       }
+      .timeAgo {
+        font-size: 11px;
+        color: #666;
+      }
     }
   }
 }
@@ -913,7 +957,7 @@ export default {
   #searchBar {
     position: absolute !important;
     right: 0;
-    top: 50px;
+    top: 70px;
     padding: 10px 5px !important;
     background-color: #fff;
     border-radius: 12px;
@@ -1208,7 +1252,7 @@ export default {
 
   .spinner-container {
     position: fixed;
-    top: 60px;
+    top: 100px;
     right: 1%;
     display: flex;
     justify-content: center;
@@ -1379,7 +1423,7 @@ export default {
 #AdvancedFeatures {
   position: absolute;
   right: 0;
-  top: 50px;
+  top: 70px;
   padding: 10px;
   background-color: #fff;
   border-radius: 12px;

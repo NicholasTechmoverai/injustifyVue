@@ -30,3 +30,15 @@ socket.on("message", (data) => {
 });
 
 export default socket;
+
+
+
+//Functions
+
+export async function likeUnlikeSong(song_id,userId) {
+    if (!userId && !song_id) {
+      this.userStore.set_snackbarMessage("You need to login!!, ", "error", 10000);
+      return;
+    }
+    socket.emit("likeUnlikeSong", { songId: song_id, userId: userId });
+  }

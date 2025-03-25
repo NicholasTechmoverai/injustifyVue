@@ -51,8 +51,6 @@ const isDarkMode = computed(() => userStore.isdarkmode);
 
 const currentChild = ref(route.params.child ? String(route.params.child) : null);
 
-// Debugging: Log current child properly
-alert(currentChild.value); // ✅ Access the `.value`
 console.log("Current Child:", currentChild.value);
 
 // Watch for route changes and update `currentChild`

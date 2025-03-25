@@ -27,7 +27,9 @@
 
       <div class="profile-info">
         <h3>{{ user.name }}</h3>
-        <p v-if="user.created_at">User since: {{ formattedDate }}</p>
+        <p :title="user.created_at" v-if="user.created_at">
+          User since: {{ formatDate(user.created_at) }}
+        </p>
 
         <div id="userEmail" class="card" :class="{ 'darktheme-4': isDarkMode }">
           <div id="veryEmail">{{ user.email }}</div>
@@ -78,7 +80,7 @@
 import axios from "axios";
 import { ref, computed, onMounted, watch, toRefs } from "vue";
 import { useUserStore } from "@/store/index.js";
-import { BASE_URL } from "@/utils/index.js";
+import { BASE_URL, formatDate } from "@/utils/index.js";
 export default {
   name: "UserProfile",
   props: {
@@ -99,18 +101,12 @@ export default {
       return document.cookie.includes("theme=dark") ? "dark-mode" : "";
     });
 
-    // Format date safely
-    const formattedDate = computed(() => {
-      if (!user.value.created_at) return "Unknown";
-      return user.value.created_at.split(" ").slice(1, 4).join(" ");
-    });
-
     // Fetch user profile
     const fetchUserProfile = async () => {
       loading.value = true;
       try {
         const response = await axios.get(`${BASE_URL}/api/profile/${useremail.value}`);
-        user.value = response.data.user_info?response.data.user_info:response.data;
+        user.value = response.data.user_info ? response.data.user_info : response.data;
         playlistId.value = response.data.playlistId; // Assuming the response contains a playlistId
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -145,30 +141,40 @@ export default {
     };
 
     const saveProfileChanges = async () => {
-  if (!newProfilePicture.value) return;
+      if (!newProfilePicture.value) return;
 
-  const formData = new FormData();
-  formData.append("profilePic", newProfilePicture.value);  
-  formData.append("userId", user.value.id);  
+      const formData = new FormData();
+      formData.append("profilePic", newProfilePicture.value);
+      formData.append("userId", user.value.id);
 
-  try {
-    const response = await axios.post(`${BASE_URL}/api/profile/updateProfile`, formData, {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
+      try {
+        const response = await axios.post(
+          `${BASE_URL}/api/profile/updateProfile`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+          }
+        );
 
-    if (response.data.success) { 
-      userStore.setUser(response.data.user ?? user.value);  
-      userStore.set_snackbarMessage(response.data.message ?? 'Profile updated successfully!', 'success', 5000);
-    } else {
-      userStore.set_snackbarMessage(response.data.message ?? 'Failed to update profile!', 'error', 5000);
-    }
-  } catch (error) {
-    console.error("Error updating profile:", error);
-    userStore.set_snackbarMessage('Failed to update profile!', 'error', 5000);
-  }
-};
-
-
+        if (response.data.success) {
+          userStore.setUser(response.data.user ?? user.value);
+          userStore.set_snackbarMessage(
+            response.data.message ?? "Profile updated successfully!",
+            "success",
+            5000
+          );
+        } else {
+          userStore.set_snackbarMessage(
+            response.data.message ?? "Failed to update profile!",
+            "error",
+            5000
+          );
+        }
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        userStore.set_snackbarMessage("Failed to update profile!", "error", 5000);
+      }
+    };
 
     // Fetch profile on mount
     onMounted(fetchUserProfile);
@@ -176,7 +182,6 @@ export default {
     return {
       user,
       loading,
-      formattedDate,
       themeClass,
       defaultProfilePic,
       fileInput,
@@ -184,6 +189,7 @@ export default {
       handleFileChange,
       saveProfileChanges,
       playlistId,
+      formatDate,
       iscollapsedBig: computed(() => userStore.iscollapsedBig),
       isDarkMode: computed(() => userStore.isdarkmode),
     };
@@ -219,6 +225,8 @@ p {
 .circular-profile_pic {
   position: relative;
   width: 150px;
+  min-width: 150px;
+  min-height: 150px;
   height: 150px;
   margin-bottom: 15px;
   border-radius: 50%;
@@ -277,6 +285,7 @@ p {
   background: white;
   border-radius: 10px;
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
 .top-songs-list {
@@ -353,9 +362,8 @@ p {
 
 /* Dark Theme 4 - Inputs */
 .darktheme-4 {
-  background: #2a2a2a !important;
+  background: #2c2c2c !important;
   color: #e0e0e0 !important;
-  border: 1px solid #444 !important;
 }
 .darktheme-4 h3 {
   color: #e0e0e0 !important;
