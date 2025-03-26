@@ -463,22 +463,24 @@ export default {
       this.loading.injustify = true;
 
       try {
+        const searchQuery = this.query && this.query.toLowerCase() !== "null" ? this.query : null;
         const response = await axios.get(`${BASE_URL}/api/songs/${this.userId}`, {
           params: {
-            search: this.query,
-            offset: this.inj_videos.length,
+            search: searchQuery,
+            offset:  this.offset,
             order_by: this.order_by,
             limit: this.limit,
           },
         });
+
         console.log(response.data);
         if (clr) {this.inj_videos = [];
           this.offset = 0;
         }
         const newsongs = response.data.songs || [];
-
         if (newsongs.length > 0) {
           this.inj_videos.push(...newsongs);
+
         }else{
          // this.setActiveTab('YouTube',100)
         }
@@ -487,6 +489,7 @@ export default {
         this.userStore.set_snackbarMessage("API Error!!, ", error, "error", 10000);
       } finally {
         this.loading.injustify = false;
+        this.offset = this.inj_videos.length
 
       }
     },
@@ -508,10 +511,10 @@ export default {
     },
 
     async searchAll() {
+      this.offset = 0;
       await this.fetchVideos(true); // Search injustify database
       await this.searchYouTube(); // Search YouTube
       await this.searchSpotify(); // Search Spotify
-      this.showSearch = false;
     },
 
     async pollServiceResults(service, retries = 20, interval = 3000) {
