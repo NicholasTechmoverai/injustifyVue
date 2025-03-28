@@ -215,8 +215,9 @@
               <!-- Dropdown Menu -->
               <div v-if="openIndex === index" class="skull-more-options">
                 <button @click="handle_dwn_Download(video)">
-                  <ion-icon name="download"></ion-icon>Injust
+                  <ion-icon name="download"></ion-icon> Injust
                 </button>
+
                 <button
                   @click="
                     handleDownload(
@@ -225,13 +226,43 @@
                     )
                   "
                 >
-                  <ion-icon name="receipt-outline"></ion-icon>
-                  load streams
+                  <ion-icon name="receipt-outline"></ion-icon> Load Streams
                 </button>
-                <button>
-                  <ion-icon name="bag-add-outline"></ion-icon>
-                  add to playlist (best)
-                </button>
+
+                <!-- Playlist Selector -->
+                <div class="playlist-dropdown" v-show="userId">
+                  <button class="playlist-toggle">
+                    <div
+                      class="asdaca"
+                      @click="add_to_playlist(selectedPlaylist.id, video.song_id)"
+                    >
+                      <ion-icon name="bag-add-outline"></ion-icon> Add to Playlist
+                      <span
+                        :title="selectedPlaylist?.name || 'No Playlist Selected'"
+                        class="activeplaylist_name"
+                        >({{ selectedPlaylist.name || "None" }})</span
+                      >
+                    </div>
+                    <ion-icon
+                      @click="togglePlaylists"
+                      :name="showPlaylists ? 'caret-up-outline' : 'caret-down-outline'"
+                      class="caret-icon"
+                    ></ion-icon>
+                  </button>
+
+                  <!-- Playlists List -->
+                  <div v-show="showPlaylists" class="playlist-list">
+                    <div
+                      v-for="playlist in playlists"
+                      :key="playlist.id"
+                      class="playlist-item"
+                      :class="{ 'darktheme-2': isDarkMode }"
+                      @click="setAsActivePlaylist(playlist)"
+                    >
+                      <span class="playlist-name">{{ playlist.name }}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -264,7 +295,7 @@ import { timeAgo } from "@/utils/index";
 import { getYouTubeThumbnails, getSpotifyThumbnail } from "@/utils/index.js";
 import { useUserStore } from "@/store/index.js";
 import { adv_UserStore } from "@/store/tasks.js";
-import { BASE_URL } from "@/utils/index.js";
+import { BASE_URL, formatDate } from "@/utils/index.js";
 import injustifyIcon from "../assets/injustify.png";
 import youtubeIcon from "../assets/youtube-icon2.jpg";
 import spotifyIcon from "../assets/spotify-logo.png";
@@ -295,6 +326,7 @@ export default {
       query: "",
       offset: 0,
       limit: 24,
+      playlists: [],
       inj_videos: [],
       yt_videos: [],
       sp_videos: [],
@@ -315,6 +347,9 @@ export default {
       filterBy: { artist: true, title: true, date: false },
       advUserStore,
       activeTab: "injustify",
+      showPlaylists: false,
+      formatDate,
+      selectedPlaylist: [],
     };
   },
 
@@ -352,6 +387,51 @@ export default {
   },
 
   methods: {
+    async add_to_playlist(playlistId, songId) {
+      this.loading = true;
+
+      if (!playlistId || !songId) {
+        this.userStore.set_snackbarMessage(
+          "Playlist or Song ID is missing!",
+          "error",
+          10000
+        );
+        return;
+      }
+
+      axios
+        .post(
+          `${BASE_URL}/api/songs/pls_update`,
+          { playlistId, songId, action: "add" },
+          { headers: { "Content-Type": "application/json" } }
+        )
+        .then((response) => {
+          if (response.data) {
+            this.userStore.set_snackbarMessage(response.data.message, "success", 10000);
+          }
+        })
+        .catch((error) => {
+          console.error("API Error:", error);
+          this.userStore.set_snackbarMessage(
+            "Failed to add song to playlist.",
+            "error",
+            10000
+          );
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
+
+    togglePlaylists() {
+      this.fetchPlaylists();
+      this.showPlaylists = !this.showPlaylists;
+    },
+    setAsActivePlaylist(playlist) {
+      this.selectedPlaylist = playlist;
+      this.showPlaylists = false;
+    },
+
     async handleScroll() {
       const scrollTop = window.scrollY;
       const windowHeight = window.innerHeight;
@@ -459,38 +539,38 @@ export default {
     },
 
     async fetchVideos(clr = false) {
-      if (this.loading.injustify && this.activeTab === 'injustify') return;
-      this.loading.injustify = true;
+      if (this.loading.injustify && this.activeTab === "injustify") return;
+      this.loading = { ...this.loading, injustify: true };
 
       try {
-        const searchQuery = this.query && this.query.toLowerCase() !== "null" ? this.query : null;
+        const searchQuery =
+          this.query && this.query.toLowerCase() !== "null" ? this.query : null;
         const response = await axios.get(`${BASE_URL}/api/songs/${this.userId}`, {
           params: {
             search: searchQuery,
-            offset:  this.offset,
+            offset: this.offset,
             order_by: this.order_by,
             limit: this.limit,
           },
         });
 
         console.log(response.data);
-        if (clr) {this.inj_videos = [];
+        if (clr) {
+          this.inj_videos = [];
           this.offset = 0;
         }
         const newsongs = response.data.songs || [];
         if (newsongs.length > 0) {
           this.inj_videos.push(...newsongs);
-
-        }else{
-         // this.setActiveTab('YouTube',100)
+        } else {
+          // this.setActiveTab('YouTube',100)
         }
       } catch (error) {
         console.error("API Error:", error);
         this.userStore.set_snackbarMessage("API Error!!, ", error, "error", 10000);
       } finally {
-        this.loading.injustify = false;
-        this.offset = this.inj_videos.length
-
+        this.loading = { ...this.loading, injustify: false };
+        this.offset = this.inj_videos.length;
       }
     },
 
@@ -661,6 +741,25 @@ export default {
       }
       return video.artist;
     },
+    fetchPlaylists() {
+      this.loading = true;
+      axios
+        .get(`${BASE_URL}/api/songs/pls/${this.userId}`)
+        .then((response) => {
+          console.log("playlist::", response.data.playlists);
+
+          this.playlists = Array.isArray(response.data.playlists)
+            ? response.data.playlists
+            : [];
+        })
+        .catch((error) => {
+          console.error("API Error:", error);
+          this.playlists = [];
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
     setActiveTab(tg, offset = 100) {
       this.activeTab = tg;
 
@@ -754,24 +853,6 @@ export default {
   color: white;
 }
 
-/* Dropdown Buttons */
-.skull-more-options button {
-  background: none;
-  border: none;
-  padding: 10px;
-  text-align: left;
-  cursor: pointer;
-  font-size: 14px;
-  color: #faf7f7;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.skull-more-options button:hover {
-  background: #9c9898;
-}
 .no-data {
   width: 100%;
   padding: 2rem 0;
@@ -1481,6 +1562,15 @@ export default {
   border-radius: 0px !important;
 }
 
+.asdaca {
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-right: auto;
+  gap: 5px;
+}
+
 .checkbox-group label {
   font-size: 14px;
   cursor: pointer;
@@ -1528,5 +1618,103 @@ button:hover {
 
 button:active {
   transform: scale(0.98);
+}
+</style>
+<style scoped>
+.skull-more-options {
+  position: absolute;
+  background: var(--menu-bg, #222);
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  min-width: 200px;
+  z-index: 10;
+}
+/* Dropdown Buttons */
+.skull-more-options button {
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: #faf7f7;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 12px; /* Small font */
+  padding: 6px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.2s ease-in-out;
+}
+
+.skull-more-options button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+}
+
+/* Playlist Dropdown */
+.playlist-dropdown {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.playlist-toggle {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px;
+  border-radius: 5px;
+}
+
+.caret-icon {
+  color: var(--accent-color, #f39c12);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Playlist List */
+.playlist-list {
+  display: flex;
+  flex-wrap: nowrap; /* Inline display */
+  overflow-x: auto;
+  max-height: 100px; /* Limit height */
+  background: var(--dark-bg, #333);
+  border-radius: 5px;
+  padding: 5px;
+  margin-top: 5px;
+}
+
+.playlist-item {
+  font-size: 10px; /* Small text */
+  white-space: nowrap;
+  padding: 5px 10px;
+  margin: 2px;
+  border-radius: 5px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.2);
+  transition: background 0.2s;
+}
+
+.playlist-item:hover {
+  background: var(--hover-bg, rgba(255, 255, 255, 0.3));
+}
+
+.darktheme-2 {
+  background: #444;
+}
+.activeplaylist_name {
+  font-size: 12x;
+  color: #595555;
+  display: -webkit-box; /* Use a flex-like box for line clamping */
+  -webkit-box-orient: vertical; /* Specify vertical stacking of lines */
+  -webkit-line-clamp: 1; /* Allow only two lines */
+  overflow: hidden; /* Hide overflowed text */
+  text-overflow: ellipsis; /* Add ellipsis (...) for overflowing text */
+  word-wrap: normal; /* Prevent forced breaks */
+  width: 50px;
 }
 </style>

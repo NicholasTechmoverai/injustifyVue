@@ -124,11 +124,12 @@ export default {
   },
   methods: {
     fetchPlaylists() {
+      if (this.loading) return;
       this.loading = true;
       axios
-        .get(`${BASE_URL}/api/songs/pls/${this.userIda}`)
+        .get(`${BASE_URL}/api/songs/pls/${this.userIda}?_t=${new Date().getTime()}`)
         .then((response) => {
-          console.log("playlist::", response.data.playlists);
+          console.log("playlist 💯💯::", response.data.playlists);
           const randomPlylist = {
             id: "3031",
             name: "Random Playlist",
@@ -138,6 +139,7 @@ export default {
             picture: this.injustifyIcon,
             description: "",
           };
+          this.playlists = [];
 
           this.playlists = Array.isArray(response.data.playlists)
             ? response.data.playlists
@@ -152,6 +154,7 @@ export default {
           this.loading = false;
         });
     },
+
     setAsActivePlaylist(playlistId) {
       const userStore = useUserStore();
       userStore.setActivePlaylist(playlistId);
