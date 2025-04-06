@@ -36,103 +36,160 @@ export const adv_UserStore = defineStore('adv_user', {
 
 
   actions: {
+    async calculateETA(fileSizeInMB, downloadSpeedMbps) {
+      if (downloadSpeedMbps <= 0) return "Calculating..."; // Avoid division by zero
+  
+      const etaSeconds = (fileSizeInMB * 8) / downloadSpeedMbps; // Convert MB to Megabits
+      const minutes = Math.floor(etaSeconds / 60);
+      const seconds = Math.round(etaSeconds % 60);
+  
+      return minutes > 0 ? `${minutes} min ${seconds} sec` : `${seconds} sec`;
+  },
 
-    async download_yt_stream(songId, itag, filename,extension,resolution) {
-      if (!itag) {
-        console.log("Please select a stream to download.",resolution);
+  async calculateSpeedPerSec(fetchedSize, elapseTime) {
+    if (fetchedSize <= 0 || elapseTime <= 0) return 0; // Avoid division by zero
+
+    // Convert fetched bytes to Megabits per second (Mbps)
+    const speedMbps = (fetchedSize / (1024 * 1024)) * 8 / elapseTime; 
+
+    console.log(`Fetched: ${fetchedSize} bytes | Time: ${elapseTime}s | Speed: ${speedMbps.toFixed(2)} Mbps`);
+    
+    return speedMbps; // Return numeric value
+},
+
+async download_yt_stream(
+   songId,
+   itag, 
+   filename,
+   extension, 
+   start_byte = 0,
+   size_mb=0,
+   format = null,
+   thumbnail=null,
+   resolution) {
+
+
+    const user_id = this.userId; 
+
+    if (!user_id) {
+        console.log("Kindly login to make a Download!!.");
+        this.userStore.set_snackbarMessage(
+          "Kindly login to make a Download!!",
+          "info",
+          10000
+        );
         return;
-      }
-    
-      this.userStore.set_isAboutToDownload(true);
-      let download_id;
-    
-      try {
+    }
+    if (!itag) {
+        console.log("Please select a stream to download.", resolution);
+        return;
+    }
+
+    this.userStore.set_isAboutToDownload(true);
+    let download_id;
+
+    try {
         const response = await fetch(`${BASE_URL}/api/download/yt`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            itag, 
-            song_url: songId, 
-            songId: extractYouTubeID(songId),
-            filename,
-            userId: this.userId,
-            start_byte: this.start_bytes,
-            size_mb: this.activeFilesize,
-            format: this.activeFormat,
-            thumbnailUrl: this.thumbnailUrl,
-            ext:extension
-          })
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                itag, 
+                song_url: songId, 
+                songId: extractYouTubeID(songId),
+                filename,
+                userId:user_id ,
+                start_byte:start_byte,
+                size_mb:size_mb,
+                format: format,
+                thumbnailUrl: thumbnail,
+                ext: extension
+            })
         });
-    
+
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         this.downloadsCount('+');
 
+        const startTime = performance.now();
         const header_info = response.headers;
-        //const contentType = header_info.get("Content-Type");
-
         const contentDisposition = header_info.get("Content-Disposition");
-        const b_filename = contentDisposition
+
+        const b_filename = contentDisposition 
             ? contentDisposition.split("filename=")[1]?.replace(/"/g, "") 
-            : filename; 
-        
+            : filename || "downloaded_file"; 
+
         const b_extension = header_info.get("format") || extension;
-        
-        download_id = header_info.get("X-Download-URL") ||songId ;
-        
-    
+        download_id = header_info.get("X-Download-URL") || songId;
+
         if (!this.onGoingDownloads) this.onGoingDownloads = {};
         if (!this.onGoingDownloads[download_id]) {
-          this.onGoingDownloads[download_id] = {};
+            this.onGoingDownloads[download_id] = {};
         }
-    
+
         const reader = response.body.getReader();
         const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
         let downloadedSize = 0;
 
-        //const audio_blob = await this.audio_decider(songId, itag, extension, resolution);
-    
         const stream = new ReadableStream({
-          start: (controller) => { 
-            const push = () => { 
-              reader.read().then(({ done, value }) => {
-                if (done) {
-                  console.log("\nDownload completed!");
-                  this.onGoingDownloads[download_id].status = "completed";
-                  controller.close();
-                  return;
-                }
-    
-                downloadedSize += value.length;
-                const progress = downloadedSize / contentLength;
-                const percent = (progress * 100).toFixed(2);
-    
-                this.onGoingDownloads[download_id] = { filename, progress, status: "downloading" };
-    
-                console.clear();
-                console.log(`Downloading: ${filename}`);    
-                console.log("progress::",percent)
+            start: (controller) => { 
+                const push = () => { 
+                    reader.read().then(async ({ done, value }) => {
+                        if (done) {
+                            console.log("\nDownload completed!");
+                            this.onGoingDownloads[download_id].status = "completed";
+                            controller.close();
+                            return;
+                        }
 
-                controller.enqueue(value);
+                        const fetchedSize = value.length; // Get chunk size
+                        downloadedSize += fetchedSize; // Update total downloaded size
+                        const elapsedTime = (performance.now() - startTime) / 1000; // Time in seconds
+
+                        const downloadSpeedMbps = await this.calculateSpeedPerSec(fetchedSize, elapsedTime);
+                        const remainingSizeMB = (contentLength - downloadedSize) / (1024 * 1024);
+
+                        const eta = await this.calculateETA(remainingSizeMB, downloadSpeedMbps);
+                        const progress = (downloadedSize / contentLength) * 100;
+
+                        // Ensure speed formatting is done outside `calculateSpeedPerSec`
+                        const formattedSpeed = downloadSpeedMbps > 1 
+                            ? `${downloadSpeedMbps.toFixed(2)} Mb/s` 
+                            : `${(downloadSpeedMbps * 1024).toFixed(0)} Kb/s`;
+
+                        this.onGoingDownloads[download_id] = { 
+                            filename, 
+                            progress, 
+                            status: "downloading", 
+                            eta, 
+                            downloadSpeedMbps: formattedSpeed, 
+                            thumbnail: `th_${songId.split('.').slice(0, -1).join('.')}.jpg`
+                        };
+
+                        console.clear();
+                        console.log(`Downloading: ${filename}`);    
+                        console.log(`Progress: ${progress.toFixed(2)}%`);
+                        console.log(`Speed: ${formattedSpeed}`);
+                        console.log(`ETA: ${eta}`);
+
+                        controller.enqueue(value);
+                        push();
+                    });
+                };
                 push();
-              });
-            };
-            push();
-          }
+            }
         });
 
         const main_blob = await new Response(stream).blob();
-  
-        this.saveToFile(main_blob, b_filename,b_extension);
-    
-      } catch (error) {
+        this.saveToFile(main_blob, b_filename, b_extension);
+
+    } catch (error) {
         console.error("Download failed:", error);
         if (this.onGoingDownloads[download_id]) {
-          this.onGoingDownloads[download_id].status = "failed";
+            this.onGoingDownloads[download_id].status = "failed";
         }
-      } finally {
+    } finally {
         this.userStore.set_isAboutToDownload(false);
-      }
-    },
+    }
+},
 
     async download_injustify_stream(songId,itag,filename,ext){
       console.log("Downloading...",filename,"::::::::",this.activeFilename);
@@ -140,8 +197,20 @@ export const adv_UserStore = defineStore('adv_user', {
         console.log("Please enter valid song ID and filename.");
         return;
       }
-      this.userStore.set_isAboutToDownload(true);
+      const user_id = this.userId; 
+
+      if (!user_id) {
+          console.log("Kindly login to make a Download!!.");
+          this.userStore.set_snackbarMessage(
+            "Kindly login to make a Download!!",
+            "info",
+            10000
+          );
+          return;
+      }
       let download_id;
+      this.userStore.set_isAboutToDownload(true);
+
       try{
         const response = await fetch(`${BASE_URL}/api/download/injustify`, {
           method: "POST",
@@ -150,7 +219,7 @@ export const adv_UserStore = defineStore('adv_user', {
             songId:`${songId.split('.').slice(0, -1).join('.')}`,
             song_url: songId,
             filename:this.activeFilename,
-            userId: this.userId,
+            userId: user_id,
             itag,
             start_byte: this.start_bytes,
             size_mb: this.activeFilesize,
@@ -158,59 +227,79 @@ export const adv_UserStore = defineStore('adv_user', {
             thumbnailUrl: `th_${songId.split('.').slice(0, -1).join('.')}.jpg`,
           })
         });
+
+
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         this.downloadsCount('+');
+
+        const startTime = performance.now();
         const header_info = response.headers;
         const contentDisposition = header_info.get("Content-Disposition");
-        const b_filename = contentDisposition
-         ? contentDisposition.split("filename=")[1]?.replace(/"/g, "") 
-          : filename; 
-        
+
+        const b_filename = contentDisposition 
+            ? contentDisposition.split("filename=")[1]?.replace(/"/g, "") 
+            : filename || "downloaded_file"; 
+
         const b_extension = header_info.get("format") || ext;
+        download_id = header_info.get("X-Download-URL") || songId;
 
-        download_id = header_info.get("X-Download-URL") ||songId ;
-
-        
         if (!this.onGoingDownloads) this.onGoingDownloads = {};
         if (!this.onGoingDownloads[download_id]) {
-          this.onGoingDownloads[download_id] = {};
+            this.onGoingDownloads[download_id] = {};
         }
-    
+
         const reader = response.body.getReader();
         const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
         let downloadedSize = 0;
 
-        //const audio_blob = await this.audio_decider(songId, itag, extension, resolution);
-    
         const stream = new ReadableStream({
           start: (controller) => { 
-            const push = () => { 
-              reader.read().then(({ done, value }) => {
-                if (done) {
-                  console.log("\nDownload completed!");
-                  this.onGoingDownloads[download_id].status = "completed";
-                  controller.close();
-                  return;
-                }
-    
-                downloadedSize += value.length;
-                const progress = downloadedSize / contentLength;
-                const percent = (progress * 100).toFixed(2);
-    
-                this.onGoingDownloads[download_id] = { filename, progress, status: "downloading" };
-    
-                console.clear();
-                console.log(`Downloading: ${filename}`);    
-                console.log("progress::",percent)
+              const push = () => { 
+                  reader.read().then(async ({ done, value }) => {
+                      if (done) {
+                          console.log("\nDownload completed!");
+                          this.onGoingDownloads[download_id].status = "completed";
+                          controller.close();
+                          return;
+                      }
 
-                controller.enqueue(value);
-                push();
-              });
-            };
-            push();
+                      const fetchedSize = value.length; // Get chunk size
+                      downloadedSize += fetchedSize; // Update total downloaded size
+                      const elapsedTime = (performance.now() - startTime) / 1000; // Time in seconds
+
+                      const downloadSpeedMbps = await this.calculateSpeedPerSec(fetchedSize, elapsedTime);
+                      const remainingSizeMB = (contentLength - downloadedSize) / (1024 * 1024);
+
+                      const eta = await this.calculateETA(remainingSizeMB, downloadSpeedMbps);
+                      const progress = (downloadedSize / contentLength) * 100;
+
+                      // Ensure speed formatting is done outside `calculateSpeedPerSec`
+                      const formattedSpeed = downloadSpeedMbps > 1 
+                          ? `${downloadSpeedMbps.toFixed(2)} Mb/s` 
+                          : `${(downloadSpeedMbps * 1024).toFixed(0)} Kb/s`;
+
+                      this.onGoingDownloads[download_id] = { 
+                          filename, 
+                          progress, 
+                          status: "downloading", 
+                          eta, 
+                          downloadSpeedMbps: formattedSpeed, 
+                          thumbnail: `th_${songId.split('.').slice(0, -1).join('.')}.jpg`
+                      };
+
+                      console.clear();
+                      console.log(`Downloading: ${filename}`);    
+                      console.log(`Progress: ${progress.toFixed(2)}%`);
+                      console.log(`Speed: ${formattedSpeed}`);
+                      console.log(`ETA: ${eta}`);
+
+                      controller.enqueue(value);
+                      push();
+                  });
+              };
+              push();
           }
-        });
-
+      });
         const main_blob = await new Response(stream).blob();
   
         this.saveToFile(main_blob, b_filename,b_extension);

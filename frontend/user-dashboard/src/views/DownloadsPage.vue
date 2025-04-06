@@ -174,7 +174,7 @@
                 </p>
 
                 <p>
-                  ETA: <span>{{ eta(download) }}</span>
+                  ETA: <span>{{ download.eta }}</span>
                 </p>
                 <div class="downloadFileProgressBar">
                   <div
@@ -197,7 +197,7 @@
             </p>
             <div class="speed-info">
               <p>
-                Speed: <span>{{ speed(download) }} MB/s</span>
+                Speed: <span>{{ download.downloadSpeedMbps }} MB/s</span>
               </p>
             </div>
 
@@ -266,7 +266,7 @@
 
           <div class="progressAndcancel">
             <p>
-              <span :title="(download.timestamp)">{{ timeAgo(download.timestamp) }}</span>
+              <span :title="download.timestamp">{{ timeAgo(download.timestamp) }}</span>
             </p>
             <div class="speed-info">
               <p>

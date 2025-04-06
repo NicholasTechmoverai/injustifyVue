@@ -141,6 +141,7 @@ export default {
       activeFilesize: null,
       activeService: null,
       activeResolution: null,
+      activeThumbnail: null,
       activeExt: "mp4",
       userId: computed(() => userStore.userId),
       isDroppeddown: false,
@@ -182,6 +183,7 @@ export default {
       this.activeFilesize = stream.size_mb;
       this.activeExt = stream.ext;
       this.activeResolution = stream.resolution;
+      this.activeThumbnail = getYouTubeThumbnails(this.songId);
       const info = {
         song_url: this.songId,
         filename: this.activeFilename,
@@ -198,7 +200,7 @@ export default {
 
     categorize_url() {
       this.isDroppeddown = false;
-      if (this.songId) {
+      if (this.songId && (this.songId != null || this.songId != '')) {
         if (this.songId.includes("youtube" || "youtu")) {
           this.activeService = "youtube";
           this.fetchStreams_youtube();
@@ -300,6 +302,10 @@ export default {
           this.activeItag,
           this.activeFilename,
           this.activeExt,
+          0,
+          this.activeFilesize,
+          null,
+          this.activeThumbnail,
           this.activeResolution
         );
       } else if (this.activeService === "injustify") {
@@ -640,7 +646,7 @@ ion-icon {
   top: 100%;
   font-size: 10px !important;
 }
-#defultStreamHolder >p{
+#defultStreamHolder > p {
   margin: 0 !important;
   padding: 0;
 }
@@ -651,11 +657,10 @@ ion-icon {
   margin: 0 !important;
   padding: 0;
 }
-#defultStreamHolder #itsContent{
-  display:flex;
+#defultStreamHolder #itsContent {
+  display: flex;
   flex-direction: row;
   gap: 5px;
-
 }
 
 #defultStreamHolder #itsContent ion-icon {
@@ -665,14 +670,14 @@ ion-icon {
   transition: color 0.3s ease;
   font-size: 12px !important;
   position: absolute;
-  top:2px;
+  top: 2px;
   right: 2px;
 }
 
 #defultStreamHolder #itsContent ion-icon:hover {
   color: #0353c2; /* Darker on hover */
 }
- #theDefultStream {
+#theDefultStream {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -680,7 +685,7 @@ ion-icon {
 }
 
 #theDefultStream span {
-  font-size: 10px; 
+  font-size: 10px;
   color: #444; /* Not too strong */
 }
 

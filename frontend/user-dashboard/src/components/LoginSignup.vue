@@ -125,7 +125,7 @@
                 :disabled="!resetEmail.includes('@') || loading"
                 :class="{ 'disabled-btn': !resetEmail.includes('@') || loading }"
               >
-                Send Reset Code 
+                Send Reset Code
               </button>
 
               <p id="password_resetInfo">{{ resetMessage }}</p>
@@ -230,8 +230,7 @@ export default {
       resetApproved: false,
       saveButton: "Save",
       if_not_code: false,
-      userStore:useUserStore(),
-
+      userStore: useUserStore(),
     };
   },
   methods: {
@@ -282,7 +281,7 @@ export default {
     async login() {
       if (!this.userEmail || !this.userPassword) {
         this.showMessage("Please fill in all fields!", false);
-        this.userStore.set_snackbarMessage('Please fill in all fields!','error',5000);
+        this.userStore.set_snackbarMessage("Please fill in all fields!", "error", 5000);
 
         return;
       }
@@ -295,7 +294,7 @@ export default {
         });
 
         this.showMessage("Login successful!", true);
-        this.userStore.set_snackbarMessage('Login successful!','success',5000);
+        this.userStore.set_snackbarMessage("Login successful!", "success", 5000);
         if (response.data.user) {
           this.userStore.setUser(response.data.user);
           this.loading = false;
@@ -306,7 +305,11 @@ export default {
         this.closeModal();
       } catch (error) {
         this.showMessage("Login failed. Check your credentials.", false);
-        this.userStore.set_snackbarMessage('Login failed. Check your credentials.','error',10000);
+        this.userStore.set_snackbarMessage(
+          "Login failed. Check your credentials.",
+          "error",
+          10000
+        );
 
         console.error("Login error:", error);
       }
@@ -315,7 +318,7 @@ export default {
     async sendResendEmail() {
       if (!this.resetEmail) {
         this.showMessage("Email is missing !!", false);
-        this.userStore.set_snackbarMessage('Email is missing !!','error',10000);
+        this.userStore.set_snackbarMessage("Email is missing !!", "error", 10000);
 
         return;
       }
@@ -332,15 +335,18 @@ export default {
           ? response.data.message
           : response.data.detail;
         this.showMessage("Enter Codes sent to your Email", true);
-        this.userStore.set_snackbarMessage('Enter Codes sent to your Email','info',10000);
-
+        this.userStore.set_snackbarMessage(
+          "Enter Codes sent to your Email",
+          "info",
+          10000
+        );
       } catch (error) {
         this.resetMessage = error.response.data.error
           ? error.response.data.error
           : error.response.data.detail;
 
         this.showMessage(this.resetMessage, false);
-        this.userStore.set_snackbarMessage(this.resetMessage,'error',10000);
+        this.userStore.set_snackbarMessage(this.resetMessage, "error", 10000);
       } finally {
         this.loading = false;
       }
@@ -349,7 +355,7 @@ export default {
     async verifyCode() {
       if (!this.resetEmail || !this.codes.join("")) {
         this.showMessage("Please fill in all fields!", false);
-        this.userStore.set_snackbarMessage('Please fill in all fields!','error',10000);
+        this.userStore.set_snackbarMessage("Please fill in all fields!", "error", 10000);
 
         return;
       }
@@ -367,11 +373,18 @@ export default {
         if (response.data.success) {
           this.resetApproved = true;
           this.showMessage("Code verified! You can now reset your password.", true);
-          this.userStore.set_snackbarMessage('Code verified! You can now reset your password.','success',10000);
-
+          this.userStore.set_snackbarMessage(
+            "Code verified! You can now reset your password.",
+            "success",
+            10000
+          );
         } else {
           this.showMessage(response.data.message || "Invalid code. Try again.", false);
-          this.userStore.set_snackbarMessage(response.data.message || "Invalid code. Try again.",'error',10000);
+          this.userStore.set_snackbarMessage(
+            response.data.message || "Invalid code. Try again.",
+            "error",
+            10000
+          );
 
           this.if_not_code = true;
           this.$nextTick(() => {
@@ -384,13 +397,17 @@ export default {
       } catch (error) {
         console.error("Verification error:", error);
         this.if_not_code = true;
-          this.$nextTick(() => {
-            setTimeout(() => {
-              this.if_not_code = false;
-              this.codes = ["", "", "", "", "", ""];
-            }, 1000);
-          });
-          this.userStore.set_snackbarMessage('Code verification failed. Kindly try again!!','error',10000);
+        this.$nextTick(() => {
+          setTimeout(() => {
+            this.if_not_code = false;
+            this.codes = ["", "", "", "", "", ""];
+          }, 1000);
+        });
+        this.userStore.set_snackbarMessage(
+          "Code verification failed. Kindly try again!!",
+          "error",
+          10000
+        );
         this.showMessage(
           error.response?.data?.error || "Verification failed. Try again.",
           false
@@ -408,14 +425,14 @@ export default {
         !this.signupConfirmPassword
       ) {
         this.showMessage("Please fill in all fields!", false);
-        this.userStore.set_snackbarMessage('Please fill in all fields!','error',10000);
+        this.userStore.set_snackbarMessage("Please fill in all fields!", "error", 10000);
 
         return;
       }
 
       if (this.signupPassword !== this.signupConfirmPassword) {
         this.showMessage("Passwords do not match!", false);
-        this.userStore.set_snackbarMessage('Passwords do not match!','error',10000);
+        this.userStore.set_snackbarMessage("Passwords do not match!", "error", 10000);
 
         return;
       }
@@ -429,7 +446,7 @@ export default {
         });
 
         this.showMessage("Signup successful!", true);
-        this.userStore.set_snackbarMessage('Signup successful!','success',5000);
+        this.userStore.set_snackbarMessage("Signup successful!", "success", 5000);
         if (response.data.user) {
           this.userStore.setUser(response.data.user);
           this.loading = false;
@@ -438,11 +455,16 @@ export default {
         this.closeModal();
       } catch (error) {
         this.showMessage("Signup failed. Try again.", false);
-        console.error("Signup error:", error);
-        this.userStore.set_snackbarMessage('Signup failed. Try again.','error',10000);
+        console.error("Signup error:", error.response.message);
+        this.userStore.set_snackbarMessage(
+          error.response.data.detail || "Signup failed. Try again.",
+          "error",
+          10000
+        );
       }
       this.loading = false;
     },
+
     async resetPassword() {
       /*console.log(
         " Reset Password for ",
@@ -460,13 +482,13 @@ export default {
       ) {
         this.showMessage("Please fill in all fields!", false);
 
-        this.userStore.set_snackbarMessage('Please fill in all fields!','error',10000);
+        this.userStore.set_snackbarMessage("Please fill in all fields!", "error", 10000);
         return;
       }
 
       if (this.signupPassword !== this.signupConfirmPassword) {
         this.showMessage("Passwords do not match!", false);
-        this.userStore.set_snackbarMessage('Passwords do not match!','error',10000);
+        this.userStore.set_snackbarMessage("Passwords do not match!", "error", 10000);
         return;
       }
 
@@ -484,7 +506,7 @@ export default {
           this.resetMessage = "Password Changed Successfully";
           this.saveButton = `<ion-icon name="checkmark-circle-outline"></ion-icon> Successfully`;
 
-          this.userStore.set_snackbarMessage(this.resetMessage,'success',5000);
+          this.userStore.set_snackbarMessage(this.resetMessage, "success", 5000);
           setTimeout(() => {
             this.resetMessage = "Enter your Email to get password reset codes.";
             this.resetApproved = false;
@@ -494,12 +516,16 @@ export default {
         } else {
           console.error("response from server", response.data);
           this.showMessage(response.data.message, false);
-          this.userStore.set_snackbarMessage(response.data.message,'error',10000);
+          this.userStore.set_snackbarMessage(response.data.message, "error", 10000);
         }
       } catch (error) {
         this.showMessage("Password reset failed. Try again.", false);
         console.error("Password reset error:", error);
-        this.userStore.set_snackbarMessage('Password reset failed. Try again.','error',10000);
+        this.userStore.set_snackbarMessage(
+          "Password reset failed. Try again.",
+          "error",
+          10000
+        );
       } finally {
         this.loading = false;
       }
@@ -542,8 +568,6 @@ export default {
 </script>
 
 <style scoped>
-
-
 .disabled-btn {
   background: #ccc;
   cursor: not-allowed;

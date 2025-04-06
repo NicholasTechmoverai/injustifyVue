@@ -1,6 +1,7 @@
 <template>
   <div class="MainContainer" :class="{ collabsedBig: iscollapsedBig }">
     <div id="homepage-header" :class="{ 'darktheme-2': isDarkMode }">
+    
       <div id="iconPlusQuery">
         <h1 @click="reloadPage" class="injustifyLogoR">Injustify</h1>
 
@@ -165,6 +166,7 @@
 
     <div
       v-if="videoSources[activeTab]"
+      
       :key="activeTab"
       :ref="activeTab"
       id="holder"
@@ -496,21 +498,28 @@ export default {
         console.log("Service not selected.");
         return;
       }
-      const sname = `${video.artist}-${video.title}`;
+      const sname =`${video.artist}`? `${video.artist}-${video.title}`:`${video.title}`;
       if (video.Stype === "injustify") {
         this.advUserStore.download_injustify_stream(
           video.song_id,
           video.itag,
           sname,
+          video.ext,
+          0,
+          null,
           video.url.split(".").pop()
         );
       } else if (video.Stype === "youtube") {
-        this.advUserStore.download_injustify_stream(
+        this.advUserStore.download_yt_stream(
           video.url,
-          video.itag,
+          '140',
           sname,
-          video.ext,
-          video.resolution
+          'm4a',
+          0,
+          0,
+          null,
+          getYouTubeThumbnails(video.url),
+          "audio only"
         );
       }
       this.streamSongID = video;
@@ -563,7 +572,7 @@ export default {
         if (newsongs.length > 0) {
           this.inj_videos.push(...newsongs);
         } else {
-          // this.setActiveTab('YouTube',100)
+          this.setActiveTab('YouTube',100)
         }
       } catch (error) {
         console.error("API Error:", error);
