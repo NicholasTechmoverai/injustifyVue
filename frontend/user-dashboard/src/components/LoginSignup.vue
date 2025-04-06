@@ -80,6 +80,9 @@
               </div>
             </div>
             <button type="submit">Sign Up</button>
+            <div>
+              {{ signUp_msg }}
+            </div>
             <div v-if="loading" class="p-loader">
               <div class="loader"></div>
             </div>
@@ -231,6 +234,7 @@ export default {
       saveButton: "Save",
       if_not_code: false,
       userStore: useUserStore(),
+      signUp_msg: null,
     };
   },
   methods: {
@@ -433,10 +437,77 @@ export default {
       if (this.signupPassword !== this.signupConfirmPassword) {
         this.showMessage("Passwords do not match!", false);
         this.userStore.set_snackbarMessage("Passwords do not match!", "error", 10000);
-
         return;
       }
 
+      const specialChars = ["!", "@", "#", "$", "%", "^", "&", "*"];
+      const hasSpecialChar = specialChars.some((char) =>
+        this.signupPassword.includes(char)
+      );
+      if (!hasSpecialChar) {
+        this.showMessage(
+          "Password should contain at least one special character (!@#$%^&*).",
+          false
+        );
+        this.userStore.set_snackbarMessage(
+          "Password should contain at least one special character (!@#$%^&*).",
+          "error",
+          10000
+        );
+        return;
+      }
+
+      if (this.signupPassword.length < 8) {
+        this.showMessage("Password should contain at least 8 characters.", false);
+        this.userStore.set_snackbarMessage(
+          "Password should contain at least 8 characters.",
+          "error",
+          10000
+        );
+        return;
+      }
+
+      if (this.signupPassword.length > 32) {
+        this.showMessage("Password should contain a maximum of 32 characters.", false);
+        this.userStore.set_snackbarMessage(
+          "Password should contain at most 32 characters.",
+          "error",
+          10000
+        );
+        return;
+      }
+
+      if (this.signupPassword) {
+        const uppercaseRegex = /[A-Z]/;
+        const lowercaseRegex = /[a-z]/;
+        const numberRegex = /[0-9]/;
+
+        if (
+          !uppercaseRegex.test(this.signupPassword) ||
+          !lowercaseRegex.test(this.signupPassword) ||
+          !numberRegex.test(this.signupPassword)
+        ) {
+          this.showMessage(
+            "Password should contain at least one uppercase letter, one lowercase letter, and one number.",
+            false
+          );
+          this.userStore.set_snackbarMessage(
+            "Password should contain at least one uppercase letter, one lowercase letter, and one number.",
+            "error",
+            10000
+          );
+          return;
+        }
+      }
+
+      if (!this.termsAccepted) {
+        this.userStore.set_snackbarMessage(
+          "Please accept the terms and conditions!!.",
+          "error",
+          10000
+        );
+        return;
+      }
       this.loading = true;
       try {
         const response = await axios.post(SIGN_UP, {
@@ -445,14 +516,17 @@ export default {
           password: this.signupPassword,
         });
 
-        this.showMessage("Signup successful!", true);
-        this.userStore.set_snackbarMessage("Signup successful!", "success", 5000);
+        this.signUp_msg =
+          "Almost there! Please check your email and click the verification link to complete your signup.";
+        this.userStore.set_snackbarMessage(
+          "Almost there! Please check your email and click the verification link to complete your signup.",
+          "success",
+          15000
+        );
         if (response.data.user) {
           this.userStore.setUser(response.data.user);
           this.loading = false;
         }
-
-        this.closeModal();
       } catch (error) {
         this.showMessage("Signup failed. Try again.", false);
         console.error("Signup error:", error.response.message);

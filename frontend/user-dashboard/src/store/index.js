@@ -4,15 +4,20 @@ export const useUserStore = defineStore('user', {
   state: () => ({
     email: 'injustify@gamil.com',
     name: 'injustify',
+    vShowNavbar:true,
     SnackBar_messages:[],
   }),
   actions: {
+    setShowNavbar(s){
+      this.vShowNavbar = s;
+    },
     setUser(data) {
       this.email = data.email;
       this.userId = data.id; 
       this.name = data.name;
       this.profilePic = data.picture; 
       this.verifiedEmail = data.verified_email;
+      this.created_at = data.created_at;
       //console.log(this.email, this.name,this.profilePic,this.verifiedEmail,this.userId);  // Log after the state is set
     },
     clearUser() {

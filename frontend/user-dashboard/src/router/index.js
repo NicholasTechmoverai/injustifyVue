@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 //import { useUserStore } from "@/store/index.js"; // Import Pinia store
 
+import AccountVerify from '@/views/AccountVerify.vue';
 import HomePage from '../views/HomePage.vue';
 import UserProfile from '../views/UserProfile.vue';
 import DownloadsPage from '../views/DownloadsPage.vue';
@@ -32,6 +33,7 @@ import YouplayingSong from "@/views/YouPageTwo.vue";
 
 
 const routes = [
+  { path: '/verify/auth', name: 'AccountVerifyPage', component: AccountVerify}, 
   { path: '/', name: 'Home', component: HomePage, },
   { path: '/profile/:useremail', name: 'Profile', component: UserProfile, props: true },
   { path: '/downloads/:useremail', name: 'UserDownloads', component: DownloadsPage, props: true },
@@ -42,6 +44,7 @@ const routes = [
   { path: '/you', name:'YouPage',component:YouPage}, 
   { path: '/help', name: 'HelpPage', component: HelpPage },
   { path: '/feedback', name: 'FeedbackPage', component: FeedbackPage },
+
 
   {
     path: "/settings",

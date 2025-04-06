@@ -1,27 +1,42 @@
 <template>
-  <div  class="security-container">
+  <div class="security-container">
     <h2>Security</h2>
 
     <div class="security-sections">
       <!-- Password and Security -->
-      <div class="security-card" :class="{'darkmode3':isDarkMode}">
+      <div class="security-card" :class="{ darkmode3: isDarkMode }">
         <h3>Password and Security</h3>
 
         <div class="input-group">
           <label for="oldPassword">Old Password:</label>
-          <input type="password" id="oldPassword" v-model="oldPassword" placeholder="Enter old password">
+          <input
+            type="password"
+            id="oldPassword"
+            v-model="oldPassword"
+            placeholder="Enter old password"
+          />
         </div>
         <p class="notifier">Enter your current password before changing.</p>
 
         <div class="input-group">
           <label for="newPassword">New Password:</label>
-          <input type="password" id="newPassword" v-model="newPassword" placeholder="Enter new password">
+          <input
+            type="password"
+            id="newPassword"
+            v-model="newPassword"
+            placeholder="Enter new password"
+          />
         </div>
         <p class="notifier">Choose a strong password!</p>
 
         <div class="input-group">
           <label for="confirmPassword">Confirm New Password:</label>
-          <input type="password" id="confirmPassword" v-model="confirmPassword" placeholder="Confirm new password">
+          <input
+            type="password"
+            id="confirmPassword"
+            v-model="confirmPassword"
+            placeholder="Confirm new password"
+          />
         </div>
         <p class="notifier">Ensure both passwords match.</p>
 
@@ -38,26 +53,26 @@
       </div>
 
       <!-- Two-Factor Authentication -->
-      <div class="security-card" :class="{'darkmode3':isDarkMode}">
+      <div class="security-card" :class="{ darkmode3: isDarkMode }">
         <h3>Two-Factor Authentication</h3>
 
         <div class="toggle-group">
           <label>Enable 2FA:</label>
-          <input type="checkbox" v-model="enableTwoFactor">
+          <input type="checkbox" v-model="enableTwoFactor" />
         </div>
 
         <button v-if="enableTwoFactor" @click="generateCode">Generate Code</button>
 
         <div v-if="enableTwoFactor">
           <label>Code:</label>
-          <input type="text" v-model="twoFactorCode" placeholder="Enter generated code">
+          <input type="text" v-model="twoFactorCode" placeholder="Enter generated code" />
 
           <button @click="verifyCode">Verify Code</button>
         </div>
       </div>
 
       <!-- Account Deletion -->
-      <div class="security-card" :class="{'darkmode3':isDarkMode}">
+      <div class="security-card" :class="{ darkmode3: isDarkMode }">
         <h4>Delete Account</h4>
         <p>This action is irreversible. Are you sure?</p>
 
@@ -66,36 +81,44 @@
     </div>
 
     <!-- Delete Account Modal -->
-    <div v-if="showDeleteAccountCard" class="delete-modal" >
-      <div class="delete-card" :class="{'darkmode3':isDarkMode}">
+    <div v-if="showDeleteAccountCard" class="delete-modal">
+      <div class="delete-card" :class="{ darkmode3: isDarkMode }">
         <span class="close-btn" @click="showDeleteAccountCard = false">x</span>
         <h4>Delete Account</h4>
         <p class="warn-delete">Are you sure you want to delete this account?</p>
 
         <div class="profile-info">
-          <img src="" class="circular-profile-pic" alt="Profile Pic">
-          <h3>John Doe</h3>
-          <p>User since: March 2021</p>
+          <img :src="profilePic" class="circular-profile-pic" alt="Profile Pic" />
+          <h3>{{userName}}</h3>
+          <p>{{formatDate(created_at)}}</p>
 
-          <div class="email-card" :class="{'darkmode4':isDarkMode}">
-            <span class="email-text">Kariuki12nicholas@gmail.com</span>
-            <i class="fas fa-check-circle"></i> <span>Verified</span>
+          <div class="email-card" :class="{ darkmode4: isDarkMode }">
+            <span class="email-text">{{email}}</span>
+            <i v-if="isverified" class="fas fa-check-circle"></i> <span>Verified</span>
           </div>
 
           <div>Shadows: <span>3000</span></div>
         </div>
 
-        <p class="warn-delete">Enter your password to confirm deletion:</p>
-        <input type="password" v-model="deleteAccountPassword" placeholder="Enter password">
-        <button @click="deleteAccount" :disabled="deleteAccountPassword === ''">Delete Account</button>
+        <p class="warn-delete">{{ msg }}</p>
+        <input
+          type="password"
+          v-model="deleteAccountPassword"
+          placeholder="Enter password"
+        />
+        <button @click="deleteAccount" :disabled="deleteAccountPassword === ''">
+          Delete Account
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { computed } from "vue";
 import { useUserStore } from "@/store/index.js";
+import { computed } from "vue";
+import axios from "axios";
+import { BASE_URL,formatDate } from "@/utils/index.js";
 
 export default {
   name: "SecuritySettings",
@@ -107,24 +130,34 @@ export default {
     const userStore = useUserStore();
 
     return {
-      oldPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-      securityLevel: 'medium',
+      oldPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+      securityLevel: "medium",
       enableTwoFactor: false,
-      twoFactorCode: '',
+      twoFactorCode: "",
       showDeleteAccountCard: false,
-      deleteAccountPassword: '',
-      isDarkMode:computed(() => userStore.isdarkmode),
-
+      deleteAccountPassword: "",
+      isDarkMode: computed(() => userStore.isdarkmode),
+      email: computed(() => userStore.email),
+      userName:computed(() => userStore.name),
+      isverified: computed(() => userStore.verifiedEmail),
+      profilePic: computed(() => userStore.profilePic),
+      emailVerified: computed(() => userStore.emailVerified),
+      shadows: computed(() => userStore.shadows),
+      userId: computed(() => userStore.userId),
+      created_at:computed(() => userStore.created_at),
+      msg: "Enter your password to confirm deletion:",
+      userStore:useUserStore(),
+      formatDate
     };
   },
   methods: {
     changePassword() {
       if (this.newPassword === this.confirmPassword) {
-        alert('Password changed successfully!');
+        alert("Password changed successfully!");
       } else {
-        alert('Passwords do not match.');
+        alert("Passwords do not match.");
       }
     },
     generateCode() {
@@ -132,24 +165,58 @@ export default {
       alert(`Your 2FA code: ${this.twoFactorCode}`);
     },
     verifyCode() {
-      alert('Code verified successfully!');
+      alert("Code verified successfully!");
     },
     deleteAccount() {
-      if (this.deleteAccountPassword) {
-        alert('Account deleted successfully!');
-        this.showDeleteAccountCard = false;
+      if (!this.userId && !this.deleteAccountPassword) {
+        return;
       }
+      if(!confirm(`confirm to delete account for ${this.email} from Injustify`))return;
+
+      axios
+        .post(`${BASE_URL}/account/delete`, {
+          userId:this.userId,
+          password:this.deleteAccountPassword,
+        })
+        .then((response) => {
+          if (response.data.success) {
+            this.userStore.setUser([])
+            this.msg = response.data.message || response.data.detail;
+            this.showDeleteAccountCard = false;
+            this.userStore.set_snackbarMessage(
+          "Account Deleted successfully, will'll miss you!",
+          "success",
+          10000
+        );
+          } else {
+            this.msg = response.data.detail;
+            this.userStore.set_snackbarMessage(
+              "Failed to delete account, please try again later.",
+              "error",
+              10000
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error deleting account1", error.response.data.detail);
+          this.msg = error.response.data.detail;
+          this.userStore.set_snackbarMessage(
+            "Failed to delete account, please try again later.",
+            "error",
+            10000
+          );
+        });
     },
   },
 };
 </script>
 
 <style scoped>
-.darkmode4{
+.darkmode4 {
   background: #555353 !important;
   color: #ffffff;
 }
-.darkmode3{
+.darkmode3 {
   background: #777575 !important;
   color: #ffffff;
 }
@@ -177,7 +244,8 @@ export default {
   font-weight: bold;
 }
 
-.input-group input, .input-group select {
+.input-group input,
+.input-group select {
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 5px;

@@ -9,6 +9,7 @@
       :isDarkMode="isDarkMode"
       @open-signup="showSignupModal = true"
       @toggle-theme="toggleTheme"
+      v-show="vShowNavbar"
     />
 
     <keep-alive include="HomePage,SearchResults">
@@ -57,6 +58,7 @@ export default {
     const userName = computed(() => userStore.name);
     const profilePic = computed(() => userStore.profilePic);
     const isVerified = computed(() => userStore.verifiedEmail);
+    const vShowNavbar = computed(() => userStore.vShowNavbar);
 
     const showSignupModal = ref(
       !userEmail.value || userEmail.value === "injustify@gamil.com"
@@ -76,6 +78,7 @@ export default {
       isVerified,
       isDarkMode,
       showSignupModal,
+      vShowNavbar,
       toggleTheme,
     };
   },

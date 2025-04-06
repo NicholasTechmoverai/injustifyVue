@@ -31,7 +31,7 @@
         </li>
         <li>
           <router-link class="inline" :to="`/analytics/${userEmail}`">
-            <ion-icon name="analytics-outline"></ion-icon>     
+            <ion-icon name="analytics-outline"></ion-icon>
             <div v-if="isSidebarOpen">Analytics</div>
           </router-link>
         </li>
@@ -120,7 +120,7 @@
               id="themeToggle"
             />
             <span class="slider mode-toggle"></span>
-            <span  class="hidden" id="lighthemething"
+            <span class="hidden" id="lighthemething"
               ><i class="fa-solid fa-sun"></i>
             </span>
           </label>
@@ -132,14 +132,16 @@
         <ion-icon name="musical-note-outline" v-if="isSidebarOpen"></ion-icon>
       </h1>
       <button
-      id="moreONnavButton"
+        id="moreONnavButton"
         @click="
           () => {
             more_injust = !more_injust;
           }
         "
       >
-        <ion-icon :name="more_injust?'close-circle-outline':'ellipsis-horizontal'"></ion-icon>
+        <ion-icon
+          :name="more_injust ? 'close-circle-outline' : 'ellipsis-horizontal'"
+        ></ion-icon>
       </button>
     </div>
   </aside>
@@ -293,7 +295,12 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 :root {
-  --main-color: linear-gradient(45deg, rgb(25, 23, 53) 10%, rgb(60, 90, 180) 50%, rgb(95, 239, 255) 90%);
+  --main-color: linear-gradient(
+    45deg,
+    rgb(25, 23, 53) 10%,
+    rgb(60, 90, 180) 50%,
+    rgb(95, 239, 255) 90%
+  );
   --hover-color1: rgb(12, 216, 231);
   --hover-color2: red;
   --other-color-balanced: rgba(132, 124, 124, 0.2);
@@ -311,7 +318,12 @@ onBeforeUnmount(() => {
   top: 0;
   width: 250px;
   height: 100%;
-  background: linear-gradient(45deg, rgb(25, 23, 53) 10%, rgb(60, 90, 180) 50%, rgb(95, 239, 255) 90%);
+  background: linear-gradient(
+    45deg,
+    rgb(25, 23, 53) 10%,
+    rgb(60, 90, 180) 50%,
+    rgb(95, 239, 255) 90%
+  );
   padding: 10px;
   color: rgb(119, 116, 116);
   display: flex;
@@ -473,35 +485,40 @@ ion-icon {
   border-bottom: 3px solid red; /* Optional underline effect */
 }
 
-#moreONnavButton{
+#moreONnavButton {
   position: relative;
   font-size: 20px;
-  margin-bottom:10px;
+  margin-bottom: 10px;
   cursor: pointer;
   border-radius: 5px;
   background-color: transparent;
-  outline:transparent;
-  border:none;
-  color:white;
-  &:hover{
+  outline: transparent;
+  border: none;
+  color: white;
+  &:hover {
     color: rgb(0, 162, 255);
     background-color: rgba(128, 128, 128, 0.172);
   }
 }
-.collapsed #moreONnav{
-  right:-150% !important;
+.collapsed #moreONnav {
+  right: -150% !important;
 }
-#moreONnav{
-  position:absolute;
+#moreONnav {
+  position: absolute;
   bottom: 50px;
-  background: linear-gradient(45deg, rgb(25, 23, 53) 10%, rgb(60, 90, 180) 50%, rgb(95, 239, 255) 90%);
-  box-shadow:0px 0px 3px black;
-  border-radius:10px;
+  background: linear-gradient(
+    45deg,
+    rgb(25, 23, 53) 10%,
+    rgb(60, 90, 180) 50%,
+    rgb(95, 239, 255) 90%
+  );
+  box-shadow: 0px 0px 3px black;
+  border-radius: 10px;
   width: 200px;
   transition: all 0.3s ease;
-  z-index:100 ;
+  z-index: 100;
 
-  a{
+  a {
     color: white;
     padding: 2px !important;
     text-decoration: none;
