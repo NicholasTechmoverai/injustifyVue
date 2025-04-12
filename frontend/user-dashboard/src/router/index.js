@@ -27,7 +27,7 @@ import TrendingPage from "@/views/TrendingPage.vue";
 import UserTopSongs from "@/views/UserTopSongs.vue";
 //import ActivePLaylist from "@/views/YouPageThree.vue";
 import YouplayingSong from "@/views/YouPageTwo.vue";
-
+import DownloadStreams from "@/views/downloadsSelectorContainer.vue"
 
 
 
@@ -44,7 +44,13 @@ const routes = [
   { path: '/you', name:'YouPage',component:YouPage}, 
   { path: '/help', name: 'HelpPage', component: HelpPage },
   { path: '/feedback', name: 'FeedbackPage', component: FeedbackPage },
-
+  {
+    path: '/',
+    name: 'DownloadStreams',
+    component: DownloadStreams,
+    props: route => ({ uuid: route.query.dwn })
+  },
+  
 
   {
     path: "/settings",

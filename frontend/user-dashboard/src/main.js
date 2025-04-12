@@ -15,8 +15,8 @@ const app = createApp(App);
 app.component('font-awesome-icon', FontAwesomeIcon);
 app.use(router);
 app.use(createPinia());
-app.config.globalProperties.$socket = WebSocketService; // ✅ Attach WebSocket globally
+app.config.globalProperties.$socket = WebSocketService; 
 app.mount('#app');
 
-// ✅ Start WebSocket connection
+// Start WebSocket connection
 WebSocketService.connect();

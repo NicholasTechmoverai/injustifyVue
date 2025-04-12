@@ -11,7 +11,7 @@
         </div>
 
         <div id="searchcontrols">
-          <button><ion-icon name="clipboard"></ion-icon></button>
+          <!-- <button><ion-icon name="clipboard"></ion-icon></button> -->
           <ion-icon
             @click="toggleSearch"
             :name="showSearch ? 'close-circle-outline' : 'search-circle-outline'"
@@ -33,6 +33,7 @@
                   fetchDownloads(true);
                 }
               "
+              @input.enter="fetchDownloads(true)"
               :class="{ 'darktheme-4': isDarkMode }"
             />
             <button
@@ -60,6 +61,10 @@
             >
               <ion-icon name="search-outline"></ion-icon>
             </button>
+            <ion-icon
+            @click="toggleSearch"
+            :name="showSearch ? 'close-circle-outline' : 'search-circle-outline'"
+          ></ion-icon>
           </div>
         </div>
 
@@ -495,6 +500,7 @@ export default {
   display: flex;
   flex-direction: column;
   width: 100%;
+  min-height: 100vh !important;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
@@ -712,17 +718,19 @@ span {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 20px;
   font-size: 18px;
   font-weight: bold;
   flex-direction: column;
   color: #666;
   text-align: center;
+  box-sizing: border-box;
+  min-height: 75vh;
 }
 
 .No-resultFound-message img {
   mix-blend-mode: multiply;
-  max-height: 50vh;
+  min-height: 50vh;
+  
 }
 
 /*daark theme*/
@@ -804,13 +812,12 @@ span {
   #searchBar {
     position: absolute !important;
     right: 0;
-    top: 50px;
+    top: 70px;
     padding: 10px 5px !important;
     background-color: #fff;
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    max-width: 360px;
-    width: 100%;
+    width: 360px;
     margin: auto;
     overflow-wrap: break-word;
     transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
@@ -853,6 +860,7 @@ span {
       color: #fff;
       height: 100% !important;
       cursor: pointer;
+      padding: 2px 5px !important;
       margin-left: 0.2rem !important;
 
       font-weight: 500;
@@ -1191,6 +1199,13 @@ span {
   background-color: #333 !important;
   border: 1px solid #333 !important;
   color: rgb(172, 168, 168) !important;
+}
+@media (max-width: 568px) {
+
+#searchBar {
+  width: 100% !important;
+}
+
 }
 
 @media screen and (max-width: 500px) {

@@ -68,7 +68,7 @@
         </li>
 
         <li v-if="userId">
-          <a class="inline" href="/logout">
+          <a class="inline" @click="HandleLogout">
             <ion-icon name="log-out-outline"></ion-icon>
             <div v-if="isSidebarOpen">Logout</div>
           </a>
@@ -151,6 +151,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useUserStore } from "@/store/index.js";
 import { adv_UserStore } from "@/store/tasks.js";
+//import axios from "axios";
 
 // Define props
 defineProps({
@@ -166,6 +167,8 @@ const emit = defineEmits(["toggle-theme"]);
 
 const userStore = useUserStore();
 const advUserStore = adv_UserStore();
+
+//const logout_loading = ref(false);
 
 const isSidebarOpen = ref(true);
 const deviceWidth = ref(window.innerWidth);
@@ -227,6 +230,35 @@ const handleResize = () => {
   deviceWidth.value = window.innerWidth;
   defaultSidebarHandler();
 };
+
+const HandleLogout = async () => {
+  userStore.clearUser();
+  //logout_loading.value = true;
+
+  // try {
+  //       const response = await axios.post("/auth/logout", {
+  //         session: "",
+  //       });
+
+       
+  //       userStore.set_snackbarMessage("Logout successful!", "info", 5000);
+  //       if (response) {
+  //         logout_loading.value= false;
+  //       }
+  //     } catch (error) {
+  //       userStore.set_snackbarMessage(
+  //         "Logout failed!",
+  //         "info",
+  //         10000
+  //       );
+  //       console.error("Logout error:", error);
+  //     }
+  //     finally{
+  //       logout_loading.value = false;
+
+  //     }
+  
+}
 
 // Lifecycle hooks
 onMounted(() => {

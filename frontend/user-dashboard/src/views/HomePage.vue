@@ -6,9 +6,6 @@
         <h1 @click="reloadPage" class="injustifyLogoR">Injustify</h1>
 
         <div id="queryShow">
-          <label for="filterSearch" id="queryHold" v-if="query" @click="toggleSearch">
-            [ <span>{{ query }}</span> ]
-          </label>
           <div class="s_result" @click="setActiveTab('injustify', 100)">
             <img :src="injustifyIcon" alt="Justify Icon" />
             <span>{{ inj_videos.length }}</span>
@@ -21,7 +18,11 @@
             <img :src="spotifyIcon" alt="Justify Icon" />
             <span>{{ sp_videos.length }}</span>
           </div>
+          <label for="filterSearch" id="queryHold" v-if="query" @click="toggleSearch">
+            [ <span>{{ query }}</span> ]
+          </label>
         </div>
+
       </div>
       <div
         v-if="loading.injustify || loading.youtube || loading.spotify"
@@ -32,7 +33,7 @@
       </div>
 
       <div id="searchcontrols">
-        <button><ion-icon name="clipboard"></ion-icon></button>
+        <!-- <button><ion-icon name="clipboard"></ion-icon></button> -->
         <ion-icon
           @click="toggleSearch"
           :name="showSearch ? 'close-circle-outline' : 'search-circle-outline'"
@@ -48,6 +49,7 @@
             placeholder="Filter Search"
             v-model="query"
             @input="fetch_suggestions"
+            @keydown.enter="searchAll"
             :class="{ 'darktheme-4': isDarkMode }"
           />
           <button @click="resetSearch" :class="{ 'darktheme-3': isDarkMode }">
@@ -56,6 +58,11 @@
           <button @click="searchAll" :class="{ 'darktheme-3': isDarkMode }">
             <ion-icon name="search-outline"></ion-icon>
           </button>
+          <ion-icon
+          @click="toggleSearch"
+          :name="showSearch ? 'close-circle-outline' : 'search-circle-outline'"
+        ></ion-icon>
+
         </div>
         <div v-if="search_suggestions.length" id="suggestionContainer">
           <div
@@ -209,7 +216,7 @@
               <ion-icon :name="video.liked ? 'heart' : 'heart-outline'"></ion-icon>
             </div>
             <div class="dropdown-container">
-              <!-- Skull Icon (Toggle Button) -->
+              <!-- MORE OPTIONS Icon (Toggle Button) -->
               <div @click="toggleDropdown(index)" class="skull-icon">
                 <ion-icon name="swap-vertical-outline"></ion-icon>
               </div>
@@ -498,7 +505,7 @@ export default {
         console.log("Service not selected.");
         return;
       }
-      const sname =`${video.artist}`? `${video.artist}-${video.title}`:`${video.title}`;
+      const sname = video.artist? `${video.artist}-${video.title}`:`${video.title}`;
       if (video.Stype === "injustify") {
         this.advUserStore.download_injustify_stream(
           video.song_id,
@@ -600,6 +607,7 @@ export default {
     },
 
     async searchAll() {
+      this.showSearch = false
       this.offset = 0;
       await this.fetchVideos(true); // Search injustify database
       await this.searchYouTube(); // Search YouTube
@@ -987,6 +995,8 @@ export default {
 }
 #holder {
   width: 100%;
+  min-height: 100vh;
+
 }
 .service {
   width: 90%;
@@ -1050,13 +1060,12 @@ export default {
   #searchBar {
     position: absolute !important;
     right: 0;
-    top: 70px;
+    top: 80px;
     padding: 10px 5px !important;
     background-color: #fff;
-    border-radius: 12px;
+    border-radius: 0px 0px 12px 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    max-width: 360px;
-    width: 100%;
+    width: 360px;
     margin: auto;
     overflow-wrap: break-word;
     transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
@@ -1100,7 +1109,7 @@ export default {
       height: 100% !important;
       cursor: pointer;
       margin-left: 0.2rem !important;
-
+      padding:2px 5px !important;
       font-weight: 500;
       transition: background-color 0.3s ease, transform 0.2s;
 
@@ -1312,6 +1321,7 @@ export default {
       border-radius: 5px;
       cursor: pointer;
       transition: background 0.3s ease-in-out;
+      box-sizing: border-box;
       &:hover {
         background: #0069d9;
       }
@@ -1323,6 +1333,8 @@ export default {
       cursor: pointer;
       font-weight: bolder;
       font-size: 20px !important;
+      box-sizing: border-box;
+
       &:hover {
         color: #0069d9;
       }
@@ -1391,10 +1403,6 @@ export default {
   }
 
   div {
-    margin-top: 0px;
-    padding: 1rem;
-    border-radius: 0px 0px 10px 10px;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05);
 
     h2 {
       font-size: 1.4rem;
@@ -1418,7 +1426,6 @@ export default {
     }
 
     button {
-      padding: 0px !important;
       font-size: 1rem;
       font-weight: bold;
       border: none;
@@ -1511,12 +1518,20 @@ export default {
     width: 95%;
   }
 }
+@media (max-width: 568px) {
+
+
+  #searchBar {
+    width: 100% !important;
+  }
+
+}
 </style>
 <style scoped>
 #AdvancedFeatures {
   position: absolute;
   right: 0;
-  top: 70px;
+  top: 80px;
   padding: 10px;
   background-color: #fff;
   border-radius: 12px;

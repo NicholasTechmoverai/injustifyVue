@@ -12,7 +12,8 @@
 module.exports = {
   transpileDependencies: [],  // Set as an empty array or specify dependencies
   devServer: {
-    proxy: 'http://localhost:5000'
+    // proxy: 'http://localhost:5000'
+     proxy:'http://192.168.100.2:5000'
   }
 };
 

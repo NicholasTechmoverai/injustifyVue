@@ -41,6 +41,23 @@ export default {
   setup() {
     const userStore = useUserStore();
 
+    const cookieName = 'user_info';
+    const cookie = document.cookie
+      .split('; ')
+      .find(c => c.trim().startsWith(`${cookieName}=`));
+
+    if (cookie) {
+      const value = decodeURIComponent(cookie.split('=')[1]);
+      const cookieData = JSON.parse(value);
+
+      if (Date.now() < cookieData.expiresAt) {
+        userStore.setUser(cookieData);
+      } else {
+        document.cookie = `user_info=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC`;
+      }
+    }
+
+
     const params = new URLSearchParams(window.location.search);
     const user = params.get("user");
     if (user) {
@@ -60,15 +77,31 @@ export default {
     const isVerified = computed(() => userStore.verifiedEmail);
     const vShowNavbar = computed(() => userStore.vShowNavbar);
 
+
     const showSignupModal = ref(
       !userEmail.value || userEmail.value === "injustify@gamil.com"
     ); //login Modal opens if no user email
-    let isDarkMode = ref(false);
+
+
+    const isDarkMode = computed(() => userStore.isdarkmode);
+
+    // Read from cookie
+    const tcookie = document.cookie
+      .split('; ')
+      .find(c => c.startsWith('isDarkmode='));
+
+    if (tcookie) {
+      const value = tcookie.split('=')[1];
+      const parsed = value === 'true';
+      userStore.setTheme(parsed);
+    }
 
     const toggleTheme = () => {
-      isDarkMode.value = !isDarkMode.value;
-      userStore.setTheme(isDarkMode.value);
+      const newVal = !userStore.isdarkmode;
+      userStore.setTheme(newVal); 
+      document.cookie = `isDarkmode=${newVal}; path=/; max-age=31536000`; // store in cookie
     };
+
 
     return {
       userEmail,

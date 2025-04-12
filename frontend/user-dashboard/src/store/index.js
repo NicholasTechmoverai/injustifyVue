@@ -18,14 +18,27 @@ export const useUserStore = defineStore('user', {
       this.profilePic = data.picture; 
       this.verifiedEmail = data.verified_email;
       this.created_at = data.created_at;
-      //console.log(this.email, this.name,this.profilePic,this.verifiedEmail,this.userId);  // Log after the state is set
+    
+      //store the login user in cookie for 3days
+      const dataWithExpiry = {
+        ...data,
+        expiresAt: Date.now() + 3 * 24 * 60 * 60 * 1000
+      };
+      
+      const jsonString = encodeURIComponent(JSON.stringify(dataWithExpiry));
+      const expires = new Date(dataWithExpiry.expiresAt).toUTCString();
+      
+      document.cookie = `user_info=${jsonString}; expires=${expires}; path=/`;
+      
     },
+    
     clearUser() {
       this.email = '';
       this.name = '';
       this.profilePic = '';
       this.verifiedEmail = false;
       this.userId = null;
+      this.created_at  = '';
     },
     setActivePlaylist(playlistId){
       this.activePlaylistId = playlistId;
@@ -44,6 +57,7 @@ export const useUserStore = defineStore('user', {
     //set theme
     setTheme(val) {
       this.isdarkmode = val;
+      document.cookie = `isDarkmode=${val}`
     },
     //set the state of any song that is about to download
     set_isAboutToDownload(val) {
@@ -74,11 +88,3 @@ export const useUserStore = defineStore('user', {
   }
 });
 
-//get cookie with user email and name
-const cookieName = 'user_info';
-const cookie = document.cookie.split('; ').find(c => c.trim().startsWith(`${cookieName}=`));
-
-if (cookie) {
-  const cookieData = JSON.parse(atob(cookie.split('=')[1]));
-  useUserStore().setUser(cookieData);
-}

@@ -14,7 +14,7 @@ export const adv_UserStore = defineStore('adv_user', {
     return {
       email: 'injustify@gmail.com',
       name: 'injustify',
-      userId: computed(() => userStore.downloadFileCredential?.userId),
+      userId: computed(() => userStore?.userId),
       isAboutToDownload: computed(() => userStore.downloadFileCredential?.isAboutToDownload),
       activeItag: computed(() => userStore.downloadFileCredential?.itag),
       activeService: 'yt',
@@ -69,9 +69,8 @@ async download_yt_stream(
    resolution) {
 
 
-    const user_id = this.userId; 
 
-    if (!user_id) {
+    if (!this.userId) {
         console.log("Kindly login to make a Download!!.");
         this.userStore.set_snackbarMessage(
           "Kindly login to make a Download!!",
@@ -97,7 +96,7 @@ async download_yt_stream(
                 song_url: songId, 
                 songId: extractYouTubeID(songId),
                 filename,
-                userId:user_id ,
+                userId:this.userId ,
                 start_byte:start_byte,
                 size_mb:size_mb,
                 format: format,
@@ -120,11 +119,27 @@ async download_yt_stream(
         const b_extension = header_info.get("format") || extension;
         download_id = header_info.get("X-Download-URL") || songId;
 
-        if (!this.onGoingDownloads) this.onGoingDownloads = {};
-        if (!this.onGoingDownloads[download_id]) {
-            this.onGoingDownloads[download_id] = {};
-        }
+        if (!this.onGoingDownloads) {
+          this.onGoingDownloads = {};
+      }
+      
 
+      //sort and organize the downloads
+      if (!this.onGoingDownloads[download_id]) {
+          this.onGoingDownloads[download_id] = {}; 
+          
+          const sortedDownloads = Object.entries(this.onGoingDownloads)
+              .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp))  
+              .reduce((acc, [key, value]) => {
+                  acc[key] = value; 
+                  return acc;
+              }, {});
+      
+          this.onGoingDownloads = sortedDownloads;
+      }
+
+        const timestamp = Date.now()
+      
         const reader = response.body.getReader();
         const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
         let downloadedSize = 0;
@@ -156,6 +171,7 @@ async download_yt_stream(
                             : `${(downloadSpeedMbps * 1024).toFixed(0)} Kb/s`;
 
                         this.onGoingDownloads[download_id] = { 
+                            timestamp,
                             filename, 
                             progress, 
                             status: "downloading", 
@@ -211,6 +227,7 @@ async download_yt_stream(
       let download_id;
       this.userStore.set_isAboutToDownload(true);
 
+
       try{
         const response = await fetch(`${BASE_URL}/api/download/injustify`, {
           method: "POST",
@@ -243,10 +260,26 @@ async download_yt_stream(
         const b_extension = header_info.get("format") || ext;
         download_id = header_info.get("X-Download-URL") || songId;
 
-        if (!this.onGoingDownloads) this.onGoingDownloads = {};
-        if (!this.onGoingDownloads[download_id]) {
-            this.onGoingDownloads[download_id] = {};
-        }
+        const timestamp = Date.now()
+
+        if (!this.onGoingDownloads) {
+          this.onGoingDownloads = {};
+      }
+      
+      if (!this.onGoingDownloads[download_id]) {
+          this.onGoingDownloads[download_id] = {};  // Initialize the new download object if it doesn't exist.
+          
+          // Convert the object to an array, sort it, and then put it back as an object if needed.
+          const sortedDownloads = Object.entries(this.onGoingDownloads) // Convert the object to an array of key-value pairs
+              .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp))  // Sort by timestamp in descending order
+              .reduce((acc, [key, value]) => {
+                  acc[key] = value;  // Rebuild the object with sorted entries
+                  return acc;
+              }, {});
+      
+          this.onGoingDownloads = sortedDownloads;
+      }
+      
 
         const reader = response.body.getReader();
         const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
@@ -279,6 +312,7 @@ async download_yt_stream(
                           : `${(downloadSpeedMbps * 1024).toFixed(0)} Kb/s`;
 
                       this.onGoingDownloads[download_id] = { 
+                        timestamp,
                           filename, 
                           progress, 
                           status: "downloading", 

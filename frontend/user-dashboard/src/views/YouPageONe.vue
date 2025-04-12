@@ -233,3 +233,136 @@ a.router-link-active {
   color: #e7e7e7 !important;
 }
 </style>
+<style scoped>
+/* Base Container */
+#youSectionA {
+  --primary-light: #6366f1;
+  --primary-dark: #818cf8;
+  --transition-speed: 0.3s;
+}
+
+/* Navigation Bar */
+#sectionAscroll {
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid;
+  @apply bg-opacity-80;
+}
+
+#sectionAscroll.darktheme-2 {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  @apply bg-gray-900 bg-opacity-80;
+}
+
+#sectionAscroll:not(.darktheme-2) {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+  @apply bg-white bg-opacity-80;
+}
+
+/* Navigation Items */
+#allScrolls {
+  scrollbar-width: none;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 20px,
+    black 90%,
+    transparent
+  );
+}
+
+.secAscroll {
+  position: relative;
+  transition: all var(--transition-speed) ease;
+}
+
+.secAscroll a {
+  position: relative;
+  transition: all var(--transition-speed) ease;
+  @apply px-3 py-2 rounded-lg;
+}
+
+/* Active State */
+.secAscroll a.router-link-active {
+  @apply font-semibold;
+}
+
+.secAscroll:hover a {
+  transform: translateY(-2px);
+}
+
+/* Underline Animation */
+.secAscroll::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-light), var(--primary-dark));
+  border-radius: 3px 3px 0 0;
+  transition: all var(--transition-speed) ease;
+  transform: translateX(-50%);
+}
+
+.secAscroll:hover::after,
+.secAscroll.router-link-active::after {
+  width: 70%;
+}
+
+/* Dark Mode Specifics */
+.darktheme-2 .secAscroll a {
+  @apply text-gray-300;
+}
+
+.darktheme-2 .secAscroll:hover a {
+  @apply text-white;
+}
+
+.darktheme-2 .secAscroll a.router-link-active {
+  @apply text-primary-400;
+}
+
+:not(.darktheme-2) .secAscroll a {
+  @apply text-gray-600;
+}
+
+:not(.darktheme-2) .secAscroll:hover a {
+  @apply text-gray-900;
+}
+
+:not(.darktheme-2) .secAscroll a.router-link-active {
+  @apply text-primary-600;
+}
+
+/* Content Transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  #allScrolls {
+    mask-image: none;
+    padding: 0 16px;
+  }
+  
+  .secAscroll a {
+    @apply px-2 py-1 text-sm;
+  }
+  
+  .secAscroll::after {
+    height: 2px;
+  }
+}
+</style>

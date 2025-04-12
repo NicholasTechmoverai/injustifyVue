@@ -4,19 +4,19 @@
       <div class="header-content">
         <!-- Stream Title -->
         <div class="stream-title">
-          <p class="stream-label">Streams:</p>
+          <!-- <p class="stream-label">Streams:</p> -->
           <p v-if="info.title || info.artist" class="song-info">
             {{ info.title }} - {{ info.artist }}
           </p>
           <p v-else-if="stmName">{{ stmName }}</p>
           <p v-else class="song-info">{{ songId }}</p>
-          <div id="defultStreamHolder">
+          <!-- <div id="defultStreamHolder">
             <p id="descpt">default</p>
             <div id="itsContent">
               <div id="theDefultStream"><span>audio</span>(<span>mp4</span>)</div>
               <ion-icon name="close-outline"></ion-icon>
             </div>
-          </div>
+          </div> -->
         </div>
 
         <!-- Control Buttons -->

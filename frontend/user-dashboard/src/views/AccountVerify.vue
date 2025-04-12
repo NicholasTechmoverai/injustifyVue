@@ -1,49 +1,87 @@
 <template>
-  <div class="about-container" :class="{ collabsedBig: isCollapsedBig }">
-    <div class="about-content">
-      <h1 class="about-title">
-        <h1 @click="reloadPage" class="injustifyLogoR">Injustify</h1>
-        Verify Your Email
-      </h1>
-      <p class="about-subtitle">
-        To protect your account and personalize your experience, we kindly ask you to
-        verify your email.
-      </p>
+  <div class="verify-container" :class="{ collabsedBig: isCollapsedBig }">
+    <div class="verify-content">
+      <div class="verify-header">
+        <h1 class="verify-title">🔐 Account Verification</h1>
+        <p class="verify-subtitle">
+          One last step to unlock your full music experience
+        </p>
+      </div>
 
-      <div class="about-sections">
-        <div class="about-card">
-          <ion-icon name="shield-checkmark-outline"></ion-icon>
-          <div class="card-content">
-            <h3>Why Verify?</h3>
-            <p>
-              Email verification ensures your account is safe and you receive important
-              updates.
-            </p>
+      <div class="verification-stats">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <ion-icon name="shield-checkmark"></ion-icon>
+          </div>
+          <div class="stat-content">
+            <h3>Security Boost</h3>
+            <p>+95% account protection</p>
           </div>
         </div>
-        <div class="about-card">
-          <ion-icon name="mail-outline"></ion-icon>
-          <div class="card-content">
-            <h3>Fast & Secure</h3>
-            <p>
-              Just one click and you're all set to explore all our features safely and
-              securely.
-            </p>
+        
+        <div class="stat-card">
+          <div class="stat-icon">
+            <ion-icon name="musical-notes"></ion-icon>
+          </div>
+          <div class="stat-content">
+            <h3>Full Access</h3>
+            <p>100+ features unlocked</p>
           </div>
         </div>
       </div>
 
-      <p class="cta-text">{{ msg }}</p>
-      <button v-if="!verified" @click="verifyemail" class="cta-button">
-        <span v-if="!verificationLoading"
-          ><ion-icon name="checkmark-circle"></ion-icon> Verify Email</span
-        >
-        <span v-if="verificationLoading">verifying...</span>
-      </button>
+      <div class="verification-details">
+        <div class="detail-item">
+          <ion-icon name="checkmark-circle" class="verified-icon"></ion-icon>
+          <span>Email: <strong>{{ maskedEmail }}</strong></span>
+        </div>
+        <div class="detail-item">
+          <ion-icon name="time" class="pending-icon"></ion-icon>
+          <span>Status: <strong>{{ verificationStatus }}</strong></span>
+        </div>
+      </div>
 
-      <router-link to="/" v-if="verified" class="cta-button">
-        🎵 Go to Homepage || Explore Music💫
-      </router-link>
+      <div class="progress-container" v-if="!verified">
+        <div class="progress-bar" :style="{ width: progressWidth }"></div>
+        <span class="progress-text">{{ progressText }}</span>
+      </div>
+
+      <div class="action-buttons">
+        <button 
+          v-if="!verified" 
+          @click="verifyemail" 
+          class="verify-button"
+          :class="{ loading: verificationLoading }"
+        >
+          <template v-if="!verificationLoading">
+            <ion-icon name="mail-unread"></ion-icon>
+            Confirm Verification
+          </template>
+          <template v-else>
+            <div class="spinner"></div>
+            Processing...
+          </template>
+        </button>
+
+        <router-link 
+          v-if="verified" 
+          to="/" 
+          class="success-button"
+        >
+          <ion-icon name="rocket"></ion-icon>
+          Launch Music Dashboard
+        </router-link>
+      </div>
+
+      <div class="verification-benefits">
+        <h3>You'll gain access to:</h3>
+        <ul>
+          <li><ion-icon name="infinite"></ion-icon> Unlimited streaming</li>
+          <li><ion-icon name="download"></ion-icon> Offline downloads</li>
+          <li><ion-icon name="stats-chart"></ion-icon> Personalized analytics</li>
+          <li><ion-icon name="heart"></ion-icon> Premium content</li>
+        </ul>
+      </div>
     </div>
   </div>
 </template>
@@ -58,61 +96,83 @@ const userStore = useUserStore();
 const isCollapsedBig = computed(() => userStore.iscollapsedBig);
 const verified = ref(false);
 const verificationLoading = ref(false);
+const verificationProgress = ref(0);
 
-const msg = ref("Click the button below to confirm your email address.");
+const params = new URLSearchParams(window.location.search);
+const email = params.get("email") || '';
+const token = params.get("token") || '';
+
+const maskedEmail = computed(() => {
+  if (!email) return 'your@email.com';
+  const [name, domain] = email.split('@');
+  return `${name.substring(0, 2)}****@${domain}`;
+});
+
+const verificationStatus = computed(() => {
+  return verified.value ? 'Verified' : 'Pending Verification';
+});
+
+const progressWidth = computed(() => {
+  return `${verificationProgress.value}%`;
+});
+
+const progressText = computed(() => {
+  if (verificationLoading.value) return 'Securing your account...';
+  return verified.value ? 'Complete!' : 'Ready to verify';
+});
+
+const msg = ref("Click to verify your email and unlock full access");
 
 const verifyemail = () => {
   if (verificationLoading.value || verified.value) return;
 
   verificationLoading.value = true;
-
-  const params = new URLSearchParams(window.location.search);
-  const email = params.get("email");
-  const token = params.get("token");
+  verificationProgress.value = 30;
 
   if (!email || !token) {
     console.error("Missing email or token in query parameters.");
-    msg.value = "Missing email or token in query parameters!";
+    msg.value = "Missing verification details! Check your email link.";
     verificationLoading.value = false;
     return;
   }
 
   axios
-    .post(`${BASE_URL}/account/verify`, {
-      email,
-      token,
-    })
+    .post(`${BASE_URL}/account/verify`, { email, token })
     .then((response) => {
       if (response.data.success) {
-        msg.value = response.data.message || "Email verified successfully.";
+        verificationProgress.value = 100;
         verified.value = true;
+        msg.value = response.data.message || "Verification successful!";
         userStore.set_snackbarMessage(
-          `Account verified successfully! <a href="/">Go to homepage</a>`,
+          `Account verified! <a href="/">Start exploring</a>`,
           "success",
           10000
         );
-
-        setTimeout(() => {
-          msg.value = "Click the button below to confirm your email address.";
-        }, 10000);
       }
     })
     .catch((error) => {
       console.error("Error verifying email", error);
-      msg.value = error?.response?.data?.detail || "Verification failed.";
+      msg.value = error?.response?.data?.detail || "Verification failed. Please try again.";
+      verificationProgress.value = 0;
     })
     .finally(() => {
       verificationLoading.value = false;
     });
 };
 
-const reloadPage = () => {
-  window.location.reload();
-};
-
 // Lifecycle hooks
 onMounted(() => {
   userStore.setShowNavbar(false);
+  // Simulate progress animation
+  if (!verified.value) {
+    const interval = setInterval(() => {
+      if (verificationProgress.value < 25 && !verificationLoading.value) {
+        verificationProgress.value += 5;
+      } else {
+        clearInterval(interval);
+      }
+    }, 300);
+  }
 });
 
 onBeforeUnmount(() => {
@@ -121,114 +181,279 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.about-container {
+.verify-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #5fefff, #007bff);
-  text-align: center;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
   min-height: 100vh;
-  height: 100%;
-  width: 100vw;
-  padding: 40px;
-  animation: backgroundAnim 40s infinite alternate ease-in-out;
-  box-sizing: border-box;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.about-content {
+.verify-content {
   max-width: 600px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
   padding: 40px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
-  transition: transform 0.3s ease-in-out;
-  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: fadeIn 0.5s ease-out;
 }
 
-.about-title {
-  font-size: 32px;
-  font-weight: bold;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.verify-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.verify-title {
+  font-size: 2.2rem;
   color: white;
-  letter-spacing: 1px;
   margin-bottom: 10px;
+  background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.about-subtitle {
-  font-size: 18px;
-  color: white;
-  margin-bottom: 20px;
-  font-style: italic;
+.verify-subtitle {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0;
 }
 
-.about-sections {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-top: 20px;
+.verification-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 30px 0;
 }
 
-.about-card {
+.stat-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
   display: flex;
   align-items: center;
-  gap: 15px;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 20px;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+}
+
+.stat-icon ion-icon {
+  font-size: 24px;
+  color: #00d2ff;
+}
+
+.stat-content h3 {
+  font-size: 1.1rem;
+  color: white;
+  margin-bottom: 5px;
+}
+
+.stat-content p {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.verification-details {
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 12px;
-  transition: 0.3s ease-in-out;
+  padding: 20px;
+  margin: 25px 0;
 }
 
-.about-card:hover {
-  transform: scale(1.05);
-  background: rgba(255, 255, 255, 0.3);
+.detail-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-ion-icon {
-  font-size: 40px;
-  color: white;
+.detail-item:last-child {
+  margin-bottom: 0;
 }
 
-.cta-text {
+.detail-item ion-icon {
+  margin-right: 10px;
   font-size: 20px;
-  margin-top: 30px;
-  color: white;
 }
 
-.cta-button {
-  display: inline-block;
-  margin-top: 15px;
-  background: white;
-  color: #007bff;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-size: 18px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: 0.3s ease-in-out;
-  cursor: pointer;
+.verified-icon {
+  color: #4caf50;
 }
 
-.cta-button:hover {
-  background: #ff5fa2;
-  color: white;
-  transform: scale(1.05);
+.pending-icon {
+  color: #ff9800;
 }
 
-.injustifyLogoR {
-  margin: 0 !important;
-  margin-right: auto !important;
-  margin-bottom: 5px !important;
-  padding-top: 2px !important;
-  text-shadow: 0px 2px 5px black;
+.progress-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  margin: 30px 0 15px;
   position: relative;
+  overflow: hidden;
 }
 
-@media (max-width: 600px) {
-  .about-container {
-    padding: 3px;
+.progress-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  display: block;
+  text-align: center;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 10px;
+}
+
+.action-buttons {
+  margin: 30px 0;
+}
+
+.verify-button, .success-button {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.verify-button {
+  background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+  color: white;
+}
+
+.verify-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
+}
+
+.verify-button.loading {
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.success-button {
+  background: linear-gradient(90deg, #4caf50, #8bc34a);
+  color: white;
+}
+
+.success-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.verification-benefits {
+  margin-top: 30px;
+}
+
+.verification-benefits h3 {
+  color: white;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
+.verification-benefits ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.verification-benefits li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.verification-benefits li ion-icon {
+  margin-right: 10px;
+  color: #00d2ff;
+  font-size: 20px;
+}
+
+@media (max-width: 768px) {
+  .verify-content {
+    padding: 30px 20px;
   }
-  .about-content {
-    padding: 5px;
+  
+  .verify-title {
+    font-size: 1.8rem;
+  }
+  
+  .verification-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .verify-container {
+    padding: 10px;
+  }
+  
+  .verify-content {
+    padding: 25px 15px;
+  }
+  
+  .verify-title {
+    font-size: 1.6rem;
+  }
+  
+  .verify-button, .success-button {
+    padding: 14px;
+    font-size: 1rem;
   }
 }
 </style>
