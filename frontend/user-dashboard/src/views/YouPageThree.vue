@@ -39,7 +39,9 @@
           :song_id="song.song_id"
           @click="playthis(song.song_id)"
         >
-          <img :src="song.thumbnail" alt="Song thumbnail" />
+          <router-link :to="`/you/stream/${song.song_id}`">
+            <img :src="song.thumbnail" alt="Song thumbnail"
+          /></router-link>
           <div id="songInfo">
             <div class="songTitle">{{ song.title }}</div>
             <div class="songArtist">{{ song.artist }}</div>

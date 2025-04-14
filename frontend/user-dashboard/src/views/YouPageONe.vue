@@ -20,7 +20,7 @@
         </div>
 
         <div class="secAscroll" @click="handleScroll('tr', $event)">
-          <router-link to="/you/tr">Trending</router-link>
+          <router-link to="/you/xy/tr">Trending</router-link>
         </div>
       </div>
     </div>
@@ -261,13 +261,7 @@ a.router-link-active {
 /* Navigation Items */
 #allScrolls {
   scrollbar-width: none;
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    black 20px,
-    black 90%,
-    transparent
-  );
+  mask-image: linear-gradient(to right, transparent, black 20px, black 90%, transparent);
 }
 
 .secAscroll {
@@ -292,7 +286,7 @@ a.router-link-active {
 
 /* Underline Animation */
 .secAscroll::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 50%;
@@ -356,11 +350,11 @@ a.router-link-active {
     mask-image: none;
     padding: 0 16px;
   }
-  
+
   .secAscroll a {
     @apply px-2 py-1 text-sm;
   }
-  
+
   .secAscroll::after {
     height: 2px;
   }

@@ -8,8 +8,12 @@
     <audio
       ref="audioPlayer"
       :src="currentSongUrl"
+      @waiting="onWaiting"
+      @canplay="onCanPlay"
       @ended="onSongEnd"
       @timeupdate="updateProgress"
+      @loadedmetadata="onLoadedMetadata"
+      @volumechange="onVolumeChange"
     ></audio>
 
     <div
@@ -17,7 +21,10 @@
       :class="{ 'darktheme-2': isDarkMode }"
       :style="extend_card ? { height: '350px', position: 'absolute', bottom: '0' } : {}"
     >
-      <div v-if="loading">loading...</div>
+      <div v-if="loading" class="loading-indicator">
+        <div class="spinner"></div>
+        <span>Loading...</span>
+      </div>
       <div
         v-for="(song, index) in availableSongs"
         :key="song.song_id"
@@ -44,8 +51,8 @@
         </div>
 
         <div class="playingSongArtwork">
-          <!--<div v-if="song.isPlaying" class="arc-border"></div>-->
-          <img :src="song.thumbnail" alt="Artist Image" />
+          <div v-if="song.isPlaying && !viewPlayersMode" class="arc-border"></div>
+          <img :src="song.thumbnail" alt="Artist Image" @error="handleImageError" />
           <div>
             <div class="playingSongArtist">{{ song.artist }}</div>
             <div class="playingSongTitle">{{ song.title }}</div>
@@ -56,44 +63,83 @@
           <!-- Progress Bar & Timer -->
           <div class="progress-container" @click="seek">
             <div class="progress-bar" :style="{ width: progressPercentage + '%' }"></div>
+            <div
+              class="progress-buffer"
+              :style="{ width: bufferedPercentage + '%' }"
+            ></div>
           </div>
           <div class="time-info">
             {{ formattedCurrentTime }} / {{ formattedDuration }}
           </div>
         </div>
         <div class="somethingIntesting">
-          <div class="somethingIntestingTitle">Artist</div>
+          <div class="somethingIntestingTitle" v-if="!viewPlayersMode">Artist</div>
           <div v-if="song.isPlaying" class="out_of_index">
             {{ currentIndex + 1 }}/{{ availableSongs.length }}
           </div>
           <div class="cardPlayerControl">
-            <i v-if="song.isPlaying" class="fa fa-random" @click="toggleShuffle"></i>
             <i
               v-if="song.isPlaying"
-              class="fa fa-step-backward"
-              @click="playPrevious"
+              class="fa fa-random"
+              @click="toggleShuffle"
+              :class="{ 'active-control': isShuffle }"
+              :title="isShuffle ? 'Shuffle: ON' : 'Shuffle: OFF'"
             ></i>
+            <router-link
+              v-if="song.isPlaying"
+              :to="`/you/stream/${getPreviousSongId()}`"
+              custom
+              v-slot="{ navigate }"
+            >
+              <i class="fa fa-step-backward" @click="navigate"></i>
+            </router-link>
             <i
-              :class="song.isPlaying ? 'fa fa-pause' : 'fa fa-play'"
-              @click="togglePlay(index)"
+              :class="
+                song.isPlaying ? (isPlaying ? 'fa fa-pause' : 'fa fa-play') : 'fa fa-play'
+              "
+              @click="togglePlay(index, song.song_id)"
             ></i>
-            <i v-if="song.isPlaying" class="fa fa-step-forward" @click="playNext"></i>
-            <i v-if="song.isPlaying" class="fa fa-repeat" @click="toggleLoop"></i>
+            <router-link
+              v-if="song.isPlaying"
+              :to="`/you/stream/${getNextSongId()}`"
+              custom
+              v-slot="{ navigate }"
+            >
+              <i class="fa fa-step-forward" @click="navigate"></i>
+            </router-link>
+            <i
+              v-if="song.isPlaying"
+              class="fa fa-repeat"
+              @click="toggleLoop"
+              :class="{ 'active-control': isLoop }"
+              :title="isLoop ? 'Loop: ON' : 'Loop: OFF'"
+            ></i>
           </div>
           <div class="playingCardTimer">{{ song.stype }}</div>
           <div class="volumeToogle" v-if="song.isPlaying">
-            <ion-icon name="volume-high-outline"></ion-icon>
+            <ion-icon :name="volumeIcon" @click="toggleMute"></ion-icon>
             <input
               class="Volume-High-Outline"
               type="range"
               min="0"
               max="1"
-              step="0.1"
+              step="0.01"
               v-model="volume"
               @input="updateVolume"
             />
           </div>
+          <div class="playback-rate" v-if="song.isPlaying && !viewPlayersMode">
+            <select v-model="playbackRate" @change="updatePlaybackRate">
+              <option value="0.5">0.5x</option>
+              <option value="0.75">0.75x</option>
+              <option value="1" selected>1x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2">2x</option>
+            </select>
+          </div>
         </div>
+        <!-- <p v-if="audio_loading">loading...</p> -->
       </div>
     </div>
   </div>
@@ -105,16 +151,17 @@ import { useUserStore } from "@/store/index.js";
 import { BASE_URL } from "@/utils";
 import axios from "axios";
 import socket from "@/services/websocket";
+import { useRouter } from "vue-router";
 
 export default {
   props: {
-    playlist_id: String,
-    songs: Array,
     songUrl: String,
-    clickedSongId: String,
+    playlist_id: String,
+    playthem: String,
   },
   setup(props, { emit }) {
     const userStore = useUserStore();
+    const router = useRouter();
     const fullViewMode = ref(false);
     const viewPlayersMode = ref(false);
     const currentSongUrl = ref("");
@@ -124,10 +171,13 @@ export default {
     const loading = ref(false);
     const isShuffle = ref(false);
     const isLoop = ref(false);
-    const volume = ref(1);
+    const volume = ref(0.7);
+    const isMuted = ref(false);
     const progressPercentage = ref(0);
+    const bufferedPercentage = ref(0);
     const currentTime = ref(0);
     const duration = ref(0);
+    const playbackRate = ref(1);
     let viewUpdateInterval = null;
     const formattedCurrentTime = computed(() => formatTime(currentTime.value));
     const formattedDuration = computed(() => formatTime(duration.value));
@@ -138,33 +188,45 @@ export default {
     const userId = computed(() => userStore.userId);
     const isDarkMode = computed(() => userStore.isdarkmode);
     let intervalId = null;
-    const showAnimate = ref(true); //wheather show the animate cards
-    const extend_card = ref(false); //wheather extend the size of the animate cards(for mobile phones)
-    const requestCards = ref(true); //wheather request animatios for playing cards
+    const showAnimate = ref(true);
+    const extend_card = ref(false);
+    const requestCards = ref(true);
+    const previousVolume = ref(volume.value);
+    const audio_loading = ref(false);
 
-    // Watch for song URL changes
-    watch(
-      () => props.songUrl,
-      async (newSongUrl) => {
-        if (newSongUrl) {
-          await fetchVideoForPropUrl(newSongUrl);
-        }
-      },
-      { immediate: true }
-    );
+    const onWaiting = () => {
+      audio_loading.value = true;
+    };
 
-    // Set the current song URL when the list changes
-    watch(availableSongs, () => {
-      if (availableSongs.value.length > 0) {
-        currentIndex.value = Math.min(
-          currentIndex.value,
-          availableSongs.value.length - 1
-        );
-        currentSongUrl.value = getSongUrl(currentIndex.value);
-      }
+    const onCanPlay = () => {
+      loading.value = false;
+    };
+
+    const volumeIcon = computed(() => {
+      if (isMuted.value || volume.value === 0) return "volume-mute-outline";
+      if (volume.value < 0.33) return "volume-low-outline";
+      if (volume.value < 0.66) return "volume-medium-outline";
+      return "volume-high-outline";
     });
 
-    // Toggle player view mode
+    // Get next song ID for router link
+    const getNextSongId = () => {
+      if (isShuffle.value) {
+        const randomIndex = Math.floor(Math.random() * availableSongs.value.length);
+        return availableSongs.value[randomIndex]?.song_id;
+      }
+      const nextIndex = (currentIndex.value + 1) % availableSongs.value.length;
+      return availableSongs.value[nextIndex]?.song_id;
+    };
+
+    // Get previous song ID for router link
+    const getPreviousSongId = () => {
+      const prevIndex =
+        (currentIndex.value - 1 + availableSongs.value.length) %
+        availableSongs.value.length;
+      return availableSongs.value[prevIndex]?.song_id;
+    };
+
     const toggleViewMode = () => {
       viewPlayersMode.value = !viewPlayersMode.value;
       emit("toggle-viewPlayersMode");
@@ -173,7 +235,6 @@ export default {
       }
     };
 
-    // Generate the song URL
     const getSongUrl = (index) =>
       `${BASE_URL}/api/stream/${availableSongs.value[index]?.url}`;
 
@@ -188,12 +249,8 @@ export default {
       loading.value = true;
       try {
         const response = await axios.get(`${BASE_URL}/api/songs/pl/${playlist_id.value}`);
-        //console.log("Playlist Songs:", response.data.songs?.songs || []);
-
         availableSongs.value = response.data.songs?.songs || [];
         playlist_name.value = response.data.songs?.playlist_name || "Unknown Playlist";
-
-        //store the songs in userstore
         userStore.setPlaylistSongs(availableSongs.value, playlist_name.value);
       } catch (error) {
         console.error("API Error:", error);
@@ -203,53 +260,91 @@ export default {
       }
     };
 
-    watch(playlist_id, fetchVideos, { immediate: true });
+    // const togglePlay = async (index, s_url) => {
+    //   const song = availableSongs.value[index];
+    //   if (!song) return;
 
-    // Play or pause a song
-    const togglePlay = async (index) => {
+    //   const player = audioPlayer.value;
+    //   if (!player) return;
+
+    //   if (index !== currentIndex.value || !isPlaying.value) {
+    //     availableSongs.value.forEach((s, i) => (s.isPlaying = i === index));
+    //     currentIndex.value = index;
+    //     currentSongUrl.value = getSongUrl(index);
+    //     router.push(`/you/stream/${s_url}`);
+    //     isPlaying.value = true;
+    //     await nextTick();
+    //     player.load();
+    //     requestNextImage();
+    //     player
+    //       .play()
+    //       .then(() => {
+    //         startSendingProgress(player);
+    //         updateBuffered();
+    //       })
+    //       .catch((err) => {
+    //         console.error("Playback error:", err);
+    //       });
+    //   } else {
+    //     isPlaying.value = !isPlaying.value;
+    //     if (isPlaying.value) {
+    //       player.play();
+    //       startSendingProgress(player);
+    //       updateBuffered();
+    //     } else {
+    //       player.pause();
+    //       clearInterval(viewUpdateInterval);
+    //     }
+    //   }
+    // };
+
+    const togglePlay = async (index, s_url) => {
       const song = availableSongs.value[index];
       if (!song) return;
 
       const player = audioPlayer.value;
       if (!player) return;
 
-      if (index !== currentIndex.value) {
-        // Switching to a new song
+      const isNewSong = index !== currentIndex.value;
+
+      if (isNewSong || !isPlaying.value) {
         availableSongs.value.forEach((s, i) => (s.isPlaying = i === index));
+        const wasNewSong = index !== currentIndex.value;
         currentIndex.value = index;
         currentSongUrl.value = getSongUrl(index);
-        isPlaying.value = true;
-        await nextTick();
-        player.load();
-        requestNextImage();
-      } else {
-        // Toggle play/pause for the current song
-        isPlaying.value = !isPlaying.value;
-        requestCards.value = !requestCards.value;
-        if (requestCards.value) {
-          requestNextImage();
-          startInterval();
-        } else {
-          PlayingAnimation_file.value = new URL(
-            "../assets/injustify.png",
-            import.meta.url
-          ).href;
-          clearInterval(intervalId); // Stop interval when paused
-        }
-      }
 
-      if (isPlaying.value) {
+        if (wasNewSong) {
+          router.push(`/you/stream/${s_url}`);
+          await nextTick(); // Wait for DOM update
+          player.load(); // Only load when switching songs
+        }
+
+        isPlaying.value = true;
+        requestNextImage();
+
         player
           .play()
-          .then(() => startSendingProgress(player))
-          .catch((err) => console.error("Playback error:", err));
+          .then(() => {
+            startSendingProgress(player);
+            updateBuffered();
+          })
+          .catch((err) => {
+            console.error("Playback error:", err);
+          });
       } else {
-        player.pause();
-        clearInterval(viewUpdateInterval);
+        isPlaying.value = !isPlaying.value;
+
+        if (isPlaying.value) {
+          player.play();
+          startSendingProgress(player);
+          updateBuffered();
+        } else {
+          player.pause();
+          clearInterval(viewUpdateInterval);
+        }
       }
     };
 
-    // Handle song ending
     const onSongEnd = () => {
       clearInterval(viewUpdateInterval);
       socket.emit("updateViewCount", {
@@ -257,30 +352,39 @@ export default {
         songId: availableSongs.value[currentIndex.value]?.song_id,
         progress: 100.0,
       });
-      playNext();
+
+      if (isLoop.value) {
+        audioPlayer.value.currentTime = 0;
+        audioPlayer.value.play();
+      } else if (isShuffle.value) {
+        router.push(`/you/stream/${getNextSongId()}`);
+      } else {
+        router.push(`/you/stream/${getNextSongId()}`);
+      }
     };
 
-    // Play next song
+    // const playRandom = () => {
+    //   let nextIndex;
+    //   do {
+    //     nextIndex = Math.floor(Math.random() * availableSongs.value.length);
+    //   } while (nextIndex === currentIndex.value && availableSongs.value.length > 1);
+
+    //   router.push(`/you/stream/${availableSongs.value[nextIndex]?.song_id}`);
+    // };
+
     const playNext = () => {
-      let nextIndex = (currentIndex.value + 1) % availableSongs.value.length;
-      togglePlay(nextIndex);
+      router.push(`/you/stream/${getNextSongId()}`);
     };
 
-    // Play previous song
     const playPrevious = () => {
-      let prevIndex =
-        (currentIndex.value - 1 + availableSongs.value.length) %
-        availableSongs.value.length;
-      togglePlay(prevIndex);
+      router.push(`/you/stream/${getPreviousSongId()}`);
     };
 
-    // Change song index based on ID
     const changeIndexBySongID = (songId) => {
       const newIndex = availableSongs.value.findIndex((s) => s.song_id === songId);
-      if (newIndex !== -1) togglePlay(newIndex);
+      if (newIndex !== -1) togglePlay(newIndex, songId);
     };
 
-    // Auto-scroll to selected song
     const scrollToview = (event) => {
       event.currentTarget.scrollIntoView({
         behavior: "smooth",
@@ -289,43 +393,20 @@ export default {
       });
     };
 
-    const toggleShuffle = () => (isShuffle.value = !isShuffle.value);
-    const toggleLoop = () => (isLoop.value = !isLoop.value);
-
-    const updateProgress = () => {
-      if (audioPlayer.value) {
-        currentTime.value = audioPlayer.value.currentTime;
-        duration.value = audioPlayer.value.duration;
-        progressPercentage.value = (currentTime.value / duration.value) * 100;
-      }
+    const toggleShuffle = () => {
+      isShuffle.value = !isShuffle.value;
+      // You can add a toast notification here if desired
+      console.log(`Shuffle ${isShuffle.value ? "enabled" : "disabled"}`);
     };
 
-    const seek = (event) => {
-      if (!audioPlayer.value || !duration.value) return;
-      const progressBar = event.currentTarget;
-      const clickPosition = event.offsetX / progressBar.clientWidth;
-      audioPlayer.value.currentTime = clickPosition * duration.value;
+    const toggleLoop = () => {
+      isLoop.value = !isLoop.value;
+      // You can add a toast notification here if desired
+      console.log(`Loop ${isLoop.value ? "enabled" : "disabled"}`);
     };
 
-    const updateVolume = () => {
-      if (audioPlayer.value) audioPlayer.value.volume = volume.value;
-    };
+    // ... (keep all other methods the same as previous version)
 
-    const formatTime = (seconds) => {
-      const minutes = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
-    };
-
-    // Watch for clicked song ID change
-    watch(
-      () => props.clickedSongId,
-      (newSongId) => {
-        if (newSongId) changeIndexBySongID(newSongId);
-      }
-    );
-
-    // Fetch song details from API
     const fetchVideoForPropUrl = async (id) => {
       loading.value = true;
       try {
@@ -333,7 +414,18 @@ export default {
         const songs = Array.isArray(response.data.songs)
           ? response.data.songs
           : [response.data.songs];
-        userStore.setPlaylistSongs(songs);
+        const newSongs = songs.filter(
+          (song) =>
+            !availableSongs.value.some((existing) => existing.song_id === song.song_id)
+        );
+
+        // Add only the new, non-duplicate songs
+        if (newSongs.length > 0) {
+          // availableSongs.value.push(...newSongs);
+          availableSongs.value = [...availableSongs.value, ...newSongs];
+
+          userStore.setPlaylistSongs(availableSongs.value);
+        }
       } catch (error) {
         console.error("API Error:", error);
       } finally {
@@ -341,7 +433,6 @@ export default {
       }
     };
 
-    // Send playback progress updates
     const startSendingProgress = (player) => {
       if (viewUpdateInterval) clearInterval(viewUpdateInterval);
       viewUpdateInterval = setInterval(() => {
@@ -354,6 +445,128 @@ export default {
           });
         }
       }, 5000);
+    };
+
+    // ... (keep all other methods and lifecycle hooks the same)
+    // Watch for song URL changes
+    watch(
+      () => props.songUrl,
+      async (newSongUrl) => {
+        if (!newSongUrl) return;
+
+        await fetchVideoForPropUrl(newSongUrl);
+        changeIndexBySongID(newSongUrl);
+      },
+      { immediate: true }
+    );
+
+    watch(playlist_id, fetchVideos, { immediate: true });
+
+    // Set the current song URL when the list changes
+    watch(availableSongs, () => {
+      if (availableSongs.value.length > 0) {
+        currentIndex.value = Math.min(
+          currentIndex.value,
+          availableSongs.value.length - 1
+        );
+        currentSongUrl.value = getSongUrl(currentIndex.value);
+      }
+    });
+
+    // const playRandom = () => {
+    //   let nextIndex;
+    //   do {
+    //     nextIndex = Math.floor(Math.random() * availableSongs.value.length);
+    //   } while (nextIndex === currentIndex.value && availableSongs.value.length > 1);
+
+    //   router.push(`/you/stream/${availableSongs.value[nextIndex]?.song_id}`);
+    // };
+
+    const updateProgress = () => {
+      if (audioPlayer.value) {
+        currentTime.value = audioPlayer.value.currentTime;
+        duration.value = audioPlayer.value.duration;
+        progressPercentage.value = (currentTime.value / duration.value) * 100;
+      }
+    };
+
+    const updateBuffered = () => {
+      if (audioPlayer.value && audioPlayer.value.buffered.length > 0) {
+        const bufferedEnd = audioPlayer.value.buffered.end(
+          audioPlayer.value.buffered.length - 1
+        );
+        const duration = audioPlayer.value.duration;
+
+        if (duration > 0) {
+          bufferedPercentage.value = (bufferedEnd / duration) * 100;
+        } else {
+          bufferedPercentage.value = 0;
+        }
+      }
+    };
+
+    const seek = (event) => {
+      if (!audioPlayer.value || !duration.value) return;
+      const progressBar = event.currentTarget;
+      const clickPosition = event.offsetX / progressBar.clientWidth;
+      audioPlayer.value.currentTime = clickPosition * duration.value;
+    };
+
+    const updateVolume = () => {
+      if (audioPlayer.value) {
+        audioPlayer.value.volume = volume.value;
+        isMuted.value = volume.value === 0;
+        if (volume.value > 0) {
+          previousVolume.value = volume.value;
+        }
+      }
+    };
+
+    const toggleMute = () => {
+      if (audioPlayer.value) {
+        if (isMuted.value) {
+          // Unmute and restore to previous volume
+          volume.value = previousVolume.value;
+          audioPlayer.value.volume = volume.value;
+          isMuted.value = false;
+        } else {
+          // Mute and remember current volume
+          previousVolume.value = volume.value;
+          volume.value = 0;
+          audioPlayer.value.volume = 0;
+          isMuted.value = true;
+        }
+      }
+    };
+
+    const updatePlaybackRate = () => {
+      if (audioPlayer.value) {
+        audioPlayer.value.playbackRate = playbackRate.value;
+      }
+    };
+
+    const onLoadedMetadata = () => {
+      duration.value = audioPlayer.value.duration;
+      updateBuffered();
+    };
+
+    const onVolumeChange = () => {
+      if (audioPlayer.value) {
+        volume.value = audioPlayer.value.volume;
+        isMuted.value = audioPlayer.value.muted;
+      }
+    };
+
+    const handleImageError = (event) => {
+      // Fallback image if the thumbnail fails to load
+      event.target.src = "https://via.placeholder.com/150";
+    };
+
+    const formatTime = (seconds) => {
+      if (isNaN(seconds)) return "0:00";
+      const minutes = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
     };
 
     const handle_showAnimate = () => {
@@ -376,9 +589,11 @@ export default {
         console.error("Received data does not contain an image:", data);
       }
     });
+
     const requestNextImage = () => {
       socket.emit("request_image");
     };
+
     const startInterval = () => {
       clearInterval(intervalId); // Clear any existing interval
       intervalId = setInterval(requestNextImage, 3000);
@@ -388,11 +603,18 @@ export default {
       if (requestCards.value) {
         startInterval();
       }
+      // Initialize audio player settings
+      if (audioPlayer.value) {
+        audioPlayer.value.volume = volume.value;
+        audioPlayer.value.playbackRate = playbackRate.value;
+      }
     });
 
     onUnmounted(() => {
-      clearInterval(intervalId); // Clean up interval on component unmount
+      clearInterval(intervalId);
+      clearInterval(viewUpdateInterval);
     });
+
     return {
       availableSongs,
       fullViewMode,
@@ -405,9 +627,12 @@ export default {
       onSongEnd,
       playNext,
       playPrevious,
+      getNextSongId,
+      getPreviousSongId,
       scrollToview,
       isDarkMode,
       progressPercentage,
+      bufferedPercentage,
       formattedCurrentTime,
       formattedDuration,
       toggleShuffle,
@@ -416,6 +641,10 @@ export default {
       updateProgress,
       volume,
       updateVolume,
+      toggleMute,
+      volumeIcon,
+      playbackRate,
+      updatePlaybackRate,
       PlayingAnimation_file,
       requestNextImage,
       intervalId,
@@ -424,11 +653,60 @@ export default {
       extend_card,
       handle_showAnimate,
       requestCards,
+      handleImageError,
+      onLoadedMetadata,
+      onVolumeChange,
+      isPlaying,
+      isShuffle,
+      isLoop,
+      onCanPlay,
+      onWaiting,
+      audio_loading,
     };
   },
 };
 </script>
 
+<style scoped>
+/* Add these styles to enhance the active state visibility */
+.active-control {
+  position: relative;
+  color: forestgreen !important;
+}
+
+.active-control::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+}
+
+.cardPlayerControl {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.cardPlayerControl i {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.1rem;
+}
+
+.cardPlayerControl i:hover {
+  transform: scale(1.2);
+  color: var(--primary-color);
+}
+
+/* Keep all other existing styles from previous version */
+</style>
 <style scoped>
 .out_of_index {
   font-size: 12px;
@@ -777,6 +1055,50 @@ export default {
   }
   .playingCard .somethingIntesting {
     margin-top: 0px;
+  }
+}
+@media (max-width: 668px) {
+  .injustifyLogoR {
+    display: none;
+  }
+
+  #youSectionC {
+    display: none;
+  }
+  #youSectionA {
+    width: 100%;
+    height: 95vh !important;
+  }
+  #youSectionB {
+    display: flex;
+    width: 100%;
+    height: 200px;
+    position: absolute;
+    bottom: 0%;
+    left: 0 !important;
+    margin-left: 0% !important;
+    margin-top: auto;
+    position: absolute;
+  }
+}
+
+@media (max-width: 480px) {
+  #youSectionA {
+    width: 100% !important;
+  }
+
+  #youSectionB {
+    display: flex !important;
+    width: 100% !important;
+    height: 200px !important;
+    position: fixed;
+    left: 0 !important;
+    margin-left: 0% !important;
+    margin-top: auto;
+    position: absolute;
+  }
+  #youSectionC {
+    display: none;
   }
 }
 </style>

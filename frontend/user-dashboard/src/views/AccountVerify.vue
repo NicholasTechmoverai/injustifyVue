@@ -188,6 +188,7 @@ onBeforeUnmount(() => {
   background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
   min-height: 100vh;
   padding: 20px;
+  width: 100vw;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 

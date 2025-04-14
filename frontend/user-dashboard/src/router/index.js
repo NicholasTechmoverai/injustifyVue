@@ -25,11 +25,13 @@ import PlaylistPage from "@/views/PlaylistsPage.vue";
 import StreamRatePage from "@/views/StreamRate.vue";
 import TrendingPage from "@/views/TrendingPage.vue";
 import UserTopSongs from "@/views/UserTopSongs.vue";
-//import ActivePLaylist from "@/views/YouPageThree.vue";
+import TrendingSongs from "@/views/TrendingPage.vue";
 import YouplayingSong from "@/views/YouPageTwo.vue";
 import DownloadStreams from "@/views/downloadsSelectorContainer.vue"
 
-
+import ChildOne from "../views/YouPageONe.vue";
+import ChildTwo from "../views/YouPageTwo.vue";
+import ChildThree from "../views/YouPageThree.vue";
 
 
 const routes = [
@@ -70,16 +72,92 @@ const routes = [
     path: "/you",
     name: "YouPage",
     component: YouPage,
-    
     children: [
-      { path: "stream/:songUrl", name: "YouplayingSong", component: YouplayingSong, props: true },
-      { path: "xy/yls/:userId", name: "LikedSongsPage", component: LikedSongsPage, props: true },
-      { path: "xy/pl/:userId", name: "PlaylistPage", component: PlaylistPage, props: true },
-      { path: "xy/str/:userId", name: "StreamRatePage", component: StreamRatePage, props: true },
-      { path: "xy/utr/:userId", name: "UserTopSongs", component: UserTopSongs, props: true },
-      { path: "tr", name: "TrendingPage", component: TrendingPage },
+      // Default layout when visiting /you
+      {
+        path: "",
+        components: {
+          stream: ChildTwo,
+          xy: ChildOne,
+          yz: ChildThree,
+        },
+      },
+  
+      // When a song is playing
+      {
+        path: "stream/:songUrl?",
+        name: "YouplayingSong",
+        components: {
+          stream: YouplayingSong,
+          xy: ChildOne,
+          yz: ChildThree,
+        },
+        props: {
+          stream: route => ({
+            songUrl: route.params.songUrl,
+            playlist_id: route.query.playlist_id,
+            playthem: route.query.playthem,
+          }),
+        },
+      },
+      
+      // ALL xy/* routes use XYSection as their shared wrapper
+      {
+        path: "xy",
+        components: {
+          xy:ChildOne,
+          stream: ChildTwo,
+          yz: ChildThree,
+        },
+        children: [
+          { path: "", redirect: "/you/xy/tr"},
+
+          {
+            path: "yls/:userId",
+            name: "LikedSongsPage",
+            component: LikedSongsPage,
+            props: true,
+          },
+          {
+            path: "pl/:userId",
+            name: "PlaylistPage",
+            component: PlaylistPage,
+            props: true,
+          },
+          {
+            path: "str/:userId",
+            name: "StreamRatePage",
+            component: StreamRatePage,
+            props: true,
+          },
+          {
+            path: "utr/:userId",
+            name: "UserTopSongs",
+            component: UserTopSongs,
+            props: true,
+          },
+          {
+            path: "tr",
+            name: "TrendingSongs",
+            component: TrendingSongs, 
+          },
+        ],
+      },
+  
+      // yz-specific route
+      {
+        path: "yz/tr",
+        name: "TrendingPage",
+        components: {
+          yz: TrendingPage,
+          stream: ChildTwo,
+          xy: ChildOne,
+        },
+      },
     ],
-  },
+  }
+  
+  
   
 
 

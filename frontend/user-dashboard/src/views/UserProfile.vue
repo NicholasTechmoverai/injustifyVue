@@ -1,62 +1,83 @@
 <template>
-  <div v-if="loading" id="loading">
-    <ion-icon name="reload-outline"></ion-icon>
+  <div v-if="loading" class="loading-overlay">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
   </div>
-  <div class="MainContainer" :class="{ collabsedBig: iscollapsedBig }">
-    <div id="profileUserInfo" :class="{ 'darktheme-5': isDarkMode }">
-      <div id="profile-pic">
-        <div class="profile-pic-ON">
+
+  <div
+    class="MainContainer"
+    :class="{ collabsedBig: iscollapsedBig, 'dark-mode': isDarkMode }"
+  >
+    <div class="profile-card" :class="{ 'dark-card': isDarkMode }">
+      <!-- Profile Header -->
+      <div class="profile-header">
+        <div class="profile-picture" @click="triggerFileInput">
           <img
             :src="user.picture || defaultProfilePic"
             alt="Profile Picture"
-            class="circular-profile_pic"
-            @click="triggerFileInput"
+            class="profile-image"
           />
+          <div v-if="user.email === this.useremail" class="edit-overlay">
+            <i class="fas fa-camera"></i>
+          </div>
         </div>
-        <div class="profile-edit" v-if="user.email === this.useremail">
+
+        <div class="profile-actions" v-if="user.email === this.useremail">
           <button
-            type="button"
-            id="saveprofileChanges"
+            class="save-button"
             @click="saveProfileChanges"
-            :class="{ 'darktheme-3': isDarkMode }"
+            :class="{ 'dark-button': isDarkMode }"
+            :disabled="!newProfilePicture"
           >
-            <i class="fas fa-pencil-alt"></i> Save
+            <i class="fas fa-save"></i> Save Changes
           </button>
         </div>
       </div>
 
+      <!-- Profile Info -->
       <div class="profile-info">
-        <h3>{{ user.name }}</h3>
-        <p :title="user.created_at" v-if="user.created_at">
-          User since: {{ formatDate(user.created_at) }}
+        <h2 class="profile-name">{{ user.name }}</h2>
+        <p class="member-since" v-if="user.created_at">
+          <i class="fas fa-calendar-alt"></i> Member since
+          {{ formatDate(user.created_at) }}
         </p>
 
-        <div id="userEmail" class="card" :class="{ 'darktheme-4': isDarkMode }">
-          <div id="veryEmail">{{ user.email }}</div>
-          <div v-if="user.verified_email === 1" id="verifiedState">
+        <div class="email-card" :class="{ 'dark-email-card': isDarkMode }">
+          <div class="email-address">
+            <i class="fas fa-envelope"></i> {{ user.email }}
+          </div>
+          <div v-if="user.verified_email === 1" class="verified-badge">
             <i class="fas fa-check-circle"></i>
             <span>Verified</span>
           </div>
         </div>
+      </div>
 
-        <div id="top-songs-Adhered" :class="{ 'darktheme-4': isDarkMode }">
-          <div id="top-songs-adheredHeader">
-            <h3>Top Songs Adhered</h3>
-          </div>
-          <div class="top-songs-list">
-            <div class="artist-socialist">
+      <!-- Top Songs Section -->
+      <div class="top-songs-section" :class="{ 'dark-section': isDarkMode }">
+        <h3 class="section-title"><i class="fas fa-music"></i> Top Songs Adhered</h3>
+
+        <div class="song-list">
+          <div class="song-card" v-for="(song, index) in sampleSongs" :key="index">
+            <div class="song-number">{{ index + 1 }}</div>
+            <div class="song-info">
               <div class="artist-info">
-                <img src="" />
-                <p>Adele</p>
-                <div class="WheatherVerified">
+                <img :src="song.artistImage" class="artist-image" />
+                <div class="artist-name">{{ song.artist }}</div>
+                <div class="verified-icon" v-if="song.verified">
                   <i class="fas fa-check-circle"></i>
                 </div>
               </div>
-              <div class="thesong">
-                <h4>Easy On Me</h4>
-                <div class="moreOn-song">
-                  <div class="songPviews">1.5B views</div>
-                  <div class="songpYear">6 months ago</div>
+              <div class="song-details">
+                <h4 class="song-title">{{ song.title }}</h4>
+                <div class="song-meta">
+                  <span class="song-views">
+                    <i class="fas fa-eye"></i> {{ song.views }}
+                  </span>
+                  <span class="song-date">
+                    <i class="fas fa-clock"></i> {{ song.date }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -81,61 +102,88 @@ import axios from "axios";
 import { ref, computed, onMounted, watch, toRefs } from "vue";
 import { useUserStore } from "@/store/index.js";
 import { BASE_URL, formatDate } from "@/utils/index.js";
+
 export default {
   name: "UserProfile",
   props: {
-    useremail: String, // User email passed as
+    useremail: String,
   },
   setup(props) {
-    const { useremail } = toRefs(props); // Make props reactive
+    const { useremail } = toRefs(props);
     const user = ref({});
     const newProfilePicture = ref(null);
-    const defaultProfilePic = "/path/to/default.jpg";
+    const defaultProfilePic = "/default-profile-blue.png";
     const fileInput = ref(null);
     const loading = ref(false);
-    const playlistId = ref(null); // Store playlist ID
+    const playlistId = ref(null);
     const userStore = useUserStore();
 
-    // Theme handling
-    const themeClass = computed(() => {
-      return document.cookie.includes("theme=dark") ? "dark-mode" : "";
-    });
+    // Sample data for top songs
+    const sampleSongs = ref([
+      {
+        artist: "Adele",
+        artistImage: "https://i.scdn.co/image/ab6761610000e5ebc9690bc711d04b3d4fd4b87c",
+        title: "Easy On Me",
+        views: "1.5B views",
+        date: "6 months ago",
+        verified: true,
+      },
+      {
+        artist: "The Weeknd",
+        artistImage: "https://i.scdn.co/image/ab6761610000e5eb092dc8cf4408e6d8eaeef2fe",
+        title: "Blinding Lights",
+        views: "3.2B views",
+        date: "2 years ago",
+        verified: true,
+      },
+      {
+        artist: "Dua Lipa",
+        artistImage: "https://i.scdn.co/image/ab6761610000e5ebc8d3d98a1bccbe71393dbfbf",
+        title: "Don't Start Now",
+        views: "2.1B views",
+        date: "1 year ago",
+        verified: true,
+      },
+    ]);
 
-    // Fetch user profile
     const fetchUserProfile = async () => {
       loading.value = true;
       try {
         const response = await axios.get(`${BASE_URL}/api/profile/${useremail.value}`);
         user.value = response.data.user_info ? response.data.user_info : response.data;
-        playlistId.value = response.data.playlistId; // Assuming the response contains a playlistId
+        playlistId.value = response.data.playlistId;
       } catch (error) {
         console.error("Error fetching profile:", error);
+        userStore.set_snackbarMessage("Failed to load profile", "error", 5000);
       } finally {
         loading.value = false;
       }
     };
 
-    // Watch for useremail changes and refetch profile
-    watch(useremail, (newEmail, oldEmail) => {
-      if (newEmail !== oldEmail) {
-        fetchUserProfile();
-      }
-    });
+    watch(useremail, fetchUserProfile);
 
-    // Trigger file input when profile picture is clicked
     const triggerFileInput = () => {
       if (user.value.email === useremail.value) {
         fileInput.value.click();
       }
     };
 
-    // Handle profile picture change
     const handleFileChange = (event) => {
       if (user.value.email === useremail.value) {
         const file = event.target.files[0];
-        if (file) {
-          user.value.picture = URL.createObjectURL(file);
+        if (file && file.type.match("image.*")) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            user.value.picture = e.target.result;
+          };
+          reader.readAsDataURL(file);
           newProfilePicture.value = file;
+        } else {
+          userStore.set_snackbarMessage(
+            "Please select a valid image file",
+            "error",
+            5000
+          );
         }
       }
     };
@@ -148,48 +196,46 @@ export default {
       formData.append("userId", user.value.id);
 
       try {
+        loading.value = true;
         const response = await axios.post(
           `${BASE_URL}/api/profile/updateProfile`,
           formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
 
         if (response.data.success) {
           userStore.setUser(response.data.user ?? user.value);
-          userStore.set_snackbarMessage(
-            response.data.message ?? "Profile updated successfully!",
-            "success",
-            5000
-          );
+          userStore.set_snackbarMessage("Profile updated successfully!", "success", 5000);
+          newProfilePicture.value = null;
         } else {
-          userStore.set_snackbarMessage(
-            response.data.message ?? "Failed to update profile!",
-            "error",
-            5000
-          );
+          throw new Error(response.data.message || "Update failed");
         }
       } catch (error) {
         console.error("Error updating profile:", error);
-        userStore.set_snackbarMessage("Failed to update profile!", "error", 5000);
+        userStore.set_snackbarMessage(
+          error.message || "Failed to update profile",
+          "error",
+          5000
+        );
+      } finally {
+        loading.value = false;
       }
     };
 
-    // Fetch profile on mount
     onMounted(fetchUserProfile);
 
     return {
       user,
       loading,
-      themeClass,
       defaultProfilePic,
       fileInput,
+      sampleSongs,
       triggerFileInput,
       handleFileChange,
       saveProfileChanges,
       playlistId,
       formatDate,
+      newProfilePicture,
       iscollapsedBig: computed(() => userStore.iscollapsedBig),
       isDarkMode: computed(() => userStore.isdarkmode),
     };
@@ -198,108 +244,273 @@ export default {
 </script>
 
 <style scoped>
-h3 {
-  color: #2c3e50;
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 5px;
+/* Base Styles */
+.profile-container {
+  transition: all 0.3s ease;
+  padding: 20px;
+  width: 100%;
+  margin: 0 auto;
 }
 
-p {
-  font-size: 14px;
-  color: #7f8c8d;
-  margin: 5px 0;
+
+.profile-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 120, 255, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-#profileUserInfo {
+.dark-card {
+  background: #202124;
+  color: #e6e6e6;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  color: #0078ff;
+  font-size: 3rem;
+}
+
+/* Profile Header */
+.profile-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 10px;
-  width: 100%;
-  box-sizing: border-box;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-}
-.circular-profile_pic {
+  padding: 30px 20px 20px;
+  background: linear-gradient(135deg, #0078ff 0%, #00c6ff 100%);
+  color: white;
   position: relative;
-  width: 150px;
-  min-width: 150px;
-  min-height: 150px;
-  height: 150px;
-  margin-bottom: 15px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 3px solid #3498db;
 }
 
-.cicircular-profile_pic img {
+.dark-card .profile-header {
+  background: linear-gradient(135deg, #005bb5 0%, #0082e6 100%);
+}
+
+.profile-picture {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 4px solid white;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.profile-picture:hover {
+  transform: scale(1.05);
+}
+
+.profile-picture:hover .edit-overlay {
+  opacity: 1;
+}
+
+.edit-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.profile-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.profile-edit {
-  position: absolute;
-  top: 85%;
-  right: 10px;
-  background: #3498db;
+.profile-actions {
+  margin-top: 20px;
+}
+
+.save-button {
+  background: white;
+  color: #0078ff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.save-button:hover {
+  background: #f0f8ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 120, 255, 0.2);
+}
+
+.save-button:disabled {
+  background: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.dark-button {
+  background: #0078ff;
+  color: white;
+}
+
+.dark-button:hover {
+  background: #0066cc;
+}
+
+/* Profile Info */
+.profile-info {
+  padding: 20px;
+  text-align: center;
+}
+
+.profile-name {
+  font-size: 1.8rem;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.dark-card .profile-name {
+  color: #fff;
+}
+
+.member-since {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.dark-card .member-since {
+  color: #aaa;
+}
+
+.email-card {
+  background: #f5f9ff;
+  border-radius: 10px;
+  padding: 15px;
+  margin: 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #e0e0e0;
+}
+
+.dark-email-card {
+  background: #2F2F2F;
+  border-color: #373737;
+}
+
+.email-address {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.dark-card .email-address {
+  color: #e6e6e6;
+}
+
+.verified-badge {
+  background: #00c853;
   color: white;
   padding: 5px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s;
-}
-
-.profile-edit:hover {
-  background: #2980b9;
-}
-
-.profile-info {
-  text-align: center;
-  margin-top: 10px;
-}
-
-#userEmail {
+  border-radius: 15px;
+  font-size: 0.8rem;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: white;
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  gap: 5px;
 }
 
-#verifiedState {
-  color: green;
-  margin-left: 10px;
-  font-weight: bold;
-}
-
-#top-songs-Adhered {
-  width: 100%;
+/* Top Songs Section */
+.top-songs-section {
   margin-top: 20px;
-  padding: 15px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  box-sizing: border-box;
+  padding: 20px;
+  border-top: 1px solid #eee;
 }
 
-.top-songs-list {
+.dark-section {
+  border-top-color: #2F2F2F;
+}
+
+.section-title {
+  color: #0078ff;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dark-card .section-title {
+  color: #00c6ff;
+}
+
+.song-list {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-.artist-socialist {
+.song-card {
   display: flex;
   align-items: center;
+  background: #f8faff;
+  border-radius: 10px;
+  padding: 12px;
+  transition: all 0.3s ease;
+}
+
+.dark-card .song-card {
+  background: #16213e;
+}
+
+.song-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 120, 255, 0.1);
+}
+
+.song-number {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #0078ff;
+  min-width: 30px;
+}
+
+.song-info {
+  display: flex;
+  flex: 1;
+  align-items: center;
   gap: 15px;
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
 }
 
 .artist-info {
@@ -308,83 +519,78 @@ p {
   gap: 10px;
 }
 
-.artist-info img {
+.artist-image {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
 }
 
-.WheatherVerified {
-  color: #3498db;
-  font-size: 14px;
-  margin-left: 5px;
+.artist-name {
+  font-weight: 500;
 }
 
-.moreOn-song {
+.verified-icon {
+  color: #00c853;
+  font-size: 0.9rem;
+}
+
+.song-details {
+  flex: 1;
+  text-align: left;
+}
+
+.song-title {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.dark-card .song-title {
+  color: #e6e6e6;
+}
+
+.song-meta {
   display: flex;
   gap: 15px;
-  font-size: 12px;
-  color: #7f8c8d;
+  margin-top: 5px;
+  font-size: 0.8rem;
+  color: #666;
 }
 
-#loading {
+.dark-card .song-meta {
+  color: #aaa;
+}
+
+.song-views, .song-date {
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: 24px;
-  color: #3498db;
+  gap: 3px;
 }
 
-/*daark theme*/
-.darktheme-1 {
-  background: #1e1e1e !important;
-  color: #f0f0f0 !important;
-}
-
-/* Dark Theme 2 - Header */
-.darktheme-2 {
-  background: #2c2c2c !important;
-  box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
-  color: #e7e7e7 !important;
-}
-
-/* Dark Theme 3 - Buttons */
-.darktheme-3 {
-  background: #3a3a3a !important;
-  color: #ffffff !important;
-  border: 1px solid #555 !important;
-}
-
-.darktheme-3:hover {
-  background: #505050 !important;
-}
-
-/* Dark Theme 4 - Inputs */
-.darktheme-4 {
-  background: #2c2c2c !important;
-  color: #e0e0e0 !important;
-}
-.darktheme-4 h3 {
-  color: #e0e0e0 !important;
-}
-.darktheme-5 h3,
-.darktheme-4 h3 {
-  color: #cfc7c7 !important;
-}
-/* Dark Theme 5 - Video Sections */
-.darktheme-5 {
-  background: #373737 !important;
-  color: #d4d4d4 !important;
-}
-
+/* Responsive Design */
 @media (max-width: 768px) {
-  #profileUserInfo {
-    padding: 15px;
+  .profile-card {
+   width: 100%;
   }
-  .artist-socialist {
+  .profile-header {
+    padding: 20px 0px;
+    border-radius: 0px;
+  }
+
+  .profile-picture {
+    width: 120px;
+    height: 120px;
+  }
+
+  .profile-name {
+    font-size: 1.5rem;
+  }
+
+  .song-info {
     flex-direction: column;
     align-items: flex-start;
+    gap: 5px;
   }
 }
 </style>

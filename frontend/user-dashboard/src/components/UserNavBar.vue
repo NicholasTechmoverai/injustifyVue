@@ -233,6 +233,8 @@ const handleResize = () => {
 
 const HandleLogout = async () => {
   userStore.clearUser();
+  document.cookie = `user_info={}; expires=; path=/`;
+
   //logout_loading.value = true;
 
   // try {

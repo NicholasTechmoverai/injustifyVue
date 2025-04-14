@@ -18,7 +18,7 @@
               <button class="dropdown-toggle">More</button>
               <div class="dropdown-content">
                 <router-link class="inline" to="/help">
-                  <ion-icon name="help-circle-outline"></ion-icon>                  Help
+                  <ion-icon name="help-circle-outline"></ion-icon> Help
                 </router-link>
                 <router-link class="inline" to="/search">
                   <ion-icon name="code-slash-outline"></ion-icon>
@@ -30,13 +30,10 @@
                   About
                 </router-link>
 
-                
                 <router-link class="inline" to="/feedback">
                   <ion-icon name="information-circle-outline"></ion-icon>
                   feedback
                 </router-link>
-
-
               </div>
             </div>
           </div>
@@ -157,7 +154,7 @@ const iscollapsedBig = computed(() => userStore.iscollapsedBig);
 /* Settings Body */
 #settings-body {
   margin-top: 20px;
-  padding: 20px;
+  padding: 0px;
   border-radius: 12px;
   background: var(--card-background, #ffffff);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -208,6 +205,7 @@ const iscollapsedBig = computed(() => userStore.iscollapsedBig);
   }
   #settings-body {
     width: 97% !important;
+    padding: 0;
   }
   #settings-header {
     width: 97% !important;

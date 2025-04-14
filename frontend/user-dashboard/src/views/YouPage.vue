@@ -6,8 +6,28 @@
       Injustify
       <ion-icon name="musical-note-outline"></ion-icon>
     </h1>
-
     <div class="children">
+      <keep-alive>
+        <router-view
+          :isDarkMode="isDarkMode"
+          @toggle-viewPlayersMode="toggleViewPlayersMode"
+          name="stream"
+        />
+      </keep-alive>
+
+      <keep-alive>
+        <router-view class="common-scroolbar" :isDarkMode="isDarkMode" name="xy" />
+      </keep-alive>
+
+      <router-view
+        class="common-scroolbar"
+        @play-song="handlePlaySong"
+        v-if="viewPlayersMode"
+        name="yz"
+      />
+    </div>
+
+    <!-- <div class="children">
       <ChildTwo
         class="common-scroolbar"
         v-if="currentChild === 'stream' || !currentChild"
@@ -27,7 +47,7 @@
         v-if="(currentChild === 'yz' || !currentChild) && viewPlayersMode"
         @play-song="handlePlaySong"
       />
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -35,9 +55,9 @@
 import { ref, computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useUserStore } from "@/store/index.js";
-import ChildOne from "./YouPageONe.vue";
-import ChildTwo from "./YouPageTwo.vue";
-import ChildThree from "./YouPageThree.vue";
+// import ChildOne from "./YouPageONe.vue";
+// import ChildTwo from "./YouPageTwo.vue";
+// import ChildThree from "./YouPageThree.vue";
 
 // Reactive State
 const route = useRoute();
@@ -100,6 +120,9 @@ const handlePlaySong = (id) => {
 }
 
 @media (max-width: 668px) {
+  .children > * {
+    padding: 0 !important;
+  }
   .injustifyLogoR {
     display: none;
   }

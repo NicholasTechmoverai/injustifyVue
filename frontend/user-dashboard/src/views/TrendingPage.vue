@@ -2,7 +2,7 @@
   <div id="youSectionC" class="common-scrollbar">
     <div id="sectioncmoststreamedSongs">
       <div class="header">
-        <span>Your Top Songs This Month</span>
+        <span>#Trending</span>
         <!-- Options Button -->
         <button class="options-btn" @click="toggleDropdown">
           <ion-icon name="options-outline"></ion-icon>
@@ -27,11 +27,13 @@
         <div v-else id="ssfads">
           <div
             v-for="(song, index) in songs"
-            :key="song.id || index"
+            :key="song.song_id || index"
             :class="{ 'darktheme-2': isDarkMode }"
             class="song-item"
           >
-            <img :src="song.thumbnail" alt="Song thumbnail" class="song-thumbnail" />
+            <router-link :to="`/you/stream/${song.song_id}`">
+              <img :src="song.thumbnail" alt="Song thumbnail" class="song-thumbnail" />
+            </router-link>
             <div class="song-duration">{{ song.duration || "3:50" }}</div>
             <div class="song-info">
               <div class="song-text">
@@ -72,6 +74,7 @@ import { useUserStore } from "@/store/index.js";
 import { computed } from "vue";
 
 export default {
+  name: "UserDownloads",
   data() {
     const userStore = useUserStore();
     return {
