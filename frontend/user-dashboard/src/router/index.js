@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 //import { useUserStore } from "@/store/index.js"; // Import Pinia store
 
 import AccountVerify from '@/views/AccountVerify.vue';
+import downloadsSelectorContainer from '../views/downloadsSelectorContainer.vue';
+import PreviewPage from '../views/PreviewPage.vue';
 import HomePage from '../views/HomePage.vue';
 import UserProfile from '../views/UserProfile.vue';
 import DownloadsPage from '../views/DownloadsPage.vue';
@@ -19,6 +21,8 @@ import NotificationSettings from "@/views/NotificationsSettings.vue";
 import PreferenceSettings from "@/views/PreferenceSettings.vue";
 import SecuritySettings from "@/views/SecuritySet.vue";
 import YouPage from "../views/YouPage.vue";
+import DownloadStreams from "@/views/downloadsSelectorContainer.vue"
+
 import LikedSongsPage from "@/views/LikedSongs.vue";
 //import UserTopArtist from "@/views/TopArtist.vue";
 import PlaylistPage from "@/views/PlaylistsPage.vue";
@@ -27,16 +31,24 @@ import TrendingPage from "@/views/TrendingPage.vue";
 import UserTopSongs from "@/views/UserTopSongs.vue";
 import TrendingSongs from "@/views/TrendingPage.vue";
 import YouplayingSong from "@/views/YouPageTwo.vue";
-import DownloadStreams from "@/views/downloadsSelectorContainer.vue"
 
 import ChildOne from "../views/YouPageONe.vue";
 import ChildTwo from "../views/YouPageTwo.vue";
 import ChildThree from "../views/YouPageThree.vue";
 
+import NotFoundPage from "@/views/NotFoundPage.vue";
 
 const routes = [
-  { path: '/verify/auth', name: 'AccountVerifyPage', component: AccountVerify}, 
-  { path: '/', name: 'Home', component: HomePage, },
+  { path: '/verify/auth', name: 'AccountVerifyPage',component:AccountVerify}, 
+  { 
+    path: '/', 
+    name: 'Home', 
+    component: HomePage,
+    children: [
+      { path: 'p', name: 'PreviewPage', component: PreviewPage }, 
+      { path: 'd', name: 'downloadsSelectorContainer', component: downloadsSelectorContainer},
+    ]
+  },  
   { path: '/profile/:useremail', name: 'Profile', component: UserProfile, props: true },
   { path: '/downloads/:useremail', name: 'UserDownloads', component: DownloadsPage, props: true },
   { path: '/analytics/:useremail', name: 'AnalyticsPage', component: AnalyticsPage, props: true },
@@ -154,9 +166,15 @@ const routes = [
           xy: ChildOne,
         },
       },
+
+   
     ],
-  }
-  
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "NotFound",
+    component: NotFoundPage,
+  },
   
   
 

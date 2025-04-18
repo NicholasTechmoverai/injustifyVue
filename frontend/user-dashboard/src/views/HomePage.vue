@@ -1,7 +1,6 @@
 <template>
   <div class="MainContainer" :class="{ collabsedBig: iscollapsedBig }">
     <div id="homepage-header" :class="{ 'darktheme-2': isDarkMode }">
-    
       <div id="iconPlusQuery">
         <h1 @click="reloadPage" class="injustifyLogoR">Injustify</h1>
 
@@ -22,7 +21,6 @@
             [ <span>{{ query }}</span> ]
           </label>
         </div>
-
       </div>
       <div
         v-if="loading.injustify || loading.youtube || loading.spotify"
@@ -59,10 +57,9 @@
             <ion-icon name="search-outline"></ion-icon>
           </button>
           <ion-icon
-          @click="toggleSearch"
-          :name="showSearch ? 'close-circle-outline' : 'search-circle-outline'"
-        ></ion-icon>
-
+            @click="toggleSearch"
+            :name="showSearch ? 'close-circle-outline' : 'search-circle-outline'"
+          ></ion-icon>
         </div>
         <div v-if="search_suggestions.length" id="suggestionContainer">
           <div
@@ -173,7 +170,6 @@
 
     <div
       v-if="videoSources[activeTab]"
-      
       :key="activeTab"
       :ref="activeTab"
       id="holder"
@@ -195,7 +191,14 @@
           :class="{ 'darkthemec-a': isDarkMode }"
         >
           <div @click="playVideo(video)">
-            <img :src="getThumbnail(video, activeTab)" alt="Video Thumbnail" />
+            <router-link
+              :to="{
+                path: '/p',
+                query: { url: video.song_id ? video.song_id : video.url },
+              }"
+            >
+              <img :src="getThumbnail(video, activeTab)" alt="Video Thumbnail" />
+            </router-link>
             <div>
               <h4>{{ getTitle(video, activeTab) }}</h4>
               <p>{{ getArtist(video, activeTab) }}</p>
@@ -283,6 +286,8 @@
       </p>
     </div>
     <!-- Downloads Selector Container -->
+    <router-view id="previewContainer"></router-view>
+
     <DownlodSelectorHold
       id="streamsContainer"
       :songId="streamSongID"
@@ -505,7 +510,7 @@ export default {
         console.log("Service not selected.");
         return;
       }
-      const sname = video.artist? `${video.artist}-${video.title}`:`${video.title}`;
+      const sname = video.artist ? `${video.artist}-${video.title}` : `${video.title}`;
       if (video.Stype === "injustify") {
         this.advUserStore.download_injustify_stream(
           video.song_id,
@@ -514,14 +519,15 @@ export default {
           video.ext,
           0,
           null,
-          video.url.split(".").pop()
+          video.url.split(".").pop(),
+          video.thumbnail
         );
       } else if (video.Stype === "youtube") {
         this.advUserStore.download_yt_stream(
           video.url,
-          '140',
+          "140",
           sname,
-          'm4a',
+          "m4a",
           0,
           0,
           null,
@@ -579,7 +585,7 @@ export default {
         if (newsongs.length > 0) {
           this.inj_videos.push(...newsongs);
         } else {
-          this.setActiveTab('YouTube',100)
+          this.setActiveTab("YouTube", 100);
         }
       } catch (error) {
         console.error("API Error:", error);
@@ -607,7 +613,7 @@ export default {
     },
 
     async searchAll() {
-      this.showSearch = false
+      this.showSearch = false;
       this.offset = 0;
       await this.fetchVideos(true); // Search injustify database
       await this.searchYouTube(); // Search YouTube
@@ -825,6 +831,14 @@ export default {
 </script>
 
 <style scoped>
+#previewContainer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  width: 60%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
 #streamsContainer {
   border-radius: 10px 10px 0 0;
   position: fixed;
@@ -996,7 +1010,6 @@ export default {
 #holder {
   width: 100%;
   min-height: 100vh;
-
 }
 .service {
   width: 90%;
@@ -1069,8 +1082,8 @@ export default {
     margin: auto;
     overflow-wrap: break-word;
     transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
-    z-index: 100;
-    box-sizing: border-box;
+    z-index: 102 !important;
+    box-sizing: border-box; 
 
     &.darktheme-1 {
       background-color: #1e1e1e;
@@ -1109,7 +1122,7 @@ export default {
       height: 100% !important;
       cursor: pointer;
       margin-left: 0.2rem !important;
-      padding:2px 5px !important;
+      padding: 2px 5px !important;
       font-weight: 500;
       transition: background-color 0.3s ease, transform 0.2s;
 
@@ -1403,7 +1416,6 @@ export default {
   }
 
   div {
-
     h2 {
       font-size: 1.4rem;
       font-weight: 600;
@@ -1519,12 +1531,9 @@ export default {
   }
 }
 @media (max-width: 568px) {
-
-
   #searchBar {
     width: 100% !important;
   }
-
 }
 </style>
 <style scoped>

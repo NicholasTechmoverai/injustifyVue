@@ -118,31 +118,20 @@ async download_yt_stream(
 
         const b_extension = header_info.get("format") || extension;
         download_id = header_info.get("X-Download-URL") || songId;
+        const timestamp = Date.now();
 
         if (!this.onGoingDownloads) {
           this.onGoingDownloads = {};
       }
       
-
-      //sort and organize the downloads
-      if (!this.onGoingDownloads[download_id]) {
-          this.onGoingDownloads[download_id] = {}; 
-          
-          const sortedDownloads = Object.entries(this.onGoingDownloads)
-              .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp))  
-              .reduce((acc, [key, value]) => {
-                  acc[key] = value; 
-                  return acc;
-              }, {});
-      
-          this.onGoingDownloads = sortedDownloads;
-      }
-
-        const timestamp = Date.now()
-      
-        const reader = response.body.getReader();
-        const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
-        let downloadedSize = 0;
+      const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
+      let downloadedSize = 0;
+      let lastUpdateTime = startTime;
+      let lastDownloadedSize = 0;
+      let speedSamples = [];
+      const MAX_SAMPLES = 5; // Number of samples for moving average
+  
+      const reader = response.body.getReader();
 
         const stream = new ReadableStream({
             start: (controller) => { 
@@ -151,41 +140,79 @@ async download_yt_stream(
                         if (done) {
                             console.log("\nDownload completed!");
                             this.onGoingDownloads[download_id].status = "completed";
+                            this.onGoingDownloads[download_id].progress = 100;
+                            this.onGoingDownloads[download_id].downloadSpeedMbps = "0 Mb/s";
+                            this.onGoingDownloads[download_id].eta = "00:00";
                             controller.close();
                             return;
                         }
 
-                        const fetchedSize = value.length; // Get chunk size
-                        downloadedSize += fetchedSize; // Update total downloaded size
-                        const elapsedTime = (performance.now() - startTime) / 1000; // Time in seconds
-
-                        const downloadSpeedMbps = await this.calculateSpeedPerSec(fetchedSize, elapsedTime);
-                        const remainingSizeMB = (contentLength - downloadedSize) / (1024 * 1024);
-
-                        const eta = await this.calculateETA(remainingSizeMB, downloadSpeedMbps);
-                        const progress = (downloadedSize / contentLength) * 100;
-
-                        // Ensure speed formatting is done outside `calculateSpeedPerSec`
-                        const formattedSpeed = downloadSpeedMbps > 1 
-                            ? `${downloadSpeedMbps.toFixed(2)} Mb/s` 
-                            : `${(downloadSpeedMbps * 1024).toFixed(0)} Kb/s`;
-
-                        this.onGoingDownloads[download_id] = { 
+                        const currentTime = performance.now();
+                        const chunkSize = value.length;
+                        downloadedSize += chunkSize;
+            
+                        // Calculate instant speed
+                        const timeDiff = (currentTime - lastUpdateTime) / 1000; // in seconds
+                        const sizeDiff = downloadedSize - lastDownloadedSize;
+                        
+                        if (timeDiff > 0) {
+                          const instantSpeed = (sizeDiff / timeDiff) / (1024 * 1024); // in MB/s
+                          
+                          // Add to speed samples for moving average
+                          speedSamples.push(instantSpeed);
+                          if (speedSamples.length > MAX_SAMPLES) {
+                            speedSamples.shift();
+                          }
+                          
+                          // Calculate average speed
+                          const avgSpeed = speedSamples.reduce((sum, speed) => sum + speed, 0) / speedSamples.length;
+                          
+                          // Calculate progress
+                          const progress = Math.min((downloadedSize / contentLength) * 100, 100);
+                          
+                          // Calculate ETA
+                          const remainingBytes = contentLength - downloadedSize;
+                          const remainingSeconds = remainingBytes / (avgSpeed * 1024 * 1024);
+                          const eta = this.formatETA(remainingSeconds);
+                          
+                          // Format speed
+                          let formattedSpeed;
+                          if (avgSpeed > 1) {
+                            formattedSpeed = `${avgSpeed.toFixed(2)} MB/s`;
+                          } else if (avgSpeed > 0.001) {
+                            formattedSpeed = `${(avgSpeed * 1024).toFixed(2)} KB/s`;
+                          } else {
+                            formattedSpeed = `${(avgSpeed * 1024 * 1024).toFixed(0)} B/s`;
+                          }
+            
+                          // Update download info
+                          if (!this.onGoingDownloads[download_id]) {
+                            this.onGoingDownloads[download_id] = {};
+                          }
+            
+                          this.onGoingDownloads[download_id] = {
                             timestamp,
-                            filename, 
-                            progress, 
-                            status: "downloading", 
-                            eta, 
-                            downloadSpeedMbps: formattedSpeed, 
-                            thumbnail: `th_${songId.split('.').slice(0, -1).join('.')}.jpg`
-                        };
-
-                        console.clear();
-                        console.log(`Downloading: ${filename}`);    
-                        console.log(`Progress: ${progress.toFixed(2)}%`);
-                        console.log(`Speed: ${formattedSpeed}`);
-                        console.log(`ETA: ${eta}`);
-
+                            filename,
+                            progress,
+                            status: "downloading",
+                            eta,
+                            downloadSpeedMbps: formattedSpeed,
+                            thumbnail: thumbnail,
+                            filesize: contentLength,
+                            downloadedSize: downloadedSize,
+                          };
+            
+                          // Log progress (optional)
+                          console.clear();
+                          console.log(`Downloading: ${filename}`);
+                          console.log(`Progress: ${progress.toFixed(2)}%`);
+                          console.log(`Speed: ${formattedSpeed}`);
+                          console.log(`ETA: ${eta}`);
+            
+                          lastUpdateTime = currentTime;
+                          lastDownloadedSize = downloadedSize;
+                        }
+            
                         controller.enqueue(value);
                         push();
                     });
@@ -196,7 +223,7 @@ async download_yt_stream(
 
         const main_blob = await new Response(stream).blob();
         this.saveToFile(main_blob, b_filename, b_extension);
-
+        this.sortDownloadsByTimestamp();
     } catch (error) {
         console.error("Download failed:", error);
         if (this.onGoingDownloads[download_id]) {
@@ -207,147 +234,225 @@ async download_yt_stream(
     }
 },
 
-    async download_injustify_stream(songId,itag,filename,ext){
-      console.log("Downloading...",filename,"::::::::",this.activeFilename);
-      if(!songId || !filename){
-        console.log("Please enter valid song ID and filename.");
-        return;
-      }
-      const user_id = this.userId; 
-
-      if (!user_id) {
-          console.log("Kindly login to make a Download!!.");
-          this.userStore.set_snackbarMessage(
-            "Kindly login to make a Download!!",
-            "info",
-            10000
-          );
-          return;
-      }
-      let download_id;
-      this.userStore.set_isAboutToDownload(true);
+async download_injustify_stream(
+  songId,
+    itag,
+    filename,
+      ext,
+      size_mb=0,
+      format = null,
+      url,
+      thumbnail=null,
+) {
+  console.log("Downloading...", filename, "::::::::", this.activeFilename);
+  if (!songId || !filename) {
+    console.log("Please enter valid song ID and filename.");
+    return;
+  }
 
 
-      try{
-        const response = await fetch(`${BASE_URL}/api/download/injustify`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            songId:`${songId.split('.').slice(0, -1).join('.')}`,
-            song_url: songId,
-            filename:this.activeFilename,
-            userId: user_id,
-            itag,
-            start_byte: this.start_bytes,
-            size_mb: this.activeFilesize,
-            format: this.activeFormat,
-            thumbnailUrl: `th_${songId.split('.').slice(0, -1).join('.')}.jpg`,
-          })
-        });
+  const user_id = this.userId;
+  if (!user_id) {
+    console.log("Kindly login to make a Download!!.");
+    this.userStore.set_snackbarMessage(
+      "Kindly login to make a Download!!",
+      "info",
+      10000
+    );
+    return;
+  }
 
+  console.log(size_mb,format,url)
+  let download_id;
+  this.userStore.set_isAboutToDownload(true);
 
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        this.downloadsCount('+');
+  try {
+    const response = await fetch(`${BASE_URL}/api/download/injustify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        songId: `${songId.split('.').slice(0, -1).join('.')}`,
+        song_url: songId,
+        filename: this.activeFilename,
+        userId: user_id,
+        itag,
+        start_byte: this.start_bytes,
+        size_mb: this.activeFilesize,
+        format: this.activeFormat,
+        thumbnailUrl: `th_${songId.split('.').slice(0, -1).join('.')}.jpg`,
+      })
+    });
 
-        const startTime = performance.now();
-        const header_info = response.headers;
-        const contentDisposition = header_info.get("Content-Disposition");
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    this.downloadsCount('+');
 
-        const b_filename = contentDisposition 
-            ? contentDisposition.split("filename=")[1]?.replace(/"/g, "") 
-            : filename || "downloaded_file"; 
+    const startTime = performance.now();
+    const header_info = response.headers;
+    const contentDisposition = header_info.get("Content-Disposition");
 
-        const b_extension = header_info.get("format") || ext;
-        download_id = header_info.get("X-Download-URL") || songId;
+    const b_filename = contentDisposition
+      ? contentDisposition.split("filename=")[1]?.replace(/"/g, "")
+      : filename || "downloaded_file";
 
-        const timestamp = Date.now()
+    const b_extension = header_info.get("format") || ext;
+    download_id = header_info.get("X-Download-URL") || songId;
+    const timestamp = Date.now();
 
-        if (!this.onGoingDownloads) {
-          this.onGoingDownloads = {};
-      }
-      
-      if (!this.onGoingDownloads[download_id]) {
-          this.onGoingDownloads[download_id] = {};  // Initialize the new download object if it doesn't exist.
-          
-          // Convert the object to an array, sort it, and then put it back as an object if needed.
-          const sortedDownloads = Object.entries(this.onGoingDownloads) // Convert the object to an array of key-value pairs
-              .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp))  // Sort by timestamp in descending order
-              .reduce((acc, [key, value]) => {
-                  acc[key] = value;  // Rebuild the object with sorted entries
-                  return acc;
-              }, {});
-      
-          this.onGoingDownloads = sortedDownloads;
-      }
-      
+    // Initialize downloads tracking
+    if (!this.onGoingDownloads) {
+      this.onGoingDownloads = {};
+    }
 
-        const reader = response.body.getReader();
-        const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
-        let downloadedSize = 0;
+    // Calculate total size in bytes
+    const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
+    let downloadedSize = 0;
+    let lastUpdateTime = startTime;
+    let lastDownloadedSize = 0;
+    let speedSamples = [];
+    const MAX_SAMPLES = 5; // Number of samples for moving average
 
-        const stream = new ReadableStream({
-          start: (controller) => { 
-              const push = () => { 
-                  reader.read().then(async ({ done, value }) => {
-                      if (done) {
-                          console.log("\nDownload completed!");
-                          this.onGoingDownloads[download_id].status = "completed";
-                          controller.close();
-                          return;
-                      }
+    const reader = response.body.getReader();
 
-                      const fetchedSize = value.length; // Get chunk size
-                      downloadedSize += fetchedSize; // Update total downloaded size
-                      const elapsedTime = (performance.now() - startTime) / 1000; // Time in seconds
+    const stream = new ReadableStream({
+      start: (controller) => {
+        const push = () => {
+          reader.read().then(async ({ done, value }) => {
+            if (done) {
+              console.log("\nDownload completed!");
+              if (this.onGoingDownloads[download_id]) {
+                this.onGoingDownloads[download_id].status = "completed";
+                this.onGoingDownloads[download_id].progress = 100;
+                this.onGoingDownloads[download_id].downloadSpeedMbps = "0 Mb/s";
+                this.onGoingDownloads[download_id].eta = "00:00";
+              }
+              controller.close();
+              return;
+            }
 
-                      const downloadSpeedMbps = await this.calculateSpeedPerSec(fetchedSize, elapsedTime);
-                      const remainingSizeMB = (contentLength - downloadedSize) / (1024 * 1024);
+            const currentTime = performance.now();
+            const chunkSize = value.length;
+            downloadedSize += chunkSize;
 
-                      const eta = await this.calculateETA(remainingSizeMB, downloadSpeedMbps);
-                      const progress = (downloadedSize / contentLength) * 100;
+            // Calculate instant speed
+            const timeDiff = (currentTime - lastUpdateTime) / 1000; // in seconds
+            const sizeDiff = downloadedSize - lastDownloadedSize;
+            
+            if (timeDiff > 0) {
+              const instantSpeed = (sizeDiff / timeDiff) / (1024 * 1024); // in MB/s
+              
+              // Add to speed samples for moving average
+              speedSamples.push(instantSpeed);
+              if (speedSamples.length > MAX_SAMPLES) {
+                speedSamples.shift();
+              }
+              
+              // Calculate average speed
+              const avgSpeed = speedSamples.reduce((sum, speed) => sum + speed, 0) / speedSamples.length;
+              
+              // Calculate progress
+              const progress = Math.min((downloadedSize / contentLength) * 100, 100);
+              
+              // Calculate ETA
+              const remainingBytes = contentLength - downloadedSize;
+              const remainingSeconds = remainingBytes / (avgSpeed * 1024 * 1024);
+              const eta = this.formatETA(remainingSeconds);
+              
+              // Format speed
+              let formattedSpeed;
+              if (avgSpeed > 1) {
+                formattedSpeed = `${avgSpeed.toFixed(2)} MB/s`;
+              } else if (avgSpeed > 0.001) {
+                formattedSpeed = `${(avgSpeed * 1024).toFixed(2)} KB/s`;
+              } else {
+                formattedSpeed = `${(avgSpeed * 1024 * 1024).toFixed(0)} B/s`;
+              }
 
-                      // Ensure speed formatting is done outside `calculateSpeedPerSec`
-                      const formattedSpeed = downloadSpeedMbps > 1 
-                          ? `${downloadSpeedMbps.toFixed(2)} Mb/s` 
-                          : `${(downloadSpeedMbps * 1024).toFixed(0)} Kb/s`;
+              // Update download info
+              if (!this.onGoingDownloads[download_id]) {
+                this.onGoingDownloads[download_id] = {};
+              }
 
-                      this.onGoingDownloads[download_id] = { 
-                        timestamp,
-                          filename, 
-                          progress, 
-                          status: "downloading", 
-                          eta, 
-                          downloadSpeedMbps: formattedSpeed, 
-                          thumbnail: `th_${songId.split('.').slice(0, -1).join('.')}.jpg`
-                      };
-
-                      console.clear();
-                      console.log(`Downloading: ${filename}`);    
-                      console.log(`Progress: ${progress.toFixed(2)}%`);
-                      console.log(`Speed: ${formattedSpeed}`);
-                      console.log(`ETA: ${eta}`);
-
-                      controller.enqueue(value);
-                      push();
-                  });
+              this.onGoingDownloads[download_id] = {
+                timestamp,
+                filename,
+                progress,
+                status: "downloading",
+                eta,
+                downloadSpeedMbps: formattedSpeed,
+                thumbnail: thumbnail,
+                filesize: contentLength,
+                downloadedSize: downloadedSize,
               };
-              push();
-          }
-      });
-        const main_blob = await new Response(stream).blob();
-  
-        this.saveToFile(main_blob, b_filename,b_extension);
-      } catch (error) {
-        console.error("Download failed:", error);
-        if (this.onGoingDownloads[download_id]) {
-          this.onGoingDownloads[download_id].status = "failed";
-        }
-      } finally {
-        this.userStore.set_isAboutToDownload(false);
+
+              // Log progress (optional)
+              console.clear();
+              console.log(`Downloading: ${filename}`);
+              console.log(`Progress: ${progress.toFixed(2)}%`);
+              console.log(`Speed: ${formattedSpeed}`);
+              console.log(`ETA: ${eta}`);
+
+              lastUpdateTime = currentTime;
+              lastDownloadedSize = downloadedSize;
+            }
+
+            controller.enqueue(value);
+            push();
+          }).catch(error => {
+            console.error("Error reading stream:", error);
+            if (this.onGoingDownloads[download_id]) {
+              this.onGoingDownloads[download_id].status = "failed";
+            }
+            controller.error(error);
+          });
+        };
+        push();
       }
+    });
 
+    const main_blob = await new Response(stream).blob();
+    this.saveToFile(main_blob, b_filename, b_extension);
 
-    },
+    // Sort downloads by timestamp
+    this.sortDownloadsByTimestamp();
+
+  } catch (error) {
+    console.error("Download failed:", error);
+    if (download_id && this.onGoingDownloads[download_id]) {
+      this.onGoingDownloads[download_id].status = "failed";
+    }
+  } finally {
+    this.userStore.set_isAboutToDownload(false);
+  }
+},
+
+// Helper method to format ETA
+formatETA(seconds) {
+  if (seconds <= 0) return "00:00";
+  
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  return [
+    hours.toString().padStart(2, '0'),
+    minutes.toString().padStart(2, '0'),
+    secs.toString().padStart(2, '0')
+  ].join(':');
+},
+
+// Helper method to sort downloads by timestamp
+sortDownloadsByTimestamp() {
+  if (!this.onGoingDownloads) return;
+  // Convert the object to an array, sort it, and then put it back as an object if needed.
+  const sortedDownloads = Object.entries(this.onGoingDownloads) // Convert the object to an array of key-value pairs
+      .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp))  // Sort by timestamp in descending order
+      .reduce((acc, [key, value]) => {
+          acc[key] = value;  // Rebuild the object with sorted entries
+          return acc;
+      }, {});
+
+  this.onGoingDownloads = sortedDownloads;
+},
  
 
     // Save File to Local System

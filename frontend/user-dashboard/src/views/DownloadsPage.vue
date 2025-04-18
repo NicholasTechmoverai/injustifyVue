@@ -165,28 +165,22 @@
             <div class="dowloadFileInfo">
               <h3>{{ download.filename }}</h3>
               <div class="downloadfileMeta">
-                <p>
-                  Total Size:
-                  <span>{{ (download.filesize / (1024 * 1024)).toFixed(2) }}</span> MB
-                </p>
-                <p>
+                <p :title="'Remaining ' + remainingSize(download)">
                   Downloaded:
-                  <span>{{ (download.downloadedSize / (1024 * 1024)).toFixed(2) }}</span>
-                  MB
-                </p>
-                <p>
-                  Remaining: <span>{{ remainingSize(download) }}</span> MB
+                    <span>{{ (download.downloadedSize / (1024 * 1024)).toFixed(2) }}</span>MB / <span>{{ (download.filesize / (1024 * 1024)).toFixed(2) }}</span> MB
                 </p>
 
                 <p>
-                  ETA: <span>{{ download.eta }}</span>
+                  ETA: <span>{{ download.eta || 0.00 }}</span>
                 </p>
                 <div class="downloadFileProgressBar">
                   <div
                     class="progress-bar"
-                    :style="{ width: (download.progress * 100).toFixed(2) + '%' }"
+                    :style="{ width: (download.progress).toFixed(2) + '%' }"
                   ></div>
                 </div>
+                <span v-if="(download.progress).toFixed(2) < 100" class="progress-percentage">{{ (download.progress).toFixed(2) }}%</span>
+                <span v-else class="progress-percentage">Completed</span>
               </div>
             </div>
 
@@ -202,7 +196,7 @@
             </p>
             <div class="speed-info">
               <p>
-                Speed: <span>{{ download.downloadSpeedMbps }} MB/s</span>
+                Speed: <span>{{ download.downloadSpeedMbps||0.00 }}</span>
               </p>
             </div>
 
@@ -241,7 +235,11 @@
             <div class="dowloadFileInfo">
               <h3>{{ download.filename }}</h3>
               <div class="downloadfileMeta">
-                <p>
+                <p >
+                  Downloaded:
+                    <span>{{ (download.filesize - remainingSize(download)).toFixed(2) }}</span>MB / <span>{{ download.filesize}}</span> MB
+                </p>
+                <!-- <p>
                   Total Size: <span>{{ download.filesize }}</span> MB
                 </p>
                 <p>
@@ -249,7 +247,7 @@
                 </p>
                 <p>
                   Remaining: <span>{{ remainingSize(download) }}</span> MB
-                </p>
+                </p> -->
                 <p>
                   ETA: <span>{{ eta(download) }}</span>
                 </p>
@@ -258,8 +256,9 @@
                     class="progress-bar"
                     :style="{ width: progress(download) + '%' }"
                   ></div>
-                  <span class="progress-percentage">{{ progress(download) }}%</span>
                 </div>
+                <span v-if="progress(download) < 100" class="progress-percentage">{{ (download.progress).toFixed(2) }}%</span>
+                <span v-else class="progress-percentage">Completed</span>
               </div>
             </div>
 
@@ -447,20 +446,23 @@ export default {
     },
 
     speed(download) {
-      const elapsedTime = download.totalSize / 1024 / 1024; // Seconds
-      return (download.totalSize / elapsedTime / 1024 / 1024).toFixed(2); // MB/s
+      // const elapsedTime = download.totalSize / 1024 / 1024; // Seconds
+      // return (download.totalSize / elapsedTime / 1024 / 1024).toFixed(2); // MB/s
+      return (download.downloadSpeedMbps || 0.00).toFixed(2); // MB/s
+
     },
 
     eta(download) {
-      const remainingSize = download.contentLength - download.totalSize;
-      const etaSeconds =
-        remainingSize / (download.totalSize / (download.totalSize / 1024 / 1024));
+      // const remainingSize = download.contentLength - download.totalSize;
+      // const etaSeconds =
+      //   remainingSize / (download.totalSize / (download.totalSize / 1024 / 1024));
 
-      if (etaSeconds >= 60) {
-        return `${Math.floor(etaSeconds / 60)} min ${Math.floor(etaSeconds % 60)} sec`;
-      } else {
-        return `${Math.floor(etaSeconds)} sec`;
-      }
+      // if (etaSeconds >= 60) {
+      //   return `${Math.floor(etaSeconds / 60)} min ${Math.floor(etaSeconds % 60)} sec`;
+      // } else {
+      //   return `${Math.floor(etaSeconds)} sec`;
+      // }
+      return`${download.eta || 0.00}sec`;
     },
 
     togglePauseResume(download) {
@@ -560,6 +562,7 @@ span {
   width: 100%;
   box-sizing: border-box;
   color: #222;
+  position: relative;
 }
 
 .dowloadFileInfo h3 {
@@ -587,7 +590,7 @@ span {
 .downloadFilePic img {
   max-height: 100%;
   width: 100%;
-  min-height: 140px;
+  min-height: 100px;
   height: auto;
   object-fit: cover;
 }
@@ -623,7 +626,7 @@ span {
 .downloading-file .downloadFileProgressBar .progress-bar {
   height: 100%;
   background: linear-gradient(to right, #4caf50, #00e676);
-  border-radius: 3px;
+  border-radius: 1px;
   position: absolute;
   transition: width 0.5s ease-in-out;
   width: 0%;
@@ -634,6 +637,16 @@ span {
   top: -20px;
   right: 5px;
   color: #222;
+  font-size: 12px;
+  font-weight: bold;
+}
+.progress-percentage {
+  background-color: #00e676;
+  border-radius: 5px;
+  color: rgb(59, 59, 59);
+  padding: 2px 5px;
+  top: 100px;
+  margin-top:10px !important;
   font-size: 12px;
   font-weight: bold;
 }
