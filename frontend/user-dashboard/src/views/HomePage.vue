@@ -31,6 +31,10 @@
       </div>
 
       <div id="searchcontrols">
+        <p id="voice_recording" v-if="isVoiceSearch">recording...</p>
+
+        <ion-icon @click="searchByVoice" name="mic-outline"></ion-icon>
+
         <!-- <button><ion-icon name="clipboard"></ion-icon></button> -->
         <ion-icon
           @click="toggleSearch"
@@ -362,6 +366,7 @@ export default {
       advUserStore,
       activeTab: "injustify",
       showPlaylists: false,
+      isVoiceSearch: false,
       formatDate,
       selectedPlaylist: [],
     };
@@ -401,6 +406,50 @@ export default {
   },
 
   methods: {
+    searchByVoice() {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+        console.error("Speech Recognition API is not supported in this browser.");
+        return false;
+      }
+
+      if (this.isVoiceSearch) {
+        console.log("Voice search is already active.");
+        return false;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        console.log("🎤 Voice recognition started");
+        this.isVoiceSearch = true;
+      };
+
+      recognition.onend = () => {
+        console.log("🛑 Voice recognition ended");
+        this.isVoiceSearch = false;
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        console.log("🗣️ Recognized:", transcript);
+        this.query = transcript;
+        this.searchAll();
+      };
+
+      recognition.onerror = (event) => {
+        console.error("❌ Voice recognition error:", event.error);
+        this.isVoiceSearch = false;
+      };
+
+      recognition.start();
+      return true;
+    },
     async add_to_playlist(playlistId, songId) {
       this.loading = true;
 
@@ -831,6 +880,17 @@ export default {
 </script>
 
 <style scoped>
+#voice_recording {
+  color: #9333ea !important; /* purple-600 */
+  font-size: 10px !important;
+  position: absolute;
+  bottom: 0;
+}
+.activevoicesearch {
+  background-color: #9333ea; /* purple-600 */
+  color: white;
+  border-radius: 0.5rem;
+}
 #previewContainer {
   position: fixed;
   bottom: 0;
@@ -1083,7 +1143,7 @@ export default {
     overflow-wrap: break-word;
     transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
     z-index: 102 !important;
-    box-sizing: border-box; 
+    box-sizing: border-box;
 
     &.darktheme-1 {
       background-color: #1e1e1e;

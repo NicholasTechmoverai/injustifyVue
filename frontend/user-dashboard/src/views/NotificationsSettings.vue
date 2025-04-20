@@ -1,5 +1,8 @@
 <template>
-  <div class="notifications-container" :class="{ 'dark-mode': isDarkMode , collabsedBig: iscollapsedBig }">
+  <div
+    class="notifications-container"
+    :class="{ 'dark-mode': isDarkMode, collabsedBig: iscollapsedBig }"
+  >
     <!-- Header -->
     <div class="notifications-header">
       <h2 class="notifications-title">
@@ -180,6 +183,7 @@
 <script>
 import { computed } from "vue";
 import { useUserStore } from "@/store/index.js";
+import socket from "@/services/websocket";
 
 export default {
   name: "NotificationSettings",
@@ -191,6 +195,7 @@ export default {
   data() {
     const userStore = useUserStore();
     return {
+      userId: computed(() => userStore.userId),
       emailNotifications: {
         newSignIn: { label: "New sign-in activity", enabled: true },
         newFeatures: { label: "New features and updates", enabled: true },
@@ -323,9 +328,95 @@ export default {
     saveSettings() {
       // Save settings logic
       console.log("Settings saved");
+      socket.emit("updateNotificationSettings", {
+        userId: this.userId,
+        emailNotifications: this.emailNotifications,
+        deviceNotifications: this.deviceNotifications,
+        enableSoundAlerts: this.enableSoundAlerts,
+        selectedSound: this.selectedSound,
+        enableDND: this.enableDND,
+        dndStartTime: this.dndStartTime,
+        dndEndTime: this.dndEndTime,
+        dndAllowCalls: this.dndAllowCalls,
+        dndAllowMessages: this.dndAllowMessages,
+        dndAllowUrgent: this.dndAllowUrgent,
+
+        newSignIn:this.emailNotifications.newSignIn.enabled,
+        newFeatures:this.emailNotifications.newFeatures.enabled,
+        newGifts:this.emailNotifications.newGifts.enabled,
+        weeklyReport:this.emailNotifications.weeklyReport.enabled,
+        allNotifications:this.deviceNotifications.allNotifications.enabled,
+        newLikes:this.deviceNotifications.newLikes.enabled,
+        newComments:this.deviceNotifications.newComments.enabled,
+        onlyNewNoty:this.deviceNotifications.onlyNewNoty.enabled,
+        
+
+      });
+      socket.on("notificationSettingsUpdated", (response) => {
+        if (response.success) {
+          console.log("Notification settings updated successfully");
+        } else {
+          console.error("Failed to update notification settings");
+        }
+      });
     },
     resetToDefaults() {
       // Reset to defaults logic
+      this.emailNotifications = {
+        newSignIn: { label: "New sign-in activity", enabled: true },
+        newFeatures: { label: "New features and updates", enabled: true },
+        newGifts: { label: "When I receive gifts", enabled: true },
+        weeklyReport: { label: "Weekly summary report", enabled: false },
+      };
+      this.deviceNotifications = {
+        allNotifications: { label: "All notifications", enabled: true },
+        newLikes: { label: "New likes or reactions", enabled: true },
+        newComments: { label: "Comments on my posts", enabled: true },
+        onlyNewNoty: { label: "Only new notifications", enabled: false },
+      };
+      this.enableSoundAlerts = true;
+      this.selectedSound = "chime";
+      this.enableDND = false;
+      this.dndStartTime = "10:00 PM";
+      this.dndEndTime = "7:00 AM";
+      this.dndAllowCalls = true;
+      this.dndAllowMessages = false;
+      this.dndAllowUrgent = true;
+
+      socket.emit("updateNotificationSettings", {
+        emailNotifications: this.emailNotifications,
+        deviceNotifications: this.deviceNotifications,
+        enableSoundAlerts: this.enableSoundAlerts,
+        selectedSound: this.selectedSound,
+        enableDND: this.enableDND,
+        dndStartTime: this.dndStartTime,
+        dndEndTime: this.dndEndTime,
+        dndAllowCalls: this.dndAllowCalls,
+        dndAllowMessages: this.dndAllowMessages,
+        dndAllowUrgent: this.dndAllowUrgent,
+      });
+      socket.on("notificationSettingsUpdated", (response) => {
+        if (response.success) {
+          console.log("Notification settings reset to defaults successfully");
+        } else {
+          console.error("Failed to reset notification settings");
+        }
+      });
+      // Resetting the settings in the store
+      const userStore = useUserStore();
+      userStore.updateNotificationSettings({
+        emailNotifications: this.emailNotifications,
+        deviceNotifications: this.deviceNotifications,
+        enableSoundAlerts: this.enableSoundAlerts,
+        selectedSound: this.selectedSound,
+        enableDND: this.enableDND,
+        dndStartTime: this.dndStartTime,
+        dndEndTime: this.dndEndTime,
+        dndAllowCalls: this.dndAllowCalls,
+        dndAllowMessages: this.dndAllowMessages,
+        dndAllowUrgent: this.dndAllowUrgent,
+      });
+
       console.log("Reset to defaults");
     },
   },

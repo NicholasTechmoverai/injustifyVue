@@ -373,6 +373,7 @@ import { useUserStore } from "@/store/index.js";
 import { computed } from "vue";
 import axios from "axios";
 import { BASE_URL,formatDate } from "@/utils/index.js";
+// import socket from "@/services/websocket";
 
 
 export default {
@@ -400,13 +401,13 @@ export default {
       deleteAccountPassword: '',
       deleteError: '',
       isDarkMode: computed(() => userStore.isdarkmode),
+      userId: computed(() => userStore.userId),
       email: computed(() => userStore.email),
       userName:computed(() => userStore.name),
       isverified: computed(() => userStore.verifiedEmail),
       profilePic: computed(() => userStore.profilePic),
       emailVerified: computed(() => userStore.emailVerified),
       shadows: computed(() => userStore.shadows),
-      userId: computed(() => userStore.userId),
       created_at:computed(() => userStore.created_at),
       useStore: useUserStore(),
       formatDate,
@@ -518,6 +519,10 @@ export default {
     },
     changePassword() {
       // Password change logic
+      if (this.passwordError) {
+        this.msg = 'Please fix the errors before proceeding.'
+        return
+      }
       console.log('Password changed')
     },
     handleTwoFactorToggle() {
