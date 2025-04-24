@@ -153,20 +153,91 @@
           <input type="month" id="monthYear" name="monthYear" />
         </div>
         <div class="section" :class="{ 'darktheme-4': isDarkMode }">
-          <h6>Advanced</h6>
-          <div class="input-container">
-            <label for="searchUrl">Paste YouTube URL to download</label>
-            <input
-              v-model="dwn_url"
-              type="text"
-              id="searchUrl"
-              placeholder="Enter URL here..."
-            />
-            <button @click="handleDownload(normalizeYouTubeUrl(dwn_url)), null">
-              Download
+          <h6>
+            Advanced
+            <button @click="toggleDwnPlaylists">
+              <ion-icon name="layers"></ion-icon>
+            </button>
+          </h6>
+          <div class="advanced-features">
+            <div class="input-container" :class="{ 'darktheme-2': isDarkMode }">
+              <label for="searchUrl">Paste YouTube videoURL to download</label>
+              <input
+                v-model="dwn_url"
+                type="text"
+                id="searchUrl"
+                placeholder="Enter URL here..."
+              />
+              <button @click="handleDownload(normalizeYouTubeUrl(dwn_url)), null">
+                Download
+              </button>
+            </div>
+            <div class="input-container" :class="{ 'darktheme-2': isDarkMode }">
+              <label for="searchUrl">Paste YouTube Playlist URL to download</label>
+              <input
+                v-model="yt_PLAYLIST_url"
+                type="text"
+                id="searchUrl"
+                placeholder="Enter URL here..."
+              />
+              <button
+                @click="getPlaylistSongs(normalizeYouTubePlaylistUrl(yt_PLAYLIST_url))"
+              >
+                Load
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        :class="{ 'darktheme-4': isDarkMode }"
+        class="playlist-popup common-scroolbar"
+        ref="popup"
+        v-if="playlist_loading || showdwnPlaylists"
+      >
+        <p @mousedown="startDrag" v-if="playlist_loading" id="playlist_loader">
+          Loading playlist...
+        </p>
+
+        <div v-if="showdwnPlaylists" id="playlistSongsContainer" class="common-scroolbar">
+          <h3 @mousedown="startDrag">
+            <span> Playlist Songs {{ yt_playlistSongs.length + 1 }}</span>
+            <button @click="toggleDwnPlaylists" class="close-playlist">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
+          </h3>
+          <div class="playlist-songs common-scroolbar">
+            <label
+              v-for="(song, index) in yt_playlistSongs"
+              :key="index || song.url"
+              class="playlist-song"
+              :class="{ 'darktheme-3': isDarkMode }"
+            >
+              <input
+                type="checkbox"
+                name="playlistSongs"
+                :value="song"
+                :disabled="isDisabled(song)"
+                v-model="selectedPlaylistSongs"
+                @change="handleSelection"
+                :checked="index < 15"
+              />
+
+              <img :src="getThumbnail(song, 'YouTube')" alt="Thumbnail" />
+              <div class="song-info">
+                <h4>{{ getTitle(song, "YouTube") }}</h4>
+                <p>{{ getArtist(song, "YouTube") }}</p>
+              </div>
+            </label>
+          </div>
+          <div id="playlistDownloadFooter">
+            <button @click="handlePlalistDownloadSelect">
+              Download {{ selectedPlaylistSongs.length }}/{{ yt_playlistSongs.length }}
             </button>
           </div>
         </div>
+        <p v-if="!yt_playlistSongs.length && !playlist_loading">No playlist songs</p>
       </div>
     </div>
 
@@ -214,10 +285,8 @@
                 ><ion-icon name="cloud-download-outline"></ion-icon
                 >{{ video.views }}</span
               >
-              <span class="timeAgo">{{ timeAgo(video.date) || "many hours " }}</span>
-              <span class="video-duration">{{
-                convertSeconds(video.duration) || ""
-              }}</span>
+              <span class="timeAgo">{{ getDate(video, activeTab) }}</span>
+              <span class="video-duration">{{ getDuration(video, activeTab) }}</span>
             </div>
             <div @click="likeUnlikeSong(video)">
               <ion-icon :name="video.liked ? 'heart' : 'heart-outline'"></ion-icon>
@@ -313,7 +382,7 @@ import { timeAgo } from "@/utils/index";
 import { getYouTubeThumbnails, getSpotifyThumbnail } from "@/utils/index.js";
 import { useUserStore } from "@/store/index.js";
 import { adv_UserStore } from "@/store/tasks.js";
-import { BASE_URL, formatDate } from "@/utils/index.js";
+import { BASE_URL, formatDate, extractYouTubeID } from "@/utils/index.js";
 import injustifyIcon from "../assets/injustify.png";
 import youtubeIcon from "../assets/youtube-icon2.jpg";
 import spotifyIcon from "../assets/spotify-logo.png";
@@ -361,6 +430,7 @@ export default {
       selectedPlatforms: [],
       selectedFilters: [],
       youtubeUrl: "",
+      yt_PLAYLIST_url: "",
       searchFrom: { injustify: true, youtube: true, spotify: true },
       filterBy: { artist: true, title: true, date: false },
       advUserStore,
@@ -368,7 +438,16 @@ export default {
       showPlaylists: false,
       isVoiceSearch: false,
       formatDate,
+      extractYouTubeID,
       selectedPlaylist: [],
+      yt_playlistSongs: [],
+      playlist_loading: false,
+      maxSelection: 25,
+      selectedPlaylistSongs: [],
+      showdwnPlaylists: false,
+      isDragging: false,
+      dragOffset: { x: 0, y: 0 },
+      yt_videos_details: {},
     };
   },
 
@@ -404,8 +483,56 @@ export default {
     await this.fetchVideos(true);
     await this.fetchSpotifyThumbnails(); // Preload Spotify thumbnails
   },
+  // watch: {
+  //   yt_playlistSongs(newSongs) {
+  //     if (newSongs.length) {
+  //       this.selectedPlaylistSongs = newSongs.slice(0, 15);
+  //     }
+  //   },
+  // },
 
   methods: {
+    startDrag(e) {
+      // Optional: Only drag if clicking near the top or add specific drag handle
+      if (e.target.closest(".playlist-popup")) {
+        this.isDragging = true;
+        this.dragOffset.x = e.clientX - this.$refs.popup.offsetLeft;
+        this.dragOffset.y = e.clientY - this.$refs.popup.offsetTop;
+
+        document.addEventListener("mousemove", this.onDrag);
+        document.addEventListener("mouseup", this.stopDrag);
+      }
+    },
+    onDrag(e) {
+      if (this.isDragging) {
+        this.$refs.popup.style.left = `${e.clientX - this.dragOffset.x}px`;
+        this.$refs.popup.style.top = `${e.clientY - this.dragOffset.y}px`;
+        this.$refs.popup.style.position = "absolute"; // Ensure it's draggable
+        this.$refs.popup.style.margin = "0"; // Avoid offset issues
+      }
+    },
+    stopDrag() {
+      this.isDragging = false;
+      document.removeEventListener("mousemove", this.onDrag);
+      document.removeEventListener("mouseup", this.stopDrag);
+    },
+    handleSelection(e) {
+      if (this.selectedPlaylistSongs.length > this.maxSelection) {
+        e.target.checked = false;
+        this.selectedSongs.pop(); // remove last
+        this.userStore.set_snackbarMessage(
+          `You can only select up to ${this.maxSelection} songs.`,
+          "warn",
+          10000
+        );
+      }
+    },
+    isDisabled(song) {
+      return (
+        this.selectedPlaylistSongs.length >= this.maxSelection &&
+        !this.selectedPlaylistSongs.includes(song)
+      );
+    },
     searchByVoice() {
       const SpeechRecognition =
         window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -426,18 +553,18 @@ export default {
       recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
-        console.log("🎤 Voice recognition started");
+        // console.log("🎤 Voice recognition started");
         this.isVoiceSearch = true;
       };
 
       recognition.onend = () => {
-        console.log("🛑 Voice recognition ended");
+        // console.log("🛑 Voice recognition ended");
         this.isVoiceSearch = false;
       };
 
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
-        console.log("🗣️ Recognized:", transcript);
+        // console.log("🗣️ Recognized:", transcript);
         this.query = transcript;
         this.searchAll();
       };
@@ -562,7 +689,7 @@ export default {
       const sname = video.artist ? `${video.artist}-${video.title}` : `${video.title}`;
       if (video.Stype === "injustify") {
         this.advUserStore.download_injustify_stream(
-          video.song_id,
+          video.url,
           video.itag,
           sname,
           video.ext,
@@ -668,7 +795,26 @@ export default {
       await this.searchYouTube(); // Search YouTube
       await this.searchSpotify(); // Search Spotify
     },
+    // formatYtDate(uploadDate) {
+    //   try {
+    //     if (!uploadDate || uploadDate.length !== 8) return "Unknown";
 
+    //     const year = parseInt(uploadDate.substring(0, 4), 10);
+    //     const month = parseInt(uploadDate.substring(4, 6), 10) - 1; // 0-indexed
+    //     const day = parseInt(uploadDate.substring(6, 8), 10);
+
+    //     const date = new Date(year, month, day);
+    //     if (isNaN(date.getTime())) return "Unknown";
+    //     console.log(
+    //       "Formatted date:",
+    //       date.toISOString().replace("T", " ").substring(0, 19)
+    //     );
+
+    //     return date.toISOString().replace("T", " ").substring(0, 19);
+    //   } catch (error) {
+    //     return "Unknown";
+    //   }
+    // },
     async pollServiceResults(service, retries = 20, interval = 3000) {
       console.log(`Polling ${service} results for:`, this.query);
       const urls = {
@@ -704,6 +850,7 @@ export default {
             console.log(`${service} Results:`, data.songs);
             if (service === "youtube") {
               this.yt_videos = data.songs;
+              this.getYoutubeSongsDetails(); // Fetch YouTube song details
             } else {
               this.sp_videos = data.songs;
               await this.fetchSpotifyThumbnails(); // Preload Spotify thumbnails
@@ -733,6 +880,31 @@ export default {
       };
 
       poll();
+    },
+
+    async getYoutubeSongsDetails() {
+      this.loading.youtube = true;
+      this.yt_videos_details = {};
+
+      try {
+        const response = await axios.post(`${BASE_URL}/api/yt/details`, {
+          userId: this.userId,
+          video_urls: this.yt_videos.map((video) => video.url),
+        });
+
+        this.yt_videos_details = response.data.song_details || {};
+        console.log("YouTube Songs Details:", this.yt_videos_details);
+      } catch (error) {
+        console.error("API Error:", error);
+        this.userStore.set_snackbarMessage(
+          "API Error!!",
+          error.message || "Unknown error",
+          "error",
+          10000
+        );
+      } finally {
+        this.loading.youtube = false;
+      }
     },
 
     playVideo(video) {
@@ -791,6 +963,18 @@ export default {
       }
       return video.title;
     },
+    getDate(video, service) {
+      if (service === "YouTube") {
+        return (
+          this.timeAgo(
+            this.yt_videos_details[this.extractYouTubeID(video.url)]?.publishedAt
+          ) || "Unknown"
+        );
+      } else if (service === "Spotify") {
+        return video.date ? this.formatDate(video.date) : "?";
+      }
+      return timeAgo(video.date);
+    },
     FillSuggestion(query_suggest) {
       this.query = query_suggest;
       this.searchAll();
@@ -812,6 +996,18 @@ export default {
         }
       }
       return video.artist;
+    },
+    getDuration(video, service) {
+      if (service === "YouTube") {
+        return (
+          this.convertSeconds(
+            this.yt_videos_details[this.extractYouTubeID(video.url)]?.duration
+          ) || "Unknown"
+        );
+      } else if (service === "Spotify") {
+        return video.duration ? this.formatDate(video.duration) : "?";
+      }
+      return this.convertSeconds(video.duration);
     },
     fetchPlaylists() {
       this.loading = true;
@@ -852,6 +1048,33 @@ export default {
         console.warn(`No element found for: ${tg}`);
       }
     },
+    normalizeYouTubePlaylistUrl(input) {
+      return input;
+    },
+    getPlaylistSongs(playlistUrl) {
+      this.showMoreAdvancedFeatures = false;
+      this.playlist_loading = true;
+
+      axios
+        .post(`${BASE_URL}/api/playlist/youtube`, {
+          playlistUrl: playlistUrl,
+          userId: this.userId,
+        })
+        .then((response) => {
+          console.log("Playlist Songs:", response.data.songs);
+          this.yt_playlistSongs = response.data.songs || [];
+          this.showdwnPlaylists = true;
+          this.selectedPlaylistSongs = this.yt_playlistSongs.slice(0, 15);
+        })
+        .catch((error) => {
+          console.error("API Error:", error);
+          this.yt_playlistSongs = [];
+        })
+        .finally(() => {
+          this.playlist_loading = false;
+        });
+    },
+
     normalizeYouTubeUrl(input) {
       if (!input) return;
       const regex = /(?:youtu\.be\/|youtube\.com\/(?:embed\/|watch\?v=|v\/|shorts\/)?|src="(?:https:\/\/www\.youtube\.com\/embed\/))([\w-]{11})/;
@@ -863,6 +1086,78 @@ export default {
       }
 
       return null;
+    },
+    async handlePlalistDownloadSelect() {
+      const batchSize = 4; // Max concurrent downloads
+      const selected = [...this.selectedPlaylistSongs]; // make a local copy
+
+      if (selected.length === 0) {
+        this.userStore.set_snackbarMessage(
+          "No songs selected for download",
+          "error",
+          10000
+        );
+        return;
+      }
+
+      this.userStore.set_snackbarMessage(
+        `Downloading ${selected.length} songs...`,
+        "success",
+        10000
+      );
+      this.showdwnPlaylists = false;
+
+      for (let i = 0; i < selected.length; i += batchSize) {
+        const batch = selected.slice(i, i + batchSize);
+
+        // Start up to 4 parallel downloads
+        await Promise.all(
+          batch.map((song) =>
+            this.advUserStore.download_yt_stream(
+              song.url,
+              "140",
+              `${this.getTitle(song, "YouTube")} ${this.getArtist(song, "YouTube")}`,
+              "m4a",
+              0,
+              0,
+              null,
+              getYouTubeThumbnails(song.url),
+              "audio only"
+            )
+          )
+        );
+
+        // Optional delay between batches
+        await new Promise((res) => setTimeout(res, 300));
+      }
+
+      // ✅ Only clear after all batches
+      this.selectedPlaylistSongs = [];
+
+      this.userStore.set_snackbarMessage(
+        `Downloaded ${selected.length} songs successfully`,
+        "success",
+        10000
+      );
+    },
+
+    toggleDwnPlaylists() {
+      this.showdwnPlaylists = !this.showdwnPlaylists;
+
+      // If opening the playlist again, cancel any pending clear
+      if (this.showdwnPlaylists && this.playlistClearTimeout) {
+        clearTimeout(this.playlistClearTimeout);
+        this.playlistClearTimeout = null;
+      }
+
+      // If closing, start timeout to clear songs
+      if (!this.showdwnPlaylists) {
+        this.playlistClearTimeout = setTimeout(() => {
+          this.selectedPlaylistSongs = [];
+          this.yt_playlistSongs = [];
+          this.playlistClearTimeout = null;
+        }, 10000);
+      }
     },
     reloadPage() {
       window.location.reload();
@@ -896,6 +1191,7 @@ export default {
   bottom: 0;
   left: 50%;
   width: 60%;
+  height: fit-content;
   transform: translateX(-50%);
   z-index: 100;
 }
@@ -1677,6 +1973,18 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 5px !important;
+  width: 100%;
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.advanced-features {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  width: 100%;
+  overflow: auto;
 }
 
 #AdvancedFeatures input[type="text"] {
@@ -1809,5 +2117,106 @@ button:active {
   text-overflow: ellipsis; /* Add ellipsis (...) for overflowing text */
   word-wrap: normal; /* Prevent forced breaks */
   width: 50px;
+}
+</style>
+<style scoped>
+.playlist-popup {
+  position: absolute !important;
+  right: 0 !important;
+  top: 20px;
+  max-width: 400px;
+  width: 99%;
+  height: fit-content;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  padding: 5px;
+  font-size: 0.85rem;
+  z-index: 102;
+}
+#playlistSongsContainer {
+  width: 100%;
+  position: relative;
+}
+.playlist-popup input {
+  width: 20px !important;
+}
+.darktheme-4 {
+  background-color: #1e1e2f;
+  color: #eee;
+}
+
+h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: row;
+  user-select: none;
+  cursor: move;
+}
+h3 button {
+  background: none !important;
+  border: none !important;
+  color: #f00 !important;
+  cursor: pointer !important;
+  font-size: 1.2rem !important;
+  transition: color 0.3s ease-in-out;
+}
+
+.playlist-songs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.playlist-song {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem;
+  border-bottom: 1px solid #ccc;
+}
+
+.darktheme-3 {
+  background-color: #2c2c3e;
+}
+
+.song-info h4,
+.song-info p {
+  margin: 0;
+  line-height: 1.2;
+  padding: 0;
+}
+
+img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+#playlistDownloadFooter {
+  position: sticky;
+  bottom: 0;
+}
+#playlist_loader {
+  font-size: 13px;
+  margin: 0;
+  padding: 5px !important;
+  color: #aba1a1 !important;
+  user-select: none;
+  cursor: move;
+}
+@media (max-width: 863px) {
+  .playlist-popup {
+    position: fixed;
+    top: 100% !important;
+    width: 100% !important;
+  }
 }
 </style>

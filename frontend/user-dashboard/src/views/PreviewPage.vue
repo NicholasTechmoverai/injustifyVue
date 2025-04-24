@@ -1,5 +1,7 @@
 <script>
 import { useUserStore } from "@/store/index.js";
+import { adv_UserStore } from "@/store/tasks.js";
+import { getYouTubeThumbnails } from "@/utils/index.js";
 import { computed } from "vue";
 import { nextTick } from "vue";
 import { BASE_URL } from "@/utils/index.js";
@@ -9,6 +11,7 @@ export default {
   name: "UniversalMusicPlayer",
   data() {
     const userStore = useUserStore();
+    const advUserStore = adv_UserStore();
 
     return {
       iscollapsedBig: computed(() => userStore.iscollapsedBig),
@@ -42,6 +45,11 @@ export default {
       dataArray: null,
       animationId: null,
       seekable: true,
+      userStore,
+      advUserStore,
+      isDragging: false,
+      dragOffset: { x: 0, y: 0 }
+
     };
   },
   computed: {
@@ -76,6 +84,72 @@ export default {
     },
   },
   methods: {
+    startDrag(e) {
+      // Optional: limit to only .player-header if needed
+      if (e.target.closest('.player-header')) {
+        this.isDragging = true;
+        this.dragOffset.x = e.clientX - this.$refs.popup.offsetLeft;
+        this.dragOffset.y = e.clientY - this.$refs.popup.offsetTop;
+
+        document.addEventListener("mousemove", this.onDrag);
+        document.addEventListener("mouseup", this.stopDrag);
+      }
+    },
+    onDrag(e) {
+      if (this.isDragging) {
+        this.$refs.popup.style.left = `${e.clientX - this.dragOffset.x}px`;
+        this.$refs.popup.style.top = `${e.clientY - this.dragOffset.y}px`;
+        this.$refs.popup.style.position = 'fixed'; // Ensure it's draggable
+        this.$refs.popup.style.margin = '0'; // Avoid offset issues
+      }
+    },
+    stopDrag() {
+      this.isDragging = false;
+      document.removeEventListener("mousemove", this.onDrag);
+      document.removeEventListener("mouseup", this.stopDrag);
+    },
+  
+    handle_dwn_Download(video) {
+      console.log("Downloading:", video, "from", video.Stype);
+      if (video.Stype == null) {
+        this.userStore.set_snackbarMessage(
+          `Error downloading from  ${video.stype},try downloading from a different source!`,
+          "error",
+          10000
+        );
+        console.log("Service not selected.");
+        return;
+      }
+      const sname = video.artist ? `${video.artist}-${video.title}` : `${video.title}`;
+      if (video.Stype === "injustify") {
+        this.advUserStore.download_injustify_stream(
+          video.url,
+          video.itag,
+          sname,
+          video.ext,
+          0,
+          null,
+          video.url.split(".").pop(),
+          video.thumbnail
+        );
+      } else if (video.Stype === "youtube") {
+        this.advUserStore.download_yt_stream(
+          video.url,
+          "140",
+          sname,
+          "m4a",
+          0,
+          0,
+          null,
+          getYouTubeThumbnails(video.url),
+          "audio only"
+        );
+      }
+      this.streamSongID = video;
+      this.stmName = sname;
+      this.toggleDropdown();
+      this.dwn_url = null;
+    },
     categoriseURL(newUrl) {
       const url = newUrl.toLowerCase();
       const audio = this.$refs.audioPlayer;
@@ -414,8 +488,9 @@ watch: {
   <div
     class="music-player"
     :class="{ 'mobile-view': isMobile, 'dark-theme': isDarkMode }"
+      ref="popup" 
   >
-    <div class="player-header">
+    <div class="player-header"  @mousedown="startDrag">
       <h2>{{ currentTrack.title || "Universal Music Player" }}</h2>
       <p v-if="currentTrack.artist">{{ currentTrack.artist }}</p>
       <p v-if="currentTrack.source" class="source-badge">{{ currentTrack.source }}</p>
@@ -650,6 +725,8 @@ watch: {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  position: absolute;
+
 }
 
 .mobile-view {
@@ -664,6 +741,8 @@ watch: {
   text-align: center;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-color);
+  cursor: move;
+  user-select: none;
 }
 
 .player-header h2 {

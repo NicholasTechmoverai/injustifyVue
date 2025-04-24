@@ -365,6 +365,7 @@ onBeforeUnmount(() => {
   transition: width 0.3s ease-in-out;
   z-index: 100;
   justify-content: space-between;
+  box-sizing: border-box;
 }
 
 /* Collapsed Sidebar */
@@ -540,25 +541,25 @@ ion-icon {
 #moreONnav {
   position: absolute;
   bottom: 50px;
-  background: linear-gradient(
+  /* background: linear-gradient(
     45deg,
     rgb(25, 23, 53) 10%,
     rgb(60, 90, 180) 50%,
     rgb(95, 239, 255) 90%
-  );
+  ); */
   box-shadow: 0px 0px 3px black;
   border-radius: 10px;
   width: 200px;
   transition: all 0.3s ease;
   z-index: 100;
 
-  a {
+  /* a {
     color: white;
     padding: 2px !important;
     text-decoration: none;
     display: flex;
     align-items: center;
     gap: 2px !important;
-  }
+  } */
 }
 </style>

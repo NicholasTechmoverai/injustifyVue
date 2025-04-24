@@ -156,7 +156,7 @@
       >
         <!-- Display Ongoing Downloads -->
         <div
-          v-for="(download, id) in onGoingDownloads"
+          v-for="(download, id) in sortedOnGoingDownloads"
           :key="id"
           class="downloading-file card"
           :class="{ 'darktheme-5': isDarkMode }"
@@ -356,6 +356,20 @@ export default {
       userId: computed(() => userStore.userId),
     };
   },
+  computed: {
+  sortedOnGoingDownloads() {
+    if (!this.onGoingDownloads || typeof this.onGoingDownloads !== 'object') return [];
+
+    return Object.entries(this.onGoingDownloads)
+      .sort((a, b) => {
+        const timeA = new Date(a[1]?.timestamp || 0);
+        const timeB = new Date(b[1]?.timestamp || 0);
+        return timeB - timeA;
+      })
+      .map(([id, data]) => ({ id, ...data }));
+  }
+}
+,
   mounted() {
     this.fetchDownloads(false);
 

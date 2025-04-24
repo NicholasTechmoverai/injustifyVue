@@ -49,14 +49,6 @@ export default {
 </script>
 
 <style scoped>
-/* General styles */
-body {
-  font-family: Arial, sans-serif;
-  background-color: #1e1e2e;
-  color: white;
-  text-align: center;
-  padding: 50px;
-}
 
 /* Snackbar container */
 #snackbar-container {

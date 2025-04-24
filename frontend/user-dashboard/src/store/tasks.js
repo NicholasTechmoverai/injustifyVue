@@ -3,6 +3,7 @@ import { useUserStore } from "@/store/index.js";
 import { computed } from "vue";
 import { BASE_URL,extractYouTubeID } from "@/utils/index.js";
 import { FFmpeg } from '@ffmpeg/ffmpeg';
+import socket from "@/services/websocket";
 
 console.log("FFmpeg",FFmpeg); // Check if this logs the function
 
@@ -201,7 +202,7 @@ async download_yt_stream(
                             filesize: contentLength,
                             downloadedSize: downloadedSize,
                           };
-            
+
                           // Log progress (optional)
                           console.clear();
                           console.log(`Downloading: ${filename}`);
@@ -211,6 +212,22 @@ async download_yt_stream(
             
                           lastUpdateTime = currentTime;
                           lastDownloadedSize = downloadedSize;
+
+                          // setInterval(() => {
+                          //   socket.emit("download_progress", {
+                          //     songId: extractYouTubeID(songId),
+                          //     user_id: this.userId,
+                          //     itag,
+                          //     progress,
+                          //     status: "IN_PROGRESS",
+                          //     filename,
+                          //     thumbnail: thumbnail,
+                          //     filesize: contentLength,
+                          //     downloadedSize: downloadedSize,
+                          //     format: format,
+                          //   });
+                            
+                          // }, 3000);
                         }
             
                         controller.enqueue(value);
@@ -223,7 +240,17 @@ async download_yt_stream(
 
         const main_blob = await new Response(stream).blob();
         this.saveToFile(main_blob, b_filename, b_extension);
-        this.sortDownloadsByTimestamp();
+        socket.emit("download_progress", {
+          songId: extractYouTubeID(songId),
+          user_id: this.userId,
+          itag,
+          status: "SUCCESS",  
+          filename,
+          thumbnail: thumbnail,
+          filesize: contentLength? contentLength : downloadedSize,
+          downloadedSize: downloadedSize,
+          format: format,
+        });
     } catch (error) {
         console.error("Download failed:", error);
         if (this.onGoingDownloads[download_id]) {
@@ -236,9 +263,9 @@ async download_yt_stream(
 
 async download_injustify_stream(
   songId,
-    itag,
+    itag='18',
     filename,
-      ext,
+      ext='mp4',
       size_mb=0,
       format = null,
       url,
@@ -273,12 +300,12 @@ async download_injustify_stream(
       body: JSON.stringify({
         songId: `${songId.split('.').slice(0, -1).join('.')}`,
         song_url: songId,
-        filename: this.activeFilename,
+        filename: this.activeFilename? this.activeFilename : filename,
         userId: user_id,
         itag,
-        start_byte: this.start_bytes,
-        size_mb: this.activeFilesize,
-        format: this.activeFormat,
+        start_byte: size_mb,
+        size_mb: this.activeFilesize? this.activeFilesize : size_mb,
+        format: songId.split('.').pop(),
         thumbnailUrl: `th_${songId.split('.').slice(0, -1).join('.')}.jpg`,
       })
     });
@@ -411,9 +438,17 @@ async download_injustify_stream(
 
     const main_blob = await new Response(stream).blob();
     this.saveToFile(main_blob, b_filename, b_extension);
-
-    // Sort downloads by timestamp
-    this.sortDownloadsByTimestamp();
+    socket.emit("download_progress", {
+      songId:  `${songId.split('.').slice(0, -1).join('.')}`,
+      user_id: this.userId,
+      itag,
+      status: "SUCCESS",  
+      filename: this.activeFilename? this.activeFilename : filename,
+      filesize: contentLength? contentLength : downloadedSize,
+      downloadedSize: downloadedSize,
+      format: songId.split('.').pop(),
+      thumbnail: `th_${songId.split('.').slice(0, -1).join('.')}.jpg`,
+    });
 
   } catch (error) {
     console.error("Download failed:", error);
@@ -440,20 +475,26 @@ formatETA(seconds) {
   ].join(':');
 },
 
-// Helper method to sort downloads by timestamp
-sortDownloadsByTimestamp() {
-  if (!this.onGoingDownloads) return;
-  // Convert the object to an array, sort it, and then put it back as an object if needed.
-  const sortedDownloads = Object.entries(this.onGoingDownloads) // Convert the object to an array of key-value pairs
-      .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp))  // Sort by timestamp in descending order
-      .reduce((acc, [key, value]) => {
-          acc[key] = value;  // Rebuild the object with sorted entries
-          return acc;
-      }, {});
+// sortDownloadsByTimestamp() {
+//   if (!this.onGoingDownloads || typeof this.onGoingDownloads !== 'object') return;
 
-  this.onGoingDownloads = sortedDownloads;
-},
- 
+//   const sortedArray = Object.entries(this.onGoingDownloads)
+//     .sort((a, b) => {
+//       const timeA = new Date(a[1]?.timestamp || 0);
+//       const timeB = new Date(b[1]?.timestamp || 0);
+//       return timeB - timeA; // Descending: latest first
+//     });
+
+//   // If you're displaying downloads as an array, return it
+//   this.onGoingDownloads = sortedArray.map(([key, value]) => ({ id: key, ...value }));
+
+//   // // OR if you truly want to rebuild the original object (not recommended for display):
+//   // this.onGoingDownloads = sortedArray.reduce((acc, [key, val]) => {
+//   //   acc[key] = val;
+//   //   return acc;
+//   // }, {});
+// },
+
 
     // Save File to Local System
     saveToFile(blob, filename, ext) {
