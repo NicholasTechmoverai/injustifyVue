@@ -30,30 +30,34 @@ html, body {
 }
 
 .MainContainer {
-  margin-left: 270px;
+  margin-left: 250px;
   transition: all 0.5s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
-  width: calc(100% - 270px); /* Prevents overflow */
+  width: calc(100% - 250px); /* Prevents overflow */
   min-height: 90vh;
   position: relative;
   max-width: 1500px;
+  padding:0px 5px;
   
 }
 .collabsedBig{
-  width: calc(100% - 80px ); /* Prevents overflow */
-  margin-left: 80px;
+  width: calc(100% - 70px ); /* Prevents overflow */
+  margin-left: 70px;
 
 }
 
 
 @media (max-width: 863px) {
   .MainContainer {
-      margin-left: 80px;
+      margin-left: 60px;
       width: calc(100% - 80px ); /* Prevents overflow */
 
+    }
+    .collapsed .inline{
+      justify-content: center;
     }
 }
 @media (max-width: 650px) {

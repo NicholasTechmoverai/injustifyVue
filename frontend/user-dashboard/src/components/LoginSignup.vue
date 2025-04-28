@@ -1,6 +1,9 @@
 <template>
-  <div v-if="isOpen" class="auth-modal-overlay" @click.self="closeModal">
-    <div class="auth-modal-container" :class="{ 'dark-mode': isDarkMode }">
+  <div v-if="isOpen" class="auth-modal-overlay common-scroolbar" @click.self="closeModal">
+    <div
+      class="auth-modal-container common-scroolbar"
+      :class="{ 'dark-mode': isDarkMode }"
+    >
       <!-- Close Button -->
       <button class="auth-close-btn" @click="closeModal">
         <i class="fas fa-times"></i>
@@ -17,42 +20,44 @@
       <div v-if="activeForm === 'login'" class="auth-form">
         <h2>Welcome Back</h2>
         <p class="auth-subtitle">Login to access your music library</p>
-        
+
         <form @submit.prevent="login" class="auth-form-content">
           <div class="form-group">
             <label for="login-email">Email</label>
             <div class="input-with-icon">
               <i class="fas fa-envelope"></i>
-              <input 
+              <input
                 id="login-email"
-                v-model="loginData.email" 
-                type="email" 
-                placeholder="Enter your email" 
-                required 
+                v-model="loginData.email"
+                type="email"
+                placeholder="Enter your email"
+                required
                 class="auth-input"
-                :class="{ 'error': loginErrors.email }"
+                :class="{ error: loginErrors.email }"
                 @input="clearError('login', 'email')"
               />
             </div>
-            <span v-if="loginErrors.email" class="error-message">{{ loginErrors.email }}</span>
+            <span v-if="loginErrors.email" class="error-message">{{
+              loginErrors.email
+            }}</span>
           </div>
-          
+
           <div class="form-group">
             <label for="login-password">Password</label>
             <div class="input-with-icon password-input">
               <i class="fas fa-lock"></i>
-              <input 
+              <input
                 id="login-password"
-                v-model="loginData.password" 
-                :type="showPassword ? 'text' : 'password'" 
-                placeholder="Enter your password" 
-                required 
+                v-model="loginData.password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Enter your password"
+                required
                 class="auth-input"
-                :class="{ 'error': loginErrors.password }"
+                :class="{ error: loginErrors.password }"
                 @input="clearError('login', 'password')"
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="password-toggle"
                 @click="showPassword = !showPassword"
                 tabindex="-1"
@@ -60,29 +65,33 @@
                 <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
               </button>
             </div>
-            <span v-if="loginErrors.password" class="error-message">{{ loginErrors.password }}</span>
+            <span v-if="loginErrors.password" class="error-message">{{
+              loginErrors.password
+            }}</span>
           </div>
-          
+
           <div class="form-options">
             <label class="checkbox-container">
               <input type="checkbox" v-model="loginData.rememberMe" />
               <span class="checkmark"></span>
               Remember me
             </label>
-            <a href="#" @click.prevent="switchForm('reset')" class="auth-link">Forgot password?</a>
+            <a href="#" @click.prevent="switchForm('reset')" class="auth-link"
+              >Forgot password?</a
+            >
           </div>
-          
+
           <button type="submit" class="auth-btn primary" :disabled="isLoading">
             <span v-if="!isLoading">Login</span>
             <div v-else class="auth-spinner"></div>
           </button>
-          
+
           <div class="auth-divider">
             <span>or continue with</span>
           </div>
-          
-          <button 
-            type="button" 
+
+          <button
+            type="button"
             class="auth-btn google-btn"
             @click="authWithGoogle"
             :disabled="isLoading"
@@ -90,10 +99,12 @@
             <img src="../assets/google_logo.png" alt="Google Logo" />
             <span>Google</span>
           </button>
-          
+
           <p class="auth-switch-text">
-            Don't have an account? 
-            <a href="#" @click.prevent="switchForm('signup')" class="auth-link">Sign up</a>
+            Don't have an account?
+            <a href="#" @click.prevent="switchForm('signup')" class="auth-link"
+              >Sign up</a
+            >
           </p>
         </form>
       </div>
@@ -102,60 +113,67 @@
       <div v-if="activeForm === 'signup'" class="auth-form">
         <h2>Create Account</h2>
         <p class="auth-subtitle">Join to discover new music</p>
-        
+
         <form @submit.prevent="signup" class="auth-form-content">
           <div class="form-group">
             <label for="signup-email">Email</label>
             <div class="input-with-icon">
               <i class="fas fa-envelope"></i>
-              <input 
+              <input
                 id="signup-email"
-                v-model="signupData.email" 
-                type="email" 
-                placeholder="Enter your email" 
-                required 
+                v-model="signupData.email"
+                type="email"
+                placeholder="Enter your email"
+                required
                 class="auth-input"
-                :class="{ 'error': signupErrors.email }"
+                :class="{ error: signupErrors.email }"
                 @input="clearError('signup', 'email')"
               />
             </div>
-            <span v-if="signupErrors.email" class="error-message">{{ signupErrors.email }}</span>
+            <span v-if="signupErrors.email" class="error-message">{{
+              signupErrors.email
+            }}</span>
           </div>
-          
+
           <div class="form-group">
             <label for="signup-username">Username</label>
             <div class="input-with-icon">
               <i class="fas fa-user"></i>
-              <input 
+              <input
                 id="signup-username"
-                v-model="signupData.username" 
-                type="text" 
-                placeholder="Choose a username" 
-                required 
+                v-model="signupData.username"
+                type="text"
+                placeholder="Choose a username"
+                required
                 class="auth-input"
-                :class="{ 'error': signupErrors.username }"
+                :class="{ error: signupErrors.username }"
                 @input="clearError('signup', 'username')"
               />
             </div>
-            <span v-if="signupErrors.username" class="error-message">{{ signupErrors.username }}</span>
+            <span v-if="signupErrors.username" class="error-message">{{
+              signupErrors.username
+            }}</span>
           </div>
-          
+
           <div class="form-group">
             <label for="signup-password">Password</label>
             <div class="input-with-icon password-input">
               <i class="fas fa-lock"></i>
-              <input 
+              <input
                 id="signup-password"
-                v-model="signupData.password" 
-                :type="showPassword ? 'text' : 'password'" 
-                placeholder="Create a password" 
-                required 
+                v-model="signupData.password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Create a password"
+                required
                 class="auth-input"
-                :class="{ 'error': signupErrors.password }"
-                @input="validatePassword(); clearError('signup', 'password')"
+                :class="{ error: signupErrors.password }"
+                @input="
+                  validatePassword();
+                  clearError('signup', 'password');
+                "
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="password-toggle"
                 @click="showPassword = !showPassword"
                 tabindex="-1"
@@ -170,42 +188,44 @@
               <span class="strength-text">{{ passwordStrengthText }}</span>
             </div>
             <ul class="password-requirements">
-              <li :class="{ 'met': hasMinLength }">
+              <li :class="{ met: hasMinLength }">
                 <i :class="hasMinLength ? 'fas fa-check-circle' : 'far fa-circle'"></i>
                 At least 8 characters
               </li>
-              <li :class="{ 'met': hasUpperCase }">
+              <li :class="{ met: hasUpperCase }">
                 <i :class="hasUpperCase ? 'fas fa-check-circle' : 'far fa-circle'"></i>
                 At least 1 uppercase letter
               </li>
-              <li :class="{ 'met': hasNumber }">
+              <li :class="{ met: hasNumber }">
                 <i :class="hasNumber ? 'fas fa-check-circle' : 'far fa-circle'"></i>
                 At least 1 number
               </li>
-              <li :class="{ 'met': hasSpecialChar }">
+              <li :class="{ met: hasSpecialChar }">
                 <i :class="hasSpecialChar ? 'fas fa-check-circle' : 'far fa-circle'"></i>
                 At least 1 special character (!@#$%^&*)
               </li>
             </ul>
-            <span v-if="signupErrors.password" class="error-message">{{ signupErrors.password }}</span>
+            <span v-if="signupErrors.password" class="error-message">{{
+              signupErrors.password
+            }}</span>
           </div>
-          
+
           <div class="form-group">
             <label for="signup-confirm-password">Confirm Password</label>
             <div class="input-with-icon password-input">
               <i class="fas fa-lock"></i>
-              <input 
+              <input
                 id="signup-confirm-password"
-                v-model="signupData.confirmPassword" 
-                :type="showConfirmPassword ? 'text' : 'password'" 
-                placeholder="Confirm your password" 
-                required 
+                v-model="signupData.confirmPassword"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                placeholder="Confirm your password"
+                required
                 class="auth-input"
-                :class="{ 'error': signupErrors.confirmPassword }"
+                :class="{ error: signupErrors.confirmPassword }"
                 @input="clearError('signup', 'confirmPassword')"
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="password-toggle"
                 @click="showConfirmPassword = !showConfirmPassword"
                 tabindex="-1"
@@ -213,38 +233,46 @@
                 <i :class="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
               </button>
             </div>
-            <span v-if="signupErrors.confirmPassword" class="error-message">{{ signupErrors.confirmPassword }}</span>
+            <span v-if="signupErrors.confirmPassword" class="error-message">{{
+              signupErrors.confirmPassword
+            }}</span>
           </div>
-          
+
           <div class="form-group terms-group">
             <label class="checkbox-container">
-              <input 
-                type="checkbox" 
-                v-model="signupData.termsAccepted" 
-                required 
-                :class="{ 'error': signupErrors.termsAccepted }"
+              <input
+                type="checkbox"
+                v-model="signupData.termsAccepted"
+                required
+                :class="{ error: signupErrors.termsAccepted }"
               />
-              <span class="checkmark" :class="{ 'error': signupErrors.termsAccepted }"></span>
-              I agree to the <a href="/terms" target="_blank" class="auth-link">Terms and Conditions</a>
+              <span
+                class="checkmark"
+                :class="{ error: signupErrors.termsAccepted }"
+              ></span>
+              I agree to the
+              <a href="/terms" target="_blank" class="auth-link">Terms and Conditions</a>
             </label>
-            <span v-if="signupErrors.termsAccepted" class="error-message">{{ signupErrors.termsAccepted }}</span>
+            <span v-if="signupErrors.termsAccepted" class="error-message">{{
+              signupErrors.termsAccepted
+            }}</span>
           </div>
-          
-          <button 
-            type="submit" 
-            class="auth-btn primary" 
+
+          <button
+            type="submit"
+            class="auth-btn primary"
             :disabled="isLoading || !canSignup"
           >
             <span v-if="!isLoading">Sign Up</span>
             <div v-else class="auth-spinner"></div>
           </button>
-          
+
           <div class="auth-divider">
             <span>or sign up with</span>
           </div>
-          
-          <button 
-            type="button" 
+
+          <button
+            type="button"
             class="auth-btn google-btn"
             @click="authWithGoogle"
             :disabled="isLoading"
@@ -252,15 +280,16 @@
             <img src="../assets/google_logo.png" alt="Google Logo" />
             <span>Google</span>
           </button>
-          
+
           <p class="auth-switch-text">
-            Already have an account? 
+            Already have an account?
             <a href="#" @click.prevent="switchForm('login')" class="auth-link">Login</a>
           </p>
-          
+
           <div v-if="signupSuccess" class="auth-message success">
             <i class="fas fa-check-circle"></i>
-            Almost there! Please check your email and click the verification link to complete your signup.
+            Almost there! Please check your email and click the verification link to
+            complete your signup.
           </div>
         </form>
       </div>
@@ -271,33 +300,33 @@
         <p class="auth-subtitle" v-if="!resetData.approved">
           Enter your email to receive a reset code
         </p>
-        <p class="auth-subtitle" v-else>
-          Create your new password
-        </p>
-        
+        <p class="auth-subtitle" v-else>Create your new password</p>
+
         <div class="auth-form-content">
           <div v-if="!resetData.approved">
             <div class="form-group">
               <label for="reset-email">Email</label>
               <div class="input-with-icon">
                 <i class="fas fa-envelope"></i>
-                <input 
+                <input
                   id="reset-email"
-                  v-model="resetData.email" 
-                  type="email" 
-                  placeholder="Enter your email" 
-                  required 
+                  v-model="resetData.email"
+                  type="email"
+                  placeholder="Enter your email"
+                  required
                   class="auth-input"
-                  :class="{ 'error': resetErrors.email }"
+                  :class="{ error: resetErrors.email }"
                   :disabled="isLoading"
                   @input="clearError('reset', 'email')"
                 />
               </div>
-              <span v-if="resetErrors.email" class="error-message">{{ resetErrors.email }}</span>
+              <span v-if="resetErrors.email" class="error-message">{{
+                resetErrors.email
+              }}</span>
             </div>
-            
-            <button 
-              type="button" 
+
+            <button
+              type="button"
               class="auth-btn primary"
               @click="sendResetCode"
               :disabled="!isValidEmail || isLoading"
@@ -305,13 +334,16 @@
               <span v-if="!isLoading">Send Reset Code</span>
               <div v-else class="auth-spinner"></div>
             </button>
-            
+
             <div v-if="resetMessage" class="auth-message" :class="resetMessage.type">
               <i :class="resetMessage.icon"></i>
               {{ resetMessage.text }}
             </div>
-            
-            <div class="verification-code" v-if="resetData.codeSent && !resetErrors.email">
+
+            <div
+              class="verification-code"
+              v-if="resetData.codeSent && !resetErrors.email"
+            >
               <p>Enter the 6-digit code sent to your email:</p>
               <div class="code-inputs">
                 <input
@@ -325,32 +357,37 @@
                   @input="moveNext($event, index)"
                   @keydown="preventInvalidInput($event, index)"
                   class="code-input"
-                  :class="{ 'error': resetErrors.code }"
+                  :class="{ error: resetErrors.code }"
                   autocomplete="off"
                   :disabled="isLoading"
                 />
               </div>
-              <span v-if="resetErrors.code" class="error-message">{{ resetErrors.code }}</span>
+              <span v-if="resetErrors.code" class="error-message">{{
+                resetErrors.code
+              }}</span>
             </div>
           </div>
-          
+
           <div v-if="resetData.approved" class="new-password-form">
             <div class="form-group">
               <label for="new-password">New Password</label>
               <div class="input-with-icon password-input">
                 <i class="fas fa-lock"></i>
-                <input 
+                <input
                   id="new-password"
-                  v-model="resetData.newPassword" 
-                  :type="showPassword ? 'text' : 'password'" 
-                  placeholder="Create a new password" 
-                  required 
+                  v-model="resetData.newPassword"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="Create a new password"
+                  required
                   class="auth-input"
-                  :class="{ 'error': resetErrors.newPassword }"
-                  @input="validateResetPassword(); clearError('reset', 'newPassword')"
+                  :class="{ error: resetErrors.newPassword }"
+                  @input="
+                    validateResetPassword();
+                    clearError('reset', 'newPassword');
+                  "
                 />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   class="password-toggle"
                   @click="showPassword = !showPassword"
                   tabindex="-1"
@@ -358,25 +395,27 @@
                   <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                 </button>
               </div>
-              <span v-if="resetErrors.newPassword" class="error-message">{{ resetErrors.newPassword }}</span>
+              <span v-if="resetErrors.newPassword" class="error-message">{{
+                resetErrors.newPassword
+              }}</span>
             </div>
-            
+
             <div class="form-group">
               <label for="confirm-new-password">Confirm New Password</label>
               <div class="input-with-icon password-input">
                 <i class="fas fa-lock"></i>
-                <input 
+                <input
                   id="confirm-new-password"
-                  v-model="resetData.confirmNewPassword" 
-                  :type="showConfirmPassword ? 'text' : 'password'" 
-                  placeholder="Confirm your new password" 
-                  required 
+                  v-model="resetData.confirmNewPassword"
+                  :type="showConfirmPassword ? 'text' : 'password'"
+                  placeholder="Confirm your new password"
+                  required
                   class="auth-input"
-                  :class="{ 'error': resetErrors.confirmNewPassword }"
+                  :class="{ error: resetErrors.confirmNewPassword }"
                   @input="clearError('reset', 'confirmNewPassword')"
                 />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   class="password-toggle"
                   @click="showConfirmPassword = !showConfirmPassword"
                   tabindex="-1"
@@ -384,11 +423,13 @@
                   <i :class="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                 </button>
               </div>
-              <span v-if="resetErrors.confirmNewPassword" class="error-message">{{ resetErrors.confirmNewPassword }}</span>
+              <span v-if="resetErrors.confirmNewPassword" class="error-message">{{
+                resetErrors.confirmNewPassword
+              }}</span>
             </div>
-            
-            <button 
-              type="button" 
+
+            <button
+              type="button"
               class="auth-btn primary"
               @click="resetPassword"
               :disabled="isLoading || !canResetPassword"
@@ -400,9 +441,9 @@
               <div v-else class="auth-spinner"></div>
             </button>
           </div>
-          
+
           <p class="auth-switch-text">
-            Remember your password? 
+            Remember your password?
             <a href="#" @click.prevent="switchForm('login')" class="auth-link">Login</a>
           </p>
         </div>
@@ -429,133 +470,150 @@ export default {
     onCloseModal: Function,
     isDarkMode: Boolean,
   },
-  
+
   data() {
     return {
-      activeForm: 'login', // 'login', 'signup', 'reset'
+      activeForm: "login", // 'login', 'signup', 'reset'
       isLoading: false,
       showPassword: false,
       showConfirmPassword: false,
       signupSuccess: false,
       resetSuccess: false,
-      
+
       // Form data
       loginData: {
-        email: '',
-        password: '',
-        rememberMe: false
+        email: "",
+        password: "",
+        rememberMe: false,
       },
-      
+
       signupData: {
-        email: '',
-        username: '',
-        password: '',
-        confirmPassword: '',
-        termsAccepted: false
+        email: "",
+        username: "",
+        password: "",
+        confirmPassword: "",
+        termsAccepted: false,
       },
-      
+
       resetData: {
-        email: '',
-        code: ['', '', '', '', '', ''],
+        email: "",
+        code: ["", "", "", "", "", ""],
         codeSent: false,
         approved: false,
-        newPassword: '',
-        confirmNewPassword: ''
+        newPassword: "",
+        confirmNewPassword: "",
       },
-      
+
       // Error messages
       loginErrors: {
-        email: '',
-        password: ''
+        email: "",
+        password: "",
       },
-      
+
       signupErrors: {
-        email: '',
-        username: '',
-        password: '',
-        confirmPassword: '',
-        termsAccepted: ''
+        email: "",
+        username: "",
+        password: "",
+        confirmPassword: "",
+        termsAccepted: "",
       },
-      
+
       resetErrors: {
-        email: '',
-        code: '',
-        newPassword: '',
-        confirmNewPassword: ''
+        email: "",
+        code: "",
+        newPassword: "",
+        confirmNewPassword: "",
       },
-      
+
       resetMessage: null,
-      
-      userStore: useUserStore()
+
+      userStore: useUserStore(),
     };
   },
-  
+
   computed: {
     // Password strength indicators
     hasMinLength() {
-      return this.signupData.password.length >= 8 || 
-             (this.activeForm === 'reset' && this.resetData.newPassword.length >= 8);
+      return (
+        this.signupData.password.length >= 8 ||
+        (this.activeForm === "reset" && this.resetData.newPassword.length >= 8)
+      );
     },
-    
+
     hasUpperCase() {
-      return /[A-Z]/.test(this.signupData.password) || 
-             (this.activeForm === 'reset' && /[A-Z]/.test(this.resetData.newPassword));
+      return (
+        /[A-Z]/.test(this.signupData.password) ||
+        (this.activeForm === "reset" && /[A-Z]/.test(this.resetData.newPassword))
+      );
     },
-    
+
     hasNumber() {
-      return /[0-9]/.test(this.signupData.password) || 
-             (this.activeForm === 'reset' && /[0-9]/.test(this.resetData.newPassword));
+      return (
+        /[0-9]/.test(this.signupData.password) ||
+        (this.activeForm === "reset" && /[0-9]/.test(this.resetData.newPassword))
+      );
     },
-    
+
     hasSpecialChar() {
-      return /[!@#$%^&*]/.test(this.signupData.password) || 
-             (this.activeForm === 'reset' && /[!@#$%^&*]/.test(this.resetData.newPassword));
+      return (
+        /[!@#$%^&*]/.test(this.signupData.password) ||
+        (this.activeForm === "reset" && /[!@#$%^&*]/.test(this.resetData.newPassword))
+      );
     },
-    
+
     passwordsMatch() {
-      if (this.activeForm === 'signup') {
+      if (this.activeForm === "signup") {
         return this.signupData.password === this.signupData.confirmPassword;
-      } else if (this.activeForm === 'reset') {
+      } else if (this.activeForm === "reset") {
         return this.resetData.newPassword === this.resetData.confirmNewPassword;
       }
       return false;
     },
-    
+
     passwordStrengthClass() {
-      if (this.activeForm === 'signup' && !this.signupData.password) return '';
-      if (this.activeForm === 'reset' && !this.resetData.newPassword) return '';
-      
-      const password = this.activeForm === 'signup' ? 
-        this.signupData.password : this.resetData.newPassword;
-      
-      const strength = 
+      if (this.activeForm === "signup" && !this.signupData.password) return "";
+      if (this.activeForm === "reset" && !this.resetData.newPassword) return "";
+
+      const password =
+        this.activeForm === "signup"
+          ? this.signupData.password
+          : this.resetData.newPassword;
+
+      const strength =
         (password.length >= 8 ? 1 : 0) +
         (/[A-Z]/.test(password) ? 1 : 0) +
         (/[0-9]/.test(password) ? 1 : 0) +
         (/[!@#$%^&*]/.test(password) ? 1 : 0);
-      
-      if (strength <= 1) return 'weak';
-      if (strength <= 2) return 'medium';
-      return 'strong';
+
+      if (strength <= 1) return "weak";
+      if (strength <= 2) return "medium";
+      return "strong";
     },
-    
+
     passwordStrengthText() {
       switch (this.passwordStrengthClass) {
-        case 'weak': return 'Weak';
-        case 'medium': return 'Medium';
-        case 'strong': return 'Strong';
-        default: return '';
+        case "weak":
+          return "Weak";
+        case "medium":
+          return "Medium";
+        case "strong":
+          return "Strong";
+        default:
+          return "";
       }
     },
-    
+
     isValidEmail() {
-      const email = this.activeForm === 'reset' ? 
-        this.resetData.email : 
-        (this.activeForm === 'login' ? this.loginData.email : this.signupData.email);
-      
+      const email =
+        this.activeForm === "reset"
+          ? this.resetData.email
+          : this.activeForm === "login"
+          ? this.loginData.email
+          : this.signupData.email;
+
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     },
-    
+
     canSignup() {
       return (
         this.isValidEmail &&
@@ -568,7 +626,7 @@ export default {
         this.signupData.termsAccepted
       );
     },
-    
+
     canResetPassword() {
       return (
         this.resetData.newPassword &&
@@ -579,89 +637,89 @@ export default {
         this.hasSpecialChar &&
         this.passwordsMatch
       );
-    }
+    },
   },
-  
+
   methods: {
     // Form switching
     switchForm(form) {
       this.activeForm = form;
       this.clearAllErrors();
       this.resetMessage = null;
-      
-      if (form === 'signup') {
+
+      if (form === "signup") {
         this.signupSuccess = false;
-      } else if (form === 'reset') {
+      } else if (form === "reset") {
         this.resetSuccess = false;
         this.resetData.codeSent = false;
         this.resetData.approved = false;
-        this.resetData.code = ['', '', '', '', '', ''];
+        this.resetData.code = ["", "", "", "", "", ""];
       }
     },
-    
+
     // Error handling
     clearError(form, field) {
-      if (form === 'login') {
-        this.loginErrors[field] = '';
-      } else if (form === 'signup') {
-        this.signupErrors[field] = '';
-      } else if (form === 'reset') {
-        this.resetErrors[field] = '';
+      if (form === "login") {
+        this.loginErrors[field] = "";
+      } else if (form === "signup") {
+        this.signupErrors[field] = "";
+      } else if (form === "reset") {
+        this.resetErrors[field] = "";
       }
     },
-    
+
     clearAllErrors() {
       this.loginErrors = {
-        email: '',
-        password: ''
+        email: "",
+        password: "",
       };
-      
+
       this.signupErrors = {
-        email: '',
-        username: '',
-        password: '',
-        confirmPassword: '',
-        termsAccepted: ''
+        email: "",
+        username: "",
+        password: "",
+        confirmPassword: "",
+        termsAccepted: "",
       };
-      
+
       this.resetErrors = {
-        email: '',
-        code: '',
-        newPassword: '',
-        confirmNewPassword: ''
+        email: "",
+        code: "",
+        newPassword: "",
+        confirmNewPassword: "",
       };
     },
-    
+
     // Validation
     validatePassword() {
-      if (this.activeForm !== 'signup') return;
-      
+      if (this.activeForm !== "signup") return;
+
       if (this.signupData.password.length > 32) {
-        this.signupErrors.password = 'Password must be 32 characters or less';
+        this.signupErrors.password = "Password must be 32 characters or less";
       }
     },
-    
+
     validateResetPassword() {
-      if (this.activeForm !== 'reset') return;
-      
+      if (this.activeForm !== "reset") return;
+
       if (this.resetData.newPassword.length > 32) {
-        this.resetErrors.newPassword = 'Password must be 32 characters or less';
+        this.resetErrors.newPassword = "Password must be 32 characters or less";
       }
     },
-    
+
     // Form submissions
     async login() {
       if (!this.validateLoginForm()) return;
-      
+
       this.isLoading = true;
       try {
         const response = await axios.post(MANUAL_LOGIN, {
           email: this.loginData.email.trim(),
-          password: this.loginData.password
+          password: this.loginData.password,
         });
 
         this.userStore.set_snackbarMessage("Login successful!", "success", 5000);
-        
+
         if (response.data.user) {
           this.userStore.setUser(response.data.user);
           this.closeModal();
@@ -672,70 +730,70 @@ export default {
         this.isLoading = false;
       }
     },
-    
+
     validateLoginForm() {
       let isValid = true;
-      
+
       if (!this.loginData.email.trim()) {
-        this.loginErrors.email = 'Email is required';
+        this.loginErrors.email = "Email is required";
         isValid = false;
       } else if (!this.isValidEmail) {
-        this.loginErrors.email = 'Please enter a valid email';
+        this.loginErrors.email = "Please enter a valid email";
         isValid = false;
       }
-      
+
       if (!this.loginData.password) {
-        this.loginErrors.password = 'Password is required';
+        this.loginErrors.password = "Password is required";
         isValid = false;
       }
-      
+
       return isValid;
     },
-    
+
     handleLoginError(error) {
-      let errorMessage = 'Login failed. Please check your credentials.';
-      
+      let errorMessage = "Login failed. Please check your credentials.";
+
       if (error.response) {
         if (error.response.data.detail) {
           errorMessage = error.response.data.detail;
         } else if (error.response.data.error) {
           errorMessage = error.response.data.error;
         }
-        
+
         if (error.response.status === 401) {
           this.loginErrors.password = errorMessage;
         } else if (error.response.status === 400 && error.response.data.email) {
           this.loginErrors.email = error.response.data.email[0];
         }
       }
-      
+
       this.userStore.set_snackbarMessage(errorMessage, "error", 10000);
     },
-    
+
     async signup() {
       if (!this.validateSignupForm()) return;
-      
+
       this.isLoading = true;
       try {
         const response = await axios.post(SIGN_UP, {
           email: this.signupData.email.trim(),
           name: this.signupData.username.trim(),
-          password: this.signupData.password
+          password: this.signupData.password,
         });
 
         this.signupSuccess = true;
         this.userStore.set_snackbarMessage(
-          "Almost there! Please check your email to complete registration.", 
-          "success", 
+          "Almost there! Please check your email to complete registration.",
+          "success",
           15000
         );
-        
+
         if (response.data.user) {
           this.userStore.setUser(response.data.user);
           // Clear form but keep email for verification reference
-          this.signupData.username = '';
-          this.signupData.password = '';
-          this.signupData.confirmPassword = '';
+          this.signupData.username = "";
+          this.signupData.password = "";
+          this.signupData.confirmPassword = "";
           this.signupData.termsAccepted = false;
         }
       } catch (error) {
@@ -744,64 +802,64 @@ export default {
         this.isLoading = false;
       }
     },
-    
+
     validateSignupForm() {
       let isValid = true;
-      
+
       // Email validation
       if (!this.signupData.email.trim()) {
-        this.signupErrors.email = 'Email is required';
+        this.signupErrors.email = "Email is required";
         isValid = false;
       } else if (!this.isValidEmail) {
-        this.signupErrors.email = 'Please enter a valid email';
+        this.signupErrors.email = "Please enter a valid email";
         isValid = false;
       }
-      
+
       // Username validation
       if (!this.signupData.username.trim()) {
-        this.signupErrors.username = 'Username is required';
+        this.signupErrors.username = "Username is required";
         isValid = false;
       } else if (this.signupData.username.trim().length < 3) {
-        this.signupErrors.username = 'Username must be at least 3 characters';
+        this.signupErrors.username = "Username must be at least 3 characters";
         isValid = false;
       }
-      
+
       // Password validation
       if (!this.signupData.password) {
-        this.signupErrors.password = 'Password is required';
+        this.signupErrors.password = "Password is required";
         isValid = false;
       } else if (this.signupData.password.length < 8) {
-        this.signupErrors.password = 'Password must be at least 8 characters';
+        this.signupErrors.password = "Password must be at least 8 characters";
         isValid = false;
       } else if (this.signupData.password.length > 32) {
-        this.signupErrors.password = 'Password must be 32 characters or less';
+        this.signupErrors.password = "Password must be 32 characters or less";
         isValid = false;
       } else if (!this.hasUpperCase || !this.hasNumber || !this.hasSpecialChar) {
-        this.signupErrors.password = 'Password does not meet requirements';
+        this.signupErrors.password = "Password does not meet requirements";
         isValid = false;
       }
-      
+
       // Confirm password
       if (!this.signupData.confirmPassword) {
-        this.signupErrors.confirmPassword = 'Please confirm your password';
+        this.signupErrors.confirmPassword = "Please confirm your password";
         isValid = false;
       } else if (!this.passwordsMatch) {
-        this.signupErrors.confirmPassword = 'Passwords do not match';
+        this.signupErrors.confirmPassword = "Passwords do not match";
         isValid = false;
       }
-      
+
       // Terms accepted
       if (!this.signupData.termsAccepted) {
-        this.signupErrors.termsAccepted = 'You must accept the terms and conditions';
+        this.signupErrors.termsAccepted = "You must accept the terms and conditions";
         isValid = false;
       }
-      
+
       return isValid;
     },
-    
+
     handleSignupError(error) {
-      let errorMessage = 'Signup failed. Please try again.';
-      
+      let errorMessage = "Signup failed. Please try again.";
+
       if (error.response) {
         if (error.response.data.detail) {
           errorMessage = error.response.data.detail;
@@ -813,77 +871,79 @@ export default {
           return;
         }
       }
-      
+
       this.userStore.set_snackbarMessage(errorMessage, "error", 10000);
     },
-    
+
     // Reset password flow
     async sendResetCode() {
       if (!this.resetData.email.trim()) {
-        this.resetErrors.email = 'Email is required';
+        this.resetErrors.email = "Email is required";
         return;
       }
-      
+
       if (!this.isValidEmail) {
-        this.resetErrors.email = 'Please enter a valid email';
+        this.resetErrors.email = "Please enter a valid email";
         return;
       }
-      
+
       this.isLoading = true;
       try {
         const response = await axios.post(SEND_EMAIL_RESET_CODES, {
-          email: this.resetData.email.trim()
+          email: this.resetData.email.trim(),
         });
 
         this.resetData.codeSent = true;
         this.resetMessage = {
-          type: 'info',
-          icon: 'fas fa-info-circle',
-          text: response.data.message || 'Reset code sent to your email'
+          type: "info",
+          icon: "fas fa-info-circle",
+          text: response.data.message || "Reset code sent to your email",
         };
-        
+
         this.userStore.set_snackbarMessage(
-          "Reset code sent to your email", 
-          "info", 
+          "Reset code sent to your email",
+          "info",
           10000
         );
       } catch (error) {
         this.handleResetError(error);
       } finally {
         this.isLoading = false;
+        this.resetData.codeSent = true;
       }
     },
-    
+
     async verifyCode() {
-      const code = this.resetData.code.join('');
-      
+      const code = this.resetData.code.join("");
+
       if (code.length !== 6) {
-        this.resetErrors.code = 'Please enter the 6-digit code';
+        this.resetErrors.code = "Please enter the 6-digit code";
         return;
       }
-      
+
       this.isLoading = true;
       try {
         const response = await axios.post(VERIFY_CODES, {
           email: this.resetData.email.trim(),
-          code: code
+          code: code,
         });
 
         if (response.data.success) {
           this.resetData.approved = true;
           this.resetMessage = {
-            type: 'success',
-            icon: 'fas fa-check-circle',
-            text: 'Code verified! You can now reset your password.'
+            type: "success",
+            icon: "fas fa-check-circle",
+            text: "Code verified! You can now reset your password.",
           };
-          
+
           this.userStore.set_snackbarMessage(
-            "Code verified! You can now reset your password.", 
-            "success", 
+            "Code verified! You can now reset your password.",
+            "success",
             10000
           );
         } else {
-          this.resetErrors.code = response.data.message || 'Invalid code. Please try again.';
+          this.resetErrors.code =
+            response.data.message || "Invalid code. Please try again.";
           this.shakeCodeInputs();
         }
       } catch (error) {
@@ -893,34 +953,34 @@ export default {
         this.isLoading = false;
       }
     },
-    
+
     async resetPassword() {
       if (!this.validateResetPasswordForm()) return;
-      
+
       this.isLoading = true;
       try {
         const response = await axios.post(RESET_PASSWORD, {
           email: this.resetData.email.trim(),
-          code: this.resetData.code.join(''),
-          password: this.resetData.newPassword
+          code: this.resetData.code.join(""),
+          password: this.resetData.newPassword,
         });
 
         this.resetSuccess = true;
         this.resetMessage = {
-          type: 'success',
-          icon: 'fas fa-check-circle',
-          text: response.data.message || 'Password reset successfully!'
+          type: "success",
+          icon: "fas fa-check-circle",
+          text: response.data.message || "Password reset successfully!",
         };
-        
+
         this.userStore.set_snackbarMessage(
-          "Password reset successfully!", 
-          "success", 
+          "Password reset successfully!",
+          "success",
           5000
         );
-        
+
         // Auto-close after success
         setTimeout(() => {
-          this.switchForm('login');
+          this.switchForm("login");
         }, 2000);
       } catch (error) {
         this.handleResetError(error);
@@ -928,45 +988,45 @@ export default {
         this.isLoading = false;
       }
     },
-    
+
     validateResetPasswordForm() {
       let isValid = true;
-      
+
       if (!this.resetData.newPassword) {
-        this.resetErrors.newPassword = 'New password is required';
+        this.resetErrors.newPassword = "New password is required";
         isValid = false;
       } else if (this.resetData.newPassword.length < 8) {
-        this.resetErrors.newPassword = 'Password must be at least 8 characters';
+        this.resetErrors.newPassword = "Password must be at least 8 characters";
         isValid = false;
       } else if (this.resetData.newPassword.length > 32) {
-        this.resetErrors.newPassword = 'Password must be 32 characters or less';
+        this.resetErrors.newPassword = "Password must be 32 characters or less";
         isValid = false;
       } else if (!this.hasUpperCase || !this.hasNumber || !this.hasSpecialChar) {
-        this.resetErrors.newPassword = 'Password does not meet requirements';
+        this.resetErrors.newPassword = "Password does not meet requirements";
         isValid = false;
       }
-      
+
       if (!this.resetData.confirmNewPassword) {
-        this.resetErrors.confirmNewPassword = 'Please confirm your new password';
+        this.resetErrors.confirmNewPassword = "Please confirm your new password";
         isValid = false;
       } else if (!this.passwordsMatch) {
-        this.resetErrors.confirmNewPassword = 'Passwords do not match';
+        this.resetErrors.confirmNewPassword = "Passwords do not match";
         isValid = false;
       }
-      
+
       return isValid;
     },
-    
+
     handleResetError(error) {
-      let errorMessage = 'An error occurred. Please try again.';
-      
+      let errorMessage = "An error occurred. Please try again.";
+
       if (error.response) {
         if (error.response.data.detail) {
           errorMessage = error.response.data.detail;
         } else if (error.response.data.error) {
           errorMessage = error.response.data.error;
         }
-        
+
         if (error.response.status === 400) {
           if (error.response.data.email) {
             this.resetErrors.email = error.response.data.email[0];
@@ -980,111 +1040,110 @@ export default {
           }
         }
       }
-      
+
       this.resetMessage = {
-        type: 'error',
-        icon: 'fas fa-exclamation-circle',
-        text: errorMessage
+        type: "error",
+        icon: "fas fa-exclamation-circle",
+        text: errorMessage,
       };
-      
+
       this.userStore.set_snackbarMessage(errorMessage, "error", 10000);
     },
-    
+
     // Code input helpers
     moveNext(event, index) {
       const input = event.target;
       input.value = input.value.replace(/[^0-9]/g, "").slice(0, 1);
-      
+
       if (input.value && index < 5) {
         document.getElementById(`digit${index + 2}`)?.focus();
       }
-      
+
       // Auto verify when all digits are entered
-      if (this.resetData.code.every(d => d.length === 1)) {
+      if (this.resetData.code.every((d) => d.length === 1)) {
         this.verifyCode();
       }
     },
-    
+
     preventInvalidInput(event, index) {
       // Allow navigation with arrow keys
-      if (event.key === 'ArrowRight' && index < 5) {
+      if (event.key === "ArrowRight" && index < 5) {
         document.getElementById(`digit${index + 2}`)?.focus();
         event.preventDefault();
-      } else if (event.key === 'ArrowLeft' && index > 0) {
+      } else if (event.key === "ArrowLeft" && index > 0) {
         document.getElementById(`digit${index}`)?.focus();
         event.preventDefault();
       }
-      
+
       // Prevent non-numeric input
       if (!/[0-9]|Backspace|ArrowLeft|ArrowRight/.test(event.key)) {
         event.preventDefault();
       }
-      
+
       // Handle backspace
-      if (event.key === 'Backspace' && !event.target.value && index > 0) {
+      if (event.key === "Backspace" && !event.target.value && index > 0) {
         document.getElementById(`digit${index}`)?.focus();
       }
     },
-    
+
     shakeCodeInputs() {
-      this.resetErrors.code = 'Invalid code. Please try again.';
-      const inputs = document.querySelectorAll('.code-input');
-      
-      inputs.forEach(input => {
-        input.classList.add('shake');
+      this.resetErrors.code = "Invalid code. Please try again.";
+      const inputs = document.querySelectorAll(".code-input");
+
+      inputs.forEach((input) => {
+        input.classList.add("shake");
         setTimeout(() => {
-          input.classList.remove('shake');
+          input.classList.remove("shake");
         }, 500);
       });
-      
+
       // Clear code and refocus first input
       setTimeout(() => {
-        this.resetData.code = ['', '', '', '', '', ''];
-        document.getElementById('digit1')?.focus();
+        this.resetData.code = ["", "", "", "", "", ""];
+        document.getElementById("digit1")?.focus();
       }, 1000);
     },
-    
+
     // Other methods
     authWithGoogle() {
       window.location.href = AUTH_WITH_GOOGLE;
     },
-    
+
     closeModal() {
       this.clearAllErrors();
       this.signupSuccess = false;
       this.resetSuccess = false;
       this.resetMessage = null;
-      
+
       // Reset forms
       this.loginData = {
-        email: '',
-        password: '',
-        rememberMe: false
+        email: "",
+        password: "",
+        rememberMe: false,
       };
-      
+
       this.signupData = {
-        email: '',
-        username: '',
-        password: '',
-        confirmPassword: '',
-        termsAccepted: false
+        email: "",
+        username: "",
+        password: "",
+        confirmPassword: "",
+        termsAccepted: false,
       };
-      
+
       this.resetData = {
-        email: '',
-        code: ['', '', '', '', '', ''],
+        email: "",
+        code: ["", "", "", "", "", ""],
         codeSent: false,
         approved: false,
-        newPassword: '',
-        confirmNewPassword: ''
+        newPassword: "",
+        confirmNewPassword: "",
       };
-      
-      this.$emit('close');
-    }
-  }
+
+      this.$emit("close");
+    },
+  },
 };
 </script>
-
 
 <style scoped>
 /* Base Styles */
@@ -1104,8 +1163,12 @@ export default {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .auth-modal-container {
@@ -1122,8 +1185,14 @@ export default {
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .auth-modal-container.dark-mode {
@@ -1623,9 +1692,18 @@ export default {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-5px); }
-  40%, 80% { transform: translateX(5px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-5px);
+  }
+  40%,
+  80% {
+    transform: translateX(5px);
+  }
 }
 
 .dark-mode .code-input {
@@ -1654,7 +1732,9 @@ export default {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .dark-mode .auth-spinner {
@@ -1701,11 +1781,11 @@ export default {
   .auth-modal-container {
     padding: 1.5rem;
   }
-  
+
   .auth-form h2 {
     font-size: 1.25rem;
   }
-  
+
   .code-input {
     width: 36px;
     height: 44px;

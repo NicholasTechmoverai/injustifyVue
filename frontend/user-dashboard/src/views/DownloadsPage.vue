@@ -314,11 +314,10 @@
 <script>
 import axios from "axios";
 import { computed } from "vue";
-import { timeAgo } from "@/utils/index";
 import { useUserStore } from "@/store/index.js";
 import { adv_UserStore } from "@/store/tasks.js";
-import { BASE_URL } from "@/utils/index.js";
 import socket from "@/services/websocket";
+import {BASE_URL,timeAgo } from "@/utils/index.js";
 
 export default {
   name: "UserDownloads",
@@ -337,6 +336,8 @@ export default {
 
   data() {
     const userStore = useUserStore();
+    const advUserStore = adv_UserStore();
+
 
     return {
       downloads: [],
@@ -354,6 +355,9 @@ export default {
       searchFrom: { injustify: true, youtube: true, spotify: true },
       filterBy: { artist: true, title: true, date: false },
       userId: computed(() => userStore.userId),
+      advUserStore,
+      userStore
+
     };
   },
   computed: {
@@ -488,8 +492,8 @@ export default {
     },
 
     retryDownload(download) {
-      console.log("Retrying download:", download.filename);
-      this.fetchDownloads(true);
+      console.log("Retrying download:", download);
+      this.handle_dwn_Download(download)
     },
 
     cancelDownload(index, download_id) {
@@ -500,6 +504,45 @@ export default {
         userId: this.userId,
       });
     },
+    handle_dwn_Download(video) {
+      // console.log("Downloading:", video, "from", video.Stype);
+      if (video.file_source == null) {
+        this.userStore.set_snackbarMessage(
+          `Error downloading from  ${video.file_source},try downloading from a different source!`,
+          "error",
+          10000
+        );
+        console.log("Service not selected.");
+        return;
+      }
+      const sname = video.filename
+      if (video.file_source === "injustify") {
+        this.advUserStore.download_injustify_stream(
+          video.song_id,
+          video.itag,
+          sname,
+          video.file_format,
+          video.filesize,
+          null,
+          video.song_id,
+          video.thumbnail
+        );
+      } else if (video.file_source === "youtube") {
+        this.advUserStore.download_yt_stream(
+          video.song_id,
+          video.itag,
+          sname,
+          video.file_format,
+          0,
+          video.filesize,
+          null,
+          video.thumbnail,
+          "audio only"
+        );
+      }
+
+    },
+
     timeAgo,
   },
 };

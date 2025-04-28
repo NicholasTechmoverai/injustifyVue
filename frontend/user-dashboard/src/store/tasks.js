@@ -2,10 +2,12 @@ import { defineStore } from 'pinia';
 import { useUserStore } from "@/store/index.js";
 import { computed } from "vue";
 import { BASE_URL,extractYouTubeID } from "@/utils/index.js";
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import socket from "@/services/websocket";
+// import { FFmpeg } from '@ffmpeg/ffmpeg';
 
-console.log("FFmpeg",FFmpeg); // Check if this logs the function
+import socket from "@/services/websocket";
+// import { ID3Writer } from 'browser-id3-writer';
+
+// console.log("FFmpeg",FFmpeg); // Check if this logs the function
 
 
 
@@ -239,7 +241,13 @@ async download_yt_stream(
         });
 
         const main_blob = await new Response(stream).blob();
-        this.saveToFile(main_blob, b_filename, b_extension);
+        this.saveToFile(main_blob, b_filename, b_extension,{
+          title: 'My Cool Song',
+          artist: 'Gee',
+          album: 'Awesome Album',
+          comment: 'Made with ❤️',
+          genre: 'Afrobeat'
+        });
         socket.emit("download_progress", {
           songId: extractYouTubeID(songId),
           user_id: this.userId,
@@ -331,7 +339,7 @@ async download_injustify_stream(
     }
 
     // Calculate total size in bytes
-    const contentLength = this.activeFilesize * 1024 * 1024; // Convert MB to bytes
+    const contentLength = this.size_mb * 1024 * 1024; // Convert MB to bytes
     let downloadedSize = 0;
     let lastUpdateTime = startTime;
     let lastDownloadedSize = 0;
@@ -437,7 +445,14 @@ async download_injustify_stream(
     });
 
     const main_blob = await new Response(stream).blob();
-    this.saveToFile(main_blob, b_filename, b_extension);
+
+    this.saveToFile(main_blob, b_filename, b_extension,{
+      title: 'My Cool Song',
+      artist: 'Gee',
+      album: 'Awesome Album',
+      comment: 'Made with ❤️',
+      genre: 'Afrobeat'
+    });
     socket.emit("download_progress", {
       songId:  `${songId.split('.').slice(0, -1).join('.')}`,
       user_id: this.userId,
@@ -475,24 +490,244 @@ formatETA(seconds) {
   ].join(':');
 },
 
-// sortDownloadsByTimestamp() {
-//   if (!this.onGoingDownloads || typeof this.onGoingDownloads !== 'object') return;
 
-//   const sortedArray = Object.entries(this.onGoingDownloads)
-//     .sort((a, b) => {
-//       const timeA = new Date(a[1]?.timestamp || 0);
-//       const timeB = new Date(b[1]?.timestamp || 0);
-//       return timeB - timeA; // Descending: latest first
+
+// async fetchCoverImage(url) {
+//   try {
+//     const response = await fetch(url);
+//     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+//     const blob = await response.blob();
+//     const arrayBuffer = await blob.arrayBuffer();
+//     const view = new DataView(arrayBuffer);
+
+//     const magic = [
+//       view.getUint32(0),
+//       view.getUint32(4)
+//     ];
+//     const isJPEG = magic[0] === 0xFFD8FFE0 || magic[0] === 0xFFD8FFE1;
+//     const isPNG = magic[0] === 0x89504E47 && magic[1] === 0x0D0A1A0A;
+
+//     if (isJPEG || isPNG) {
+//       return new Uint8Array(arrayBuffer); // Return correct type for APIC
+//     } else {
+//       throw new Error("Invalid image format");
+//     }
+//   } catch (error) {
+//     console.error('Failed to fetch cover image:', error);
+//     return null;
+//   }
+// },
+
+// async saveToFile(blobOrUrl, filename, ext, img_url = null) {
+//   let taggedBlob, url;
+//   const tempLink = document.createElement('a');
+
+//   try {
+//     // Convert blobOrUrl to ArrayBuffer
+//     let arrayBuffer;
+//     if (blobOrUrl instanceof Blob) {
+//       arrayBuffer = await blobOrUrl.arrayBuffer();
+//     } else if (typeof blobOrUrl === 'string') {
+//       const response = await fetch(blobOrUrl);
+//       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+//       const blob = await response.blob();
+//       arrayBuffer = await blob.arrayBuffer();
+//     } else {
+//       throw new Error('Invalid input to saveToFile');
+//     }
+
+//     // Sanitize filename and extract metadata
+//     const sanitizedFilename = filename.replace(/[<>:"/\\|?*]/g, '_');
+//     const [artist, ...titleParts] = sanitizedFilename.split('-');
+//     const title = titleParts.join('-').trim();
+
+//     // Initialize ID3 writer with the ArrayBuffer
+//     const writer = new ID3Writer(arrayBuffer);
+
+//     // Handle cover image
+//     if (img_url) {
+//       const coverImage = await this.fetchCoverImage(img_url);
+//       if (coverImage) {
+//         writer.setFrame('APIC', {
+//           type: 3,
+//           data: coverImage,
+//           description: 'Cover Image'
+//         });
+//       }
+//     }
+
+//     // Set ID3 tags
+//     writer
+//       .setFrame('TIT2', title || sanitizedFilename)
+//       .setFrame('TPE1', artist ? [artist.trim()] : ['Unknown Artist'])
+//       .setFrame('TALB', 'Injustify Collection')
+//       .setFrame('COMM', {
+//         description: 'Like No Other...South of Sahara',
+//         text: 'injustify.buzz'
+//       });
+
+//     // Add tag and get the final blob
+//     writer.addTag();
+//     taggedBlob = writer.getBlob();
+
+//     if (taggedBlob.size <= 0) {
+//       throw new Error('Tagged blob is empty');
+//     }
+
+//     // Set up download
+//     url = URL.createObjectURL(taggedBlob);
+//     tempLink.href = url;
+//     tempLink.download = `${sanitizedFilename}.${ext}`;
+//     tempLink.style.display = 'none';
+//     document.body.appendChild(tempLink);
+
+//     // Trigger download
+//     tempLink.click();
+
+//     console.log("✅ File saved successfully:", sanitizedFilename);
+//     this.downloadsCount('-');
+//     return true;
+//   } catch (error) {
+//     console.error('❌ Failed to save file:', error);
+//     throw error;
+//   } finally {
+//     // Cleanup resources
+//     if (tempLink.parentNode) {
+//       document.body.removeChild(tempLink);
+//     }
+//     if (url) {
+//       setTimeout(() => URL.revokeObjectURL(url), 0);
+//     }
+//   }
+// },
+
+
+
+
+
+
+// async  saveToFile(blob, filename, ext, metadata = {}) {
+//   if (!(blob instanceof Blob)) {
+//     throw new Error('Input must be a valid Blob object');
+//   }
+
+//   const ffmpeg = new FFmpeg({ log: true });
+//   let url = null;
+//   const tempLink = document.createElement('a');
+
+//   try {
+//     // Load FFmpeg
+//     console.log('⏳ Loading FFmpeg...');
+//     await ffmpeg.load();
+//     console.log('✅ FFmpeg loaded successfully');
+
+//     // Sanitize filename and prepare file names
+//     const sanitizedFilename = filename.replace(/[<>:"/\\|?*]/g, '_');
+//     const inputFileName = `input.${ext}`;
+//     const outputFileName = `output.${ext}`;
+
+//     // Write input file
+//     console.log('⏳ Processing audio file...');
+//     const arrayBuffer = await blob.arrayBuffer();
+//     ffmpeg.FS('writeFile', inputFileName, new Uint8Array(arrayBuffer));
+
+//     // Prepare metadata arguments
+//     const metadataArgs = [];
+//     const validMetadataFields = ['title', 'artist', 'album', 'comment', 'genre'];
+    
+//     validMetadataFields.forEach(field => {
+//       if (metadata[field]) {
+//         metadataArgs.push('-metadata', `${field}=${metadata[field]}`);
+//       }
 //     });
 
-//   // If you're displaying downloads as an array, return it
-//   this.onGoingDownloads = sortedArray.map(([key, value]) => ({ id: key, ...value }));
+//     // Add cover art if provided
+//     let coverArtArgs = [];
+//     if (metadata.coverArt && metadata.coverArt instanceof Blob) {
+//       const coverFileName = 'cover.jpg';
+//       const coverArrayBuffer = await metadata.coverArt.arrayBuffer();
+//       ffmpeg.FS('writeFile', coverFileName, new Uint8Array(coverArrayBuffer));
+//       coverArtArgs = [
+//         '-i', coverFileName,
+//         '-map', '0',
+//         '-map', '1',
+//         '-c:v', 'mjpeg',
+//         '-disposition:v', 'attached_pic'
+//       ];
+//     }
 
-//   // // OR if you truly want to rebuild the original object (not recommended for display):
-//   // this.onGoingDownloads = sortedArray.reduce((acc, [key, val]) => {
-//   //   acc[key] = val;
-//   //   return acc;
-//   // }, {});
+//     // Execute FFmpeg command
+//     const command = [
+//       '-i', inputFileName,
+//       ...coverArtArgs,
+//       ...metadataArgs,
+//       '-c:a', 'copy',
+//       '-id3v2_version', '3',
+//       '-write_id3v1', '1',
+//       outputFileName
+//     ];
+
+//     console.log('🏃‍♂️ Executing FFmpeg command:', command.join(' '));
+//     await ffmpeg.exec(command);
+
+//     // Read output file
+//     const outputData = ffmpeg.FS('readFile', outputFileName);
+    
+//     if (outputData.length === 0) {
+//       throw new Error('FFmpeg output is empty');
+//     }
+
+//     // Create output blob with correct MIME type
+//     const mimeType = this.getMimeType(ext);
+//     const outputBlob = new Blob([outputData.buffer], { type: mimeType });
+
+//     // Set up download
+//     url = URL.createObjectURL(outputBlob);
+//     tempLink.href = url;
+//     tempLink.download = `${sanitizedFilename}.${ext}`;
+//     tempLink.style.display = 'none';
+//     document.body.appendChild(tempLink);
+
+//     // Trigger download
+//     console.log('⬇️ Starting download...');
+//     tempLink.click();
+
+//     console.log('✅ File saved successfully with metadata!');
+//     return {
+//       success: true,
+//       filename: `${sanitizedFilename}.${ext}`,
+//       size: outputBlob.size
+//     };
+
+//   } catch (error) {
+//     console.error('❌ Error processing file:', error);
+//     throw new Error(`Failed to process file: ${error.message}`);
+//   } finally {
+//     // Cleanup
+//     if (tempLink.parentNode) {
+//       document.body.removeChild(tempLink);
+//     }
+//     if (url) {
+//       setTimeout(() => URL.revokeObjectURL(url), 100);
+//     }
+//     try {
+//       await ffmpeg.exit();
+//     } catch (cleanupError) {
+//       console.warn('⚠️ Error during FFmpeg cleanup:', cleanupError);
+//     }
+//   }
+// },
+
+// // Helper function to get MIME type from extension
+//  getMimeType(ext) {
+//   const mimeTypes = {
+//     mp3: 'audio/mpeg',
+//     m4a: 'audio/mp4',
+//     ogg: 'audio/ogg',
+//     wav: 'audio/wav',
+//     flac: 'audio/flac'
+//   };
+//   return mimeTypes[ext.toLowerCase()] || 'application/octet-stream';
 // },
 
 

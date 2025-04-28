@@ -48,8 +48,7 @@ export default {
       userStore,
       advUserStore,
       isDragging: false,
-      dragOffset: { x: 0, y: 0 }
-
+      dragOffset: { x: 0, y: 0 },
     };
   },
   computed: {
@@ -86,7 +85,7 @@ export default {
   methods: {
     startDrag(e) {
       // Optional: limit to only .player-header if needed
-      if (e.target.closest('.player-header')) {
+      if (e.target.closest(".player-header")) {
         this.isDragging = true;
         this.dragOffset.x = e.clientX - this.$refs.popup.offsetLeft;
         this.dragOffset.y = e.clientY - this.$refs.popup.offsetTop;
@@ -99,8 +98,8 @@ export default {
       if (this.isDragging) {
         this.$refs.popup.style.left = `${e.clientX - this.dragOffset.x}px`;
         this.$refs.popup.style.top = `${e.clientY - this.dragOffset.y}px`;
-        this.$refs.popup.style.position = 'fixed'; // Ensure it's draggable
-        this.$refs.popup.style.margin = '0'; // Avoid offset issues
+        this.$refs.popup.style.position = "fixed"; // Ensure it's draggable
+        this.$refs.popup.style.margin = "0"; // Avoid offset issues
       }
     },
     stopDrag() {
@@ -108,7 +107,7 @@ export default {
       document.removeEventListener("mousemove", this.onDrag);
       document.removeEventListener("mouseup", this.stopDrag);
     },
-  
+
     handle_dwn_Download(video) {
       console.log("Downloading:", video, "from", video.Stype);
       if (video.Stype == null) {
@@ -176,7 +175,7 @@ export default {
         this.audioUrl = newUrl;
         this.loadAudio(`http://192.168.100.2:5000/api/stream/${this.audioUrl}.mp4`);
         this.activeSource = "url";
-        this.fetchVideoForPropUrl(newUrl)
+        this.fetchVideoForPropUrl(newUrl);
       }
     },
     async fetchVideoForPropUrl(id) {
@@ -332,7 +331,8 @@ export default {
         this.seekable = true;
       } else {
         // Treat as generic embed
-        this.embeddedContent = '<iframe src="' + this.audioUrl + '" frameborder="0" allowfullscreen></iframe>';
+        this.embeddedContent =
+          '<iframe src="' + this.audioUrl + '" frameborder="0" allowfullscreen></iframe>';
         this.currentTrack = {
           title: "Embedded Content",
           artist: "",
@@ -457,16 +457,16 @@ export default {
     },
   },
 
-watch: {
-  url: {
-    immediate: true,
-    handler(newVal) {
-      console.log("URL changed to:", newVal);
-      // Defer categoriseURL to ensure $refs is available
-      nextTick(() => this.categoriseURL(newVal));
+  watch: {
+    url: {
+      immediate: true,
+      handler(newVal) {
+        console.log("URL changed to:", newVal);
+        // Defer categoriseURL to ensure $refs is available
+        nextTick(() => this.categoriseURL(newVal));
+      },
     },
   },
-},
 
   mounted() {
     this.checkMobile();
@@ -483,14 +483,13 @@ watch: {
 };
 </script>
 
-
 <template>
   <div
     class="music-player"
     :class="{ 'mobile-view': isMobile, 'dark-theme': isDarkMode }"
-      ref="popup" 
+    ref="popup"
   >
-    <div class="player-header"  @mousedown="startDrag">
+    <div class="player-header" @mousedown="startDrag">
       <h2>{{ currentTrack.title || "Universal Music Player" }}</h2>
       <p v-if="currentTrack.artist">{{ currentTrack.artist }}</p>
       <p v-if="currentTrack.source" class="source-badge">{{ currentTrack.source }}</p>
@@ -499,7 +498,7 @@ watch: {
     <div class="player-content">
       <!-- Audio element (hidden) for direct audio files -->
       <audio
-      crossorigin="anonymous"
+        crossorigin="anonymous"
         ref="audioPlayer"
         @timeupdate="updateTime"
         @loadedmetadata="updateDuration"
@@ -661,8 +660,6 @@ watch: {
   </div>
 </template>
 
-
-
 <style>
 :root {
   /* Light mode colors */
@@ -726,7 +723,6 @@ watch: {
   flex-direction: column;
   gap: 1rem;
   position: absolute;
-
 }
 
 .mobile-view {

@@ -310,8 +310,22 @@ onBeforeUnmount(() => {
 .inline-loader-container {
   position: absolute;
   bottom: 0;
-  width: 100% !important;
-} /* Sidebar Styling */
+  width: 100%;
+  height: 3px;
+  overflow: hidden;
+}
+.lder {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 .injustifyLogoR {
   position: relative;
   font-size: 1em;
@@ -346,6 +360,7 @@ onBeforeUnmount(() => {
   --white-third-background: rgb(240, 233, 233);
 }
 
+/* Sidebar Styling */
 .sidecontent {
   position: fixed;
   left: 0;
@@ -358,27 +373,28 @@ onBeforeUnmount(() => {
     rgb(60, 90, 180) 50%,
     rgb(95, 239, 255) 90%
   );
-  padding: 10px;
-  color: rgb(119, 116, 116);
+  padding: 15px;
+  color: white;
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease-in-out;
+  transition: width 0.3s ease;
   z-index: 100;
   justify-content: space-between;
   box-sizing: border-box;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
 }
 
 /* Collapsed Sidebar */
 .sidecontent.collapsed {
   width: 60px;
+  padding: 15px 5px;
 }
 
 /* Sidebar Toggle */
 #sideBartoggle {
   position: absolute;
   top: 20px;
-  left: 100%;
-  transform: translateX(-50%);
+  right: -12px;
   border: none;
   background-color: red;
   color: white;
@@ -387,49 +403,59 @@ onBeforeUnmount(() => {
   height: 25px;
   cursor: pointer;
   font-weight: bold;
-  transition: transform 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+  z-index: 101;
+}
+
+#sideBartoggle:hover {
+  transform: scale(1.1);
 }
 
 /* Sidebar Links */
 nav {
   overflow-y: auto;
-  margin-top: 10px !important;
+  margin-top: 20px;
+  flex-grow: 1;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
-nav,
-li,
-ul {
-  margin: 0;
-  padding: 0;
-  text-align: center;
+
+nav::-webkit-scrollbar {
+  width: 4px;
 }
+
+nav::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
 nav ul {
   list-style: none;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .inline {
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   color: white;
   text-decoration: none;
   display: flex;
-  flex-direction: row;
-  margin: 5px 0px;
-  height: 30px;
-  background-color: rgba(21, 21, 21, 0.156);
-  text-align: center;
   align-items: center;
-  padding: 5px;
-  border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
-  -ms-border-radius: 5px;
-  -o-border-radius: 5px;
+  margin: 3px 0;
+  height: 40px;
+  background-color: rgba(21, 21, 21, 0.2);
+  padding: 0 10px;
+  border-radius: 8px;
   cursor: pointer;
-  color: white;
   position: relative;
   overflow: hidden;
-  transition: all 0.5s ease;
-  border-bottom: 3px solid transparent;
+  border-left: 3px solid transparent;
 }
 a {
   color: inherit;
@@ -437,13 +463,14 @@ a {
 }
 
 .inline:hover {
-  background: rgba(255, 0, 0, 0.249);
+  background: rgba(255, 0, 0, 0.3);
+  transform: translateX(3px);
 }
-
 .inline ion-icon {
   font-size: 20px;
+  min-width: 24px;
+  text-align: center;
 }
-
 .userinfo {
   display: flex;
   align-items: center;
@@ -454,41 +481,58 @@ a {
 .UnverifiedEmailWarn {
   position: relative;
   width: 100%;
-  background: #303030;
+  height: 100%;
+  background: #303030b1;
 }
 .UnverifiedEmailWarn ion-icon {
-  font-size: 2.4em !important;
+  font-size: 2em;
   font-weight: bolder;
   color: red;
   position: absolute;
-  right: -22px;
-  top: 0;
+  right: 0px;
+  top: 0px;
   z-index: 101;
-}
-.userinfo p,
-h3 {
-  margin: 0;
-  color: white;
-  transition: all 0.3s ease-in-out;
-  display: -webkit-box; /* Use a flex-like box for line clamping */
-  -webkit-box-orient: vertical; /* Specify vertical stacking of lines */
-  -webkit-line-clamp: 1; /* Allow only two lines */
-  overflow: hidden; /* Hide overflowed text */
-  text-overflow: ellipsis; /* Add ellipsis (...) for overflowing text */
-  word-wrap: normal; /* Prevent forced breaks */
-  width: 200px;
+  background: rgba(0, 0, 0, 0.535);
+  border-radius: 50%;
+  padding: 2px;
 }
 
+.userinfo p, .userinfo h3 {
+  margin: 0;
+  color: rgb(232, 225, 225);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+.userinfo h3 a {
+  color: inherit;
+  text-decoration: underline;
+  color:gray;
+}
+
+.userinfo h3 a:hover {
+  color: var(--hover-color1);
+}
+
+
 .circular-profile_pic {
-  min-width: 50px;
-  min-height: 50px;
   width: 50px;
   height: 50px;
+  min-height: 50px;
+  min-width: 50px;
   object-fit: cover;
   border-radius: 50%;
-  background-color: gray;
+  background-color: rgba(255, 255, 255, 0.1);
   cursor: pointer;
-  position: relative;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.circular-profile_pic:hover {
+  border-color: var(--hover-color1);
+  transform: scale(1.05);
 }
 
 /* Hide Text When Sidebar Collapses */
@@ -513,53 +557,79 @@ ion-icon {
   margin: 0 5px;
 }
 
+/* Active Link */
 .router-link-active {
   font-weight: bold;
-  text-shadow: 0px 0px 5px rgb(0, 0, 0);
-  color: rgb(228, 228, 228); /* Change color for active link */
-  border-bottom: 3px solid red; /* Optional underline effect */
+  color: white;
+  border-left: 3px solid red;
+  border-bottom: 3px solid red;
+  background: rgba(255, 0, 0, 0.2);
+}
+
+.router-link-active ion-icon {
+  color: var(--hover-color1);
 }
 
 #moreONnavButton {
-  position: relative;
   font-size: 20px;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   cursor: pointer;
   border-radius: 5px;
   background-color: transparent;
-  outline: transparent;
   border: none;
   color: white;
-  &:hover {
-    color: rgb(0, 162, 255);
-    background-color: rgba(128, 128, 128, 0.172);
-  }
+  padding: 5px;
+  width: 100%;
+  transition: all 0.3s ease;
 }
+
+#moreONnavButton:hover {
+  color: var(--hover-color1);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 .collapsed #moreONnav {
   right: -150% !important;
 }
+
 #moreONnav {
   position: absolute;
-  bottom: 50px;
-  /* background: linear-gradient(
-    45deg,
-    rgb(25, 23, 53) 10%,
-    rgb(60, 90, 180) 50%,
-    rgb(95, 239, 255) 90%
-  ); */
-  box-shadow: 0px 0px 3px black;
+  bottom: 60px;
+  background: rgba(25, 23, 53, 0.95);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   border-radius: 10px;
-  width: 200px;
+  width: calc(100% - 30px);
+  min-width: 150px;
+  max-width: 250px;
+  padding: 10px;
   transition: all 0.3s ease;
   z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  gap: 8px;
+}
 
-  /* a {
-    color: white;
-    padding: 2px !important;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 2px !important;
-  } */
+#moreONnav .inline {
+  background: transparent;
+  border-left: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+}
+
+#moreONnav .inline:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+#sidebarBottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 </style>

@@ -369,6 +369,8 @@
       @selected="handleDownloadSelect"
       v-if="streamloading && streamSongID"
       :class="{ 'darktheme-4': isDarkMode }"
+      @closeDownContainer="streamloading = false ;streamSongID=null"
+
     />
   </div>
 </template>
@@ -468,17 +470,6 @@ export default {
       this.search_suggestions = data.search_suggestions;
     });
 
-    if (!this.useremail) {
-      console.error("User email is undefined");
-      return;
-    }
-
-    axios
-      .get(`${BASE_URL}/api/${this.useremail}`)
-      .then((response) => {
-        this.message = response.data.message;
-      })
-      .catch((error) => console.error("API Error:", error));
 
     await this.fetchVideos(true);
     await this.fetchSpotifyThumbnails(); // Preload Spotify thumbnails

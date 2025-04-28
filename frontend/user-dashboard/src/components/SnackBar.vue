@@ -49,7 +49,6 @@ export default {
 </script>
 
 <style scoped>
-
 /* Snackbar container */
 #snackbar-container {
   position: fixed;
@@ -79,15 +78,15 @@ export default {
   opacity: 0.9;
 }
 .snackbarcontent {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    flex-direction: row;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-direction: row;
 }
-.snackbarcontent ion-icon{
-    color: rgb(225, 220, 220);
-    font-weight: bolder;
-    font-size: 20px !important;
+.snackbarcontent ion-icon {
+  color: rgb(225, 220, 220);
+  font-weight: bolder;
+  font-size: 20px !important;
 }
 /* Snackbar types */
 .snackbar.error {

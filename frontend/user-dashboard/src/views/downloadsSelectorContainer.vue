@@ -1,5 +1,5 @@
 <template>
-  <div id="stream-container">
+  <div id="stream-container" v-if="streamloading && songId">
     <div id="streams-container-Header">
       <div class="header-content">
         <!-- Stream Title -->
@@ -49,6 +49,8 @@
               </button>
             </div>
           </div>
+
+          <button @click="closeDownContainer"><ion-icon name="close"></ion-icon></button>
         </div>
 
         <!-- Download Indicator (Loader Unchanged) -->
@@ -124,6 +126,7 @@ export default {
     songId: String,
     stmName: String,
     streamloading: Boolean,
+    streamSongId: String,
   },
   data() {
     const userStore = useUserStore();
@@ -159,6 +162,9 @@ export default {
     };
   },
   methods: {
+    closeDownContainer(){
+      this.$emit("closeDownContainer");
+    },
     toggleShowAllStreams() {
       this.showAll_streams = !this.showAll_streams;
     },
@@ -201,7 +207,7 @@ export default {
     categorize_url() {
       this.isDroppeddown = false;
       if (this.songId && (this.songId != null || this.songId != '')) {
-        if (this.songId.includes("youtube" || "youtu")) {
+        if (this.songId.includes("youtu")) {
           this.activeService = "youtube";
           this.fetchStreams_youtube();
         } else if (this.songId.includes("spotify")) {

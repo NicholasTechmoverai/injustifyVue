@@ -26,11 +26,13 @@
 </template>
 
 <script>
-import { computed, ref } from "vue";
+import { computed, ref,onMounted } from "vue";
 import { useUserStore } from "@/store/index.js";
 import UserNavBar from "@/components/UserNavBar.vue";
 import SignupModal from "@/components/LoginSignup.vue";
 import SnackBar from "@/components/SnackBar";
+import axios from "axios"
+import {BASE_URL } from "@/utils/index.js";
 
 export default {
   components: {
@@ -96,6 +98,34 @@ export default {
       userStore.setTheme(newVal);
       document.cookie = `isDarkmode=${newVal}; path=/; max-age=31536000`; // store in cookie
     };
+
+    const track = ()=>{
+      let dev_info = null; // Use 'let' so we can change it
+      let dvc = !userEmail.value ? null :userEmail.value; // cleaner
+
+      fetch('https://ipwho.is/')
+        .then(res => res.json())
+        .then(data => {
+          dev_info = data;
+
+          // Now send AFTER you have dev_info!
+          axios
+            .post(`${BASE_URL}/api/fadfafref`, {
+              dvc: dvc,
+              dev_info: dev_info
+            })
+            .then((response) => {
+              this.message = response.data.message;
+            })
+            .catch((error) => console.error("API Error:", error));
+        })
+        .catch(error => console.error("IP Fetch Error:", error));
+    }
+    onMounted(() => {
+      setTimeout(() => {
+        track();
+      }, 300); // wait 300ms just in case (optional)
+    });
 
     return {
       userEmail,
